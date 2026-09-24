@@ -1,6 +1,10 @@
 spring:
   application:
     name: pedeai-api
+  config:
+    # Em desenvolvimento, a API lê o mesmo .env do docker compose (na raiz do repositório).
+    # Variáveis de ambiente de verdade (CI, produção) têm prioridade sobre o arquivo.
+    import: optional:file:../.env[.properties]
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
