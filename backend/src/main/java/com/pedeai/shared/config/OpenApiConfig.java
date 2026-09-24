@@ -6,9 +6,13 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.ArrayList;
 
 @Configuration
 public class OpenApiConfig {
@@ -28,6 +32,22 @@ public class OpenApiConfig {
                         .type(SecurityScheme.Type.HTTP)
                         .scheme("bearer")
                         .bearerFormat("JWT")))
-                .addSecurityItem(new SecurityRequirement().addList("bearer"));
+                .addSecurityItem(new SecurityRequirement().addList("bearer"))
+                // URL relativa: a especificação fica igual em qualquer ambiente (e versionável no frontend).
+                .addServersItem(new Server().url("/"));
+    }
+
+    /**
+     * Toda resposta da API devolve todos os campos (nulos aparecem como {@code null}). Marcar os campos
+     * como obrigatórios faz os tipos gerados no frontend refletirem isso. Campo que pode vir nulo é
+     * declarado no DTO com {@code @Schema(types = {"string", "null"})}.
+     */
+    @Bean
+    OpenApiCustomizer responseFieldsAreAlwaysPresent() {
+        return openApi -> openApi.getComponents().getSchemas().forEach((name, schema) -> {
+            if (name.endsWith("Response") && schema.getProperties() != null) {
+                schema.setRequired(new ArrayList<>(schema.getProperties().keySet()));
+            }
+        });
     }
 }

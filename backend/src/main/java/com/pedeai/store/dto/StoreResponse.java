@@ -1,6 +1,7 @@
 package com.pedeai.store.dto;
 
 import com.pedeai.store.domain.Store;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalTime;
 import java.util.UUID;
@@ -8,8 +9,8 @@ import java.util.UUID;
 public record StoreResponse(
         UUID id,
         String name,
-        String document,
-        String phone,
+        @Schema(types = {"string", "null"}) String document,
+        @Schema(types = {"string", "null"}) String phone,
         String timezone,
         LocalTime businessDayCutoff,
         int serviceFeeBp,
