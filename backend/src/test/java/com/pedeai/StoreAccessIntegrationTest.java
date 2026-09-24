@@ -20,8 +20,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Fluxo completo com banco (H2 no modo PostgreSQL, ou PostgreSQL real no CI) e segurança de verdade. */
-@SpringBootTest
+/**
+ * Fluxo completo com banco (H2 no modo PostgreSQL, ou PostgreSQL real no CI) e segurança de verdade.
+ * A janela de tolerância de renovação fica zerada para o reuso de token ser detectado na hora.
+ */
+@SpringBootTest(properties = "app.auth.refresh-reuse-grace=PT0S")
 @AutoConfigureMockMvc
 class StoreAccessIntegrationTest {
     private static final String REFRESH_COOKIE = "pedeai_refresh";

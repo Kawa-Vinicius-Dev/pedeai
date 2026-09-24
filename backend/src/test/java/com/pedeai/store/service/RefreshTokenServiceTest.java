@@ -4,6 +4,7 @@ import com.pedeai.shared.exception.InvalidCredentialsException;
 import com.pedeai.shared.security.Role;
 import com.pedeai.store.domain.AppUser;
 import com.pedeai.store.domain.RefreshToken;
+import com.pedeai.store.domain.RevokeReason;
 import com.pedeai.store.repository.RefreshTokenRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,6 +72,7 @@ class RefreshTokenServiceTest {
         RefreshToken consumed = service.consume("valor");
 
         assertThat(consumed.isRevoked()).isTrue();
+        assertThat(consumed.getRevokeReason()).isEqualTo(RevokeReason.ROTATED);
     }
 
     @Test
@@ -92,17 +94,39 @@ class RefreshTokenServiceTest {
         when(repository.findByTokenHash(any())).thenReturn(Optional.of(token));
 
         assertThatThrownBy(() -> service.consume("vencido")).isInstanceOf(InvalidCredentialsException.class);
-        verify(repository, never()).revokeAllActiveByUserId(any(), any());
+        verify(repository, never()).revokeAllActiveByUserId(any(), any(), any());
     }
 
     @Test
-    void reusingARevokedTokenRevokesEverySessionOfTheUser() {
+    void reusingARotatedTokenAfterTheGraceWindowRevokesEverySession() {
         RefreshToken token = token(NOW.plus(Duration.ofDays(1)));
-        token.revoke(NOW.minusSeconds(60));
+        token.revoke(NOW.minusSeconds(60), RevokeReason.ROTATED);
         when(repository.findByTokenHash(any())).thenReturn(Optional.of(token));
 
         assertThatThrownBy(() -> service.consume("reusado")).isInstanceOf(InvalidCredentialsException.class);
-        verify(repository).revokeAllActiveByUserId(user.getId(), NOW);
+        verify(repository).revokeAllActiveByUserId(user.getId(), NOW, RevokeReason.REVOKED);
+    }
+
+    @Test
+    void twoTabsRenewingTogetherWithinTheGraceWindowIsNotTreatedAsTheft() {
+        RefreshToken token = token(NOW.plus(Duration.ofDays(1)));
+        token.revoke(NOW.minusSeconds(10), RevokeReason.ROTATED);
+        when(repository.findByTokenHash(any())).thenReturn(Optional.of(token));
+
+        RefreshToken consumed = service.consume("mesmo-cookie-da-outra-aba");
+
+        assertThat(consumed).isSameAs(token);
+        verify(repository, never()).revokeAllActiveByUserId(any(), any(), any());
+    }
+
+    @Test
+    void tokenEndedByLogoutIsNeverAcceptedAgain() {
+        RefreshToken token = token(NOW.plus(Duration.ofDays(1)));
+        token.revoke(NOW.minusSeconds(5), RevokeReason.LOGOUT);
+        when(repository.findByTokenHash(any())).thenReturn(Optional.of(token));
+
+        assertThatThrownBy(() -> service.consume("depois-do-logout")).isInstanceOf(InvalidCredentialsException.class);
+        verify(repository).revokeAllActiveByUserId(user.getId(), NOW, RevokeReason.REVOKED);
     }
 
     @Test
@@ -113,7 +137,7 @@ class RefreshTokenServiceTest {
         RefreshToken token = token(NOW.plus(Duration.ofDays(1)));
         when(repository.findByTokenHash(RefreshTokenService.hash("valor"))).thenReturn(Optional.of(token));
         service.revoke("valor");
-        assertThat(token.isRevoked()).isTrue();
+        assertThat(token.getRevokeReason()).isEqualTo(RevokeReason.LOGOUT);
     }
 
     private RefreshToken token(java.time.Instant expiresAt) {

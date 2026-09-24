@@ -4,6 +4,7 @@ import com.pedeai.shared.config.AppProperties;
 import com.pedeai.shared.exception.InvalidCredentialsException;
 import com.pedeai.store.domain.AppUser;
 import com.pedeai.store.domain.RefreshToken;
+import com.pedeai.store.domain.RevokeReason;
 import com.pedeai.store.repository.RefreshTokenRepository;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +47,9 @@ public class RefreshTokenService {
 
     /**
      * Valida o token e o revoga: cada refresh token vale uma vez só (rotação). Se um token já trocado
-     * aparecer de novo, alguém pode tê-lo copiado, então todas as sessões da pessoa caem.
+     * aparecer de novo depois da janela de tolerância, alguém pode tê-lo copiado, então todas as sessões
+     * da pessoa caem. Dentro da janela é corrida benigna (duas abas renovando juntas, ou a resposta
+     * anterior perdida na rede) e a renovação segue normalmente.
      */
     public RefreshToken consume(String value) {
         if (value == null || value.isBlank()) {
@@ -56,13 +59,16 @@ public class RefreshTokenService {
         RefreshToken token = repository.findByTokenHash(hash(value))
                 .orElseThrow(() -> new InvalidCredentialsException(SESSION_EXPIRED));
         if (token.isRevoked()) {
-            repository.revokeAllActiveByUserId(token.getUserId(), now);
+            if (token.wasRotatedWithin(properties.auth().refreshReuseGrace(), now)) {
+                return token;
+            }
+            repository.revokeAllActiveByUserId(token.getUserId(), now, RevokeReason.REVOKED);
             throw new InvalidCredentialsException(SESSION_EXPIRED);
         }
         if (token.isExpiredAt(now)) {
             throw new InvalidCredentialsException(SESSION_EXPIRED);
         }
-        token.revoke(now);
+        token.revoke(now, RevokeReason.ROTATED);
         return token;
     }
 
@@ -71,11 +77,11 @@ public class RefreshTokenService {
             return;
         }
         Instant now = Instant.now(clock);
-        repository.findByTokenHash(hash(value)).ifPresent(token -> token.revoke(now));
+        repository.findByTokenHash(hash(value)).ifPresent(token -> token.revoke(now, RevokeReason.LOGOUT));
     }
 
     public void revokeAllForUser(UUID userId) {
-        repository.revokeAllActiveByUserId(userId, Instant.now(clock));
+        repository.revokeAllActiveByUserId(userId, Instant.now(clock), RevokeReason.REVOKED);
     }
 
     static String hash(String value) {

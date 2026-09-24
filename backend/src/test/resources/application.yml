@@ -16,6 +16,7 @@ app:
     jwt-issuer: pedeai
     access-token-ttl: PT15M
     refresh-token-ttl: P30D
+    refresh-reuse-grace: PT30S
     refresh-cookie-name: pedeai_refresh
     refresh-cookie-secure: false
   signup-enabled: true

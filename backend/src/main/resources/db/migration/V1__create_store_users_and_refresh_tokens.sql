@@ -40,8 +40,10 @@ CREATE TABLE refresh_token (
     created_at  TIMESTAMP WITH TIME ZONE NOT NULL,
     expires_at  TIMESTAMP WITH TIME ZONE NOT NULL,
     revoked_at  TIMESTAMP WITH TIME ZONE,
+    revoke_reason VARCHAR(20),
     version     BIGINT       NOT NULL,
-    CONSTRAINT uk_refresh_token_hash UNIQUE (token_hash)
+    CONSTRAINT uk_refresh_token_hash UNIQUE (token_hash),
+    CONSTRAINT ck_refresh_token_reason CHECK (revoke_reason IN ('ROTATED', 'LOGOUT', 'REVOKED'))
 );
 
 CREATE INDEX ix_refresh_token_user ON refresh_token (user_id);

@@ -38,7 +38,7 @@ public final class TestSecurity {
     public static AppProperties properties(boolean signupEnabled) {
         return new AppProperties(
                 new AppProperties.Auth("test-secret-with-at-least-thirty-two-bytes", "pedeai",
-                        Duration.ofMinutes(15), Duration.ofDays(30), "pedeai_refresh", false),
+                        Duration.ofMinutes(15), Duration.ofDays(30), Duration.ofSeconds(30), "pedeai_refresh", false),
                 signupEnabled,
                 List.of("http://localhost:5173"));
     }

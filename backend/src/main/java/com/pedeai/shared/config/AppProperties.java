@@ -20,6 +20,7 @@ public record AppProperties(Auth auth, boolean signupEnabled, List<String> corsA
             String jwtIssuer,
             Duration accessTokenTtl,
             Duration refreshTokenTtl,
+            Duration refreshReuseGrace,
             String refreshCookieName,
             boolean refreshCookieSecure
     ) {
@@ -32,6 +33,7 @@ public record AppProperties(Auth auth, boolean signupEnabled, List<String> corsA
             Objects.requireNonNull(jwtIssuer, "Configure app.auth.jwt-issuer.");
             Objects.requireNonNull(accessTokenTtl, "Configure app.auth.access-token-ttl.");
             Objects.requireNonNull(refreshTokenTtl, "Configure app.auth.refresh-token-ttl.");
+            Objects.requireNonNull(refreshReuseGrace, "Configure app.auth.refresh-reuse-grace.");
             Objects.requireNonNull(refreshCookieName, "Configure app.auth.refresh-cookie-name.");
         }
     }

@@ -2,10 +2,13 @@ package com.pedeai.store.domain;
 
 import com.pedeai.shared.id.UuidV7;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -22,6 +25,8 @@ public class RefreshToken {
     private Instant createdAt;
     private Instant expiresAt;
     private Instant revokedAt;
+    @Enumerated(EnumType.STRING)
+    private RevokeReason revokeReason;
     @Version
     private Long version;
 
@@ -47,9 +52,15 @@ public class RefreshToken {
         return !expiresAt.isAfter(now);
     }
 
-    public void revoke(Instant now) {
+    /** Foi trocado por outro token há pouco tempo: duas abas renovando juntas, não roubo. */
+    public boolean wasRotatedWithin(Duration window, Instant now) {
+        return revokeReason == RevokeReason.ROTATED && !revokedAt.plus(window).isBefore(now);
+    }
+
+    public void revoke(Instant now, RevokeReason reason) {
         if (revokedAt == null) {
             revokedAt = now;
+            revokeReason = reason;
         }
     }
 
@@ -79,5 +90,9 @@ public class RefreshToken {
 
     public Instant getRevokedAt() {
         return revokedAt;
+    }
+
+    public RevokeReason getRevokeReason() {
+        return revokeReason;
     }
 }
