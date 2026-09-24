@@ -1,0 +1,25 @@
+# Segredos e configuração local
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+
+# Java / Maven
+target/
+*.class
+*.log
+
+# Node / Vite
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# IDEs e sistema
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
