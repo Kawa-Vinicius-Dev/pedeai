@@ -1,6 +1,7 @@
 package com.pedeai.store.controller;
 
 import com.pedeai.shared.security.CurrentUser;
+import com.pedeai.shared.security.Permissions;
 import com.pedeai.store.dto.CreateUserRequest;
 import com.pedeai.store.dto.UpdateUserRequest;
 import com.pedeai.store.dto.UserResponse;
@@ -22,7 +23,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
-@PreAuthorize("hasRole('OWNER')")
+@PreAuthorize(Permissions.OWNER)
 public class UserController {
     private final UserService userService;
 
