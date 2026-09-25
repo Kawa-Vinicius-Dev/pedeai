@@ -36,6 +36,10 @@ flowchart LR
 recebe `404` no teste padrão de IDOR. O CI está verde. O protótipo imprimiu
 certo nas impressoras do piloto.
 
+> **Situação (set/2026):** tudo feito, com o fluxo validado num navegador real
+> contra PostgreSQL. Falta o protótipo de impressão, que depende de saber
+> marca, modelo e conexão (USB ou rede) das impressoras do piloto.
+
 ## Etapa 1 · Cardápio
 
 - Setores, categorias, produtos (código PDV, preço, setor, disponibilidade),

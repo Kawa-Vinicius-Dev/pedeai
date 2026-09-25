@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: pedeai-api
+  config:
+    # Em desenvolvimento, a API lê o mesmo .env do docker compose (na raiz do repositório).
+    # Variáveis de ambiente de verdade (CI, produção) têm prioridade sobre o arquivo.
+    import: optional:file:../.env[.properties]
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+app:
+  auth:
+    jwt-secret: ${JWT_SECRET}
+    jwt-issuer: pedeai
+    access-token-ttl: PT15M
+    refresh-token-ttl: P30D
+    refresh-reuse-grace: PT30S
+    refresh-cookie-name: pedeai_refresh
+    refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:true}
+  signup-enabled: ${SIGNUP_ENABLED:true}
+  cors-allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}

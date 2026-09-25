@@ -98,10 +98,15 @@ aponta para a antiga, sem apagar a antiga.
 ## D09 · JWT curto e refresh token rotativo
 
 - **Decisão:** token de acesso de 15 min e refresh token de 30 dias, guardado
-  como hash, rotativo e revogável por dispositivo. Os agentes usam token de
-  dispositivo próprio.
+  como hash, rotativo e revogável por dispositivo. O refresh token só existe num
+  cookie HttpOnly e SameSite=Strict, restrito a `/api/auth`, e o token de acesso
+  fica só na memória da aba. Reusar um refresh token já trocado derruba todas as
+  sessões da pessoa, porque indica cópia. A exceção são os 30 s seguintes à troca:
+  aí é corrida benigna (duas abas renovando juntas, ou resposta perdida na rede).
+  Os agentes usam token de dispositivo próprio.
 - **Alternativas:** sessão com cookie (simples, mas frágil com frontend e API em
-  domínios diferentes e com o SSE).
+  domínios diferentes e com o SSE); refresh token no `localStorage` (qualquer XSS
+  o levaria).
 - **Consequências:** o SSE do frontend usa um cliente baseado em `fetch`, que
   envia o header `Authorization`.
 

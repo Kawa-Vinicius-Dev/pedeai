@@ -5,8 +5,41 @@ canais (balcão, telefone, mesa, iFood, 99Food), organiza, manda para a cozinha,
 imprime nas impressoras térmicas certas e acompanha cada pedido até a entrega,
 com uma visão financeira básica.
 
-> **Status:** proposta de arquitetura. Ainda não há código. A implementação
-> segue por etapas, descritas no [roadmap](docs/06-roadmap.md).
+> **Status:** Etapa 0 (fundação) pronta: cadastro de loja, login, sessão,
+> configurações da loja e equipe, com backend, frontend, testes e CI. Falta só o
+> protótipo de impressão, que precisa das impressoras do restaurante-piloto.
+> Próxima: Etapa 1 (cardápio). Ver o [roadmap](docs/06-roadmap.md).
+
+## Como rodar localmente
+
+Pré-requisitos: Java 21, Node 22 e Docker.
+
+```bash
+cp .env.example .env              # ajuste as senhas e o JWT_SECRET
+docker compose up -d              # PostgreSQL
+
+cd backend
+./mvnw spring-boot:run            # API em http://localhost:8080 (lê o .env da raiz)
+
+cd ../frontend
+npm install
+npm run dev                       # app em http://localhost:5173
+```
+
+Abra http://localhost:5173/cadastro e crie a sua loja. No Windows, use
+`mvnw.cmd` no lugar de `./mvnw`. Para subir a API também em container:
+`docker compose --profile api up --build`.
+
+| Tarefa | Comando |
+| --- | --- |
+| Testes do backend (H2) | `cd backend && ./mvnw verify` |
+| Testes do backend contra o PostgreSQL local | `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/pedeai SPRING_DATASOURCE_USERNAME=... SPRING_DATASOURCE_PASSWORD=... ./mvnw test` |
+| Testes, lint e tipos do frontend | `cd frontend && npm test && npm run lint && npm run typecheck` |
+| Documentação da API | http://localhost:8080/swagger-ui.html |
+| Atualizar os tipos da API no frontend (com a API rodando) | `cd frontend && npm run api:spec && npm run api:types` |
+
+O teste `OpenApiContractTest` do backend falha se `frontend/openapi.json` ficar
+diferente da API. É o aviso para rodar a última linha da tabela.
 
 ## Prioridades
 
@@ -93,16 +126,16 @@ Detalhes e alternativas descartadas estão em [docs/decisoes.md](docs/decisoes.m
 | [06 · Roadmap](docs/06-roadmap.md) | Etapas de implementação e critérios de pronto |
 | [Decisões](docs/decisoes.md) | Registro de decisões de arquitetura |
 
-## Estrutura planejada do repositório
+## Estrutura do repositório
 
 ```
 pedeai/
 ├── backend/            API Spring Boot (Java 21, Maven)
 ├── frontend/           SPA React + TypeScript (Vite)
-├── print-agent/        Agente de impressão (Java 21, instalador Windows)
+├── print-agent/        Agente de impressão (Java 21, instalador Windows), na Etapa 3
 ├── docs/               Arquitetura e decisões
 ├── compose.yaml        PostgreSQL local
-└── .github/workflows/  CI
+└── .github/workflows/  CI: backend no H2 e no PostgreSQL, frontend
 ```
 
 ## Tecnologias
