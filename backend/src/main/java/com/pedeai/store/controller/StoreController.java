@@ -1,6 +1,7 @@
 package com.pedeai.store.controller;
 
 import com.pedeai.shared.security.CurrentUser;
+import com.pedeai.shared.security.Permissions;
 import com.pedeai.store.dto.AuthResponse;
 import com.pedeai.store.dto.RegisterStoreRequest;
 import com.pedeai.store.dto.StoreResponse;
@@ -51,7 +52,7 @@ public class StoreController {
     }
 
     @PatchMapping("/api/store")
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize(Permissions.OWNER)
     public StoreResponse update(CurrentUser user, @Valid @RequestBody UpdateStoreRequest request) {
         return storeService.update(user.storeId(), request);
     }

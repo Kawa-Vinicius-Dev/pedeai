@@ -4,7 +4,6 @@ import { Link } from 'react-router';
 import { useSession } from '../auth/auth-context';
 
 const UPCOMING: { label: string; icon: LucideIcon }[] = [
-  { label: 'Cardápio com categorias, adicionais e setores', icon: BookOpen },
   { label: 'Pedidos de balcão, telefone e delivery', icon: ClipboardList },
   { label: 'Tela da cozinha e impressão automática', icon: ChefHat },
   { label: 'Mesas e comandas', icon: Armchair },
@@ -47,6 +46,12 @@ export function HomePage() {
                     Cadastre a equipe
                   </Anchor>{' '}
                   com o papel de cada pessoa
+                </List.Item>
+                <List.Item icon={<ItemIcon icon={BookOpen} color="orange" />}>
+                  <Anchor component={Link} to="/cardapio">
+                    Monte o cardápio
+                  </Anchor>{' '}
+                  (setores, categorias, adicionais e produtos)
                 </List.Item>
               </List>
             </Stack>
