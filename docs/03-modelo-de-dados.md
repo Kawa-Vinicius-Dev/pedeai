@@ -53,7 +53,7 @@ erDiagram
 
 | Tabela | Colunas principais | Regras |
 | --- | --- | --- |
-| `store` | `name`, `document` (CNPJ/CPF), `phone`, `timezone`, `business_day_cutoff` (TIME, padrão 05:00), `service_fee_bp` (padrão 1000), `auto_confirm_own_orders`, `start_preparation_on_confirm`, `default_sector_id` | É o tenant. Configurações operacionais simples ficam como colunas; uma tabela de configurações só se crescer muito. |
+| `store` | `name`, `document` (CNPJ/CPF), `phone`, `timezone`, `business_day_cutoff` (TIME, padrão 05:00), `service_fee_bp` (padrão 1000), `auto_confirm_own_orders`, `start_preparation_on_confirm` | É o tenant. Configurações operacionais simples ficam como colunas; uma tabela de configurações só se crescer muito. |
 | `app_user` | `store_id`, `name`, `email`, `password_hash`, `role` (`OWNER`, `MANAGER`, `CASHIER`, `WAITER`, `KITCHEN`), `active` | `email` único. `user` é palavra reservada, por isso `app_user`. Multi-loja por usuário fica para o futuro. |
 | `refresh_token` | `user_id`, `token_hash`, `device_name`, `expires_at`, `revoked_at` | Rotação a cada uso. Revogável por dispositivo. |
 | `audit_log` | `store_id`, `user_id`, `action`, `entity_type`, `entity_id`, `details` (TEXT), `created_at` | Ações sensíveis. Só inserção. |
@@ -62,12 +62,12 @@ erDiagram
 
 | Tabela | Colunas principais | Regras |
 | --- | --- | --- |
-| `sector` | `store_id`, `name` (Cozinha, Bar, Pizzaria), `sort_order`, `active` | Setor de produção. A impressora de cada setor fica no módulo de impressão. |
+| `sector` | `store_id`, `name` (Cozinha, Bar, Pizzaria), `is_default`, `sort_order`, `active` | Setor de produção. Um setor ativo é o padrão da loja (`is_default`): o primeiro criado já nasce padrão, e o padrão só muda quando outro é marcado no lugar (ver [D18](decisoes.md#d18--setor-padrão-marcado-no-próprio-setor)). A impressora de cada setor fica no módulo de impressão. |
 | `category` | `store_id`, `name`, `sort_order`, `default_sector_id`, `active` | O setor da categoria vale para os produtos que não definem o seu. |
 | `product` | `store_id`, `category_id`, `code` (código PDV), `name`, `description`, `price_cents`, `sector_id`, `active`, `available`, `sort_order` | `UNIQUE(store_id, code)`. `available = false` pausa o item sem desativar. O setor segue a ordem produto → categoria → padrão da loja. |
-| `option_group` | `store_id`, `name` ("Adicionais", "Ponto da carne", "Sabores"), `min_choices`, `max_choices`, `pricing_rule` (`SUM`, `MAX`, `AVERAGE`), `active` | `SUM` é o padrão. `MAX` e `AVERAGE` resolvem pizza meio a meio (vale o sabor mais caro, ou a média). |
-| `option_item` | `store_id`, `option_group_id`, `code`, `name`, `price_cents`, `active`, `available`, `sort_order` | `option` é palavra reservada, por isso `option_item`. |
-| `product_option_group` | `product_id`, `option_group_id`, `sort_order` | PK composta. Um grupo pode ser reutilizado em vários produtos. |
+| `option_group` | `store_id`, `name` ("Adicionais", "Ponto da carne", "Sabores"), `min_choices`, `max_choices`, `pricing_rule` (`SUM`, `MAX`, `AVERAGE`), `active` | `SUM` é o padrão. `MAX` e `AVERAGE` resolvem pizza meio a meio (vale o sabor mais caro, ou a média, arredondada com `HALF_UP`). Em `MAX` e `AVERAGE` cada opção entra uma vez só. |
+| `option_item` | `store_id`, `option_group_id`, `code`, `name`, `price_cents`, `active`, `available`, `sort_order` | `option` é palavra reservada, por isso `option_item`. `UNIQUE(option_group_id, code)`. Opção removida do grupo fica inativa (pedidos antigos apontam para ela). Cadastrar de novo uma opção com o mesmo código PDV traz a antiga de volta. |
+| `product_option_group` | `product_id`, `option_group_id`, `sort_order` | PK `(product_id, sort_order)`: a posição é a ordem em que o grupo aparece no produto. Um grupo pode ser reutilizado em vários produtos. Exceção à regra do `store_id`: é uma coleção do produto (só é lida junto com ele), não uma entidade. |
 
 ## Clientes (`customer`)
 
