@@ -10,6 +10,7 @@ import com.pedeai.catalog.dto.OptionItemRequest;
 import com.pedeai.catalog.repository.OptionGroupRepository;
 import com.pedeai.shared.exception.BusinessRuleException;
 import com.pedeai.shared.exception.ResourceNotFoundException;
+import com.pedeai.shared.text.Texts;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

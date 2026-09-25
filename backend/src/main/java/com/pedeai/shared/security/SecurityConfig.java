@@ -1,5 +1,6 @@
 package com.pedeai.shared.security;
 
+import jakarta.servlet.DispatcherType;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.pedeai.shared.config.AppProperties;
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,6 +54,8 @@ public class SecurityConfig {
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Resposta em andamento (o stream do tempo real): a requisição já foi autorizada no início.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh", "/api/auth/logout")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, STORES_PATH).permitAll()
