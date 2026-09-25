@@ -42,6 +42,18 @@ Abra http://localhost:5173/cadastro e crie a sua loja. No Windows, use
 O teste `OpenApiContractTest` do backend falha se `frontend/openapi.json` ficar
 diferente da API. É o aviso para rodar a última linha da tabela.
 
+## Deploy
+
+O frontend é um site estático e fica na Vercel. No projeto da Vercel, **Root
+Directory = `frontend`**. O [`frontend/vercel.json`](frontend/vercel.json) faz
+qualquer rota (`/cardapio`, `/login`...) abrir o app, menos `/api/*`.
+
+A API (Java) e o PostgreSQL ficam fora da Vercel, num servidor sempre ligado: a
+impressão, o quadro de pedidos em tempo real e o iFood dependem de um processo
+contínuo. Quando a API estiver no ar, o `vercel.json` ganha uma regra que repassa
+`/api/*` para ela. Assim o navegador fala só com o domínio do app, e o cookie de
+sessão continua funcionando.
+
 ## Prioridades
 
 1. Receber pedidos
