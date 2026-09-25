@@ -48,8 +48,14 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
   return typeof value === 'object' && value !== null && 'message' in value && 'status' in value;
 }
 
+/** Mensagem para erro sem o corpo padrão da API, ou seja, que não veio da API do PedeAí. */
 function defaultMessage(status: number): string {
-  return status >= 500
-    ? 'O servidor teve um problema. Tente novamente em instantes.'
-    : 'Não foi possível concluir a operação.';
+  if (status >= 500) {
+    return 'O servidor teve um problema. Tente novamente em instantes.';
+  }
+  // A API sempre responde 404 com o corpo padrão. Um 404 sem ele vem da hospedagem: a API não está no ar.
+  if (status === 404) {
+    return 'Não foi possível falar com o servidor do PedeAí. Tente novamente mais tarde.';
+  }
+  return 'Não foi possível concluir a operação.';
 }
