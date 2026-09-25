@@ -38,9 +38,7 @@ public class DeliveryZoneService {
     @Transactional
     public DeliveryZoneResponse create(UUID storeId, DeliveryZoneRequest request) {
         String neighborhood = clean(request.neighborhood());
-        if (repository.existsByStoreIdAndNeighborhoodKey(storeId, Texts.normalizeKey(neighborhood))) {
-            throw new ConflictException(duplicate(neighborhood));
-        }
+        rejectDuplicate(storeId, neighborhood, null);
         DeliveryZone zone = new DeliveryZone(storeId, neighborhood, request.feeCents(), request.active(),
                 Instant.now(clock));
         return DeliveryZoneResponse.from(repository.save(zone));
@@ -51,9 +49,7 @@ public class DeliveryZoneService {
         DeliveryZone zone = repository.findByIdAndStoreId(id, storeId)
                 .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND));
         String neighborhood = clean(request.neighborhood());
-        if (repository.existsByStoreIdAndNeighborhoodKeyAndIdNot(storeId, Texts.normalizeKey(neighborhood), id)) {
-            throw new ConflictException(duplicate(neighborhood));
-        }
+        rejectDuplicate(storeId, neighborhood, id);
         zone.update(neighborhood, request.feeCents(), request.active(), Instant.now(clock));
         return DeliveryZoneResponse.from(zone);
     }
@@ -63,7 +59,13 @@ public class DeliveryZoneService {
         return neighborhood.trim().replaceAll("\\s+", " ");
     }
 
-    private static String duplicate(String neighborhood) {
-        return "Já existe uma taxa para o bairro " + neighborhood + ".";
+    /** O aviso usa o nome já cadastrado: quem digitou "centro" vê que é o "Centro" da lista. */
+    private void rejectDuplicate(UUID storeId, String neighborhood, UUID currentId) {
+        repository.findByStoreIdAndNeighborhoodKey(storeId, Texts.normalizeKey(neighborhood))
+                .filter(existing -> !existing.getId().equals(currentId))
+                .ifPresent(existing -> {
+                    throw new ConflictException(
+                            "Já existe uma taxa para o bairro " + existing.getNeighborhood() + ".");
+                });
     }
 }

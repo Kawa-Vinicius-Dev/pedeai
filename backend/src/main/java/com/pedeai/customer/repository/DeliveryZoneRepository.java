@@ -13,7 +13,5 @@ public interface DeliveryZoneRepository extends JpaRepository<DeliveryZone, UUID
 
     Optional<DeliveryZone> findByIdAndStoreId(UUID id, UUID storeId);
 
-    boolean existsByStoreIdAndNeighborhoodKey(UUID storeId, String neighborhoodKey);
-
-    boolean existsByStoreIdAndNeighborhoodKeyAndIdNot(UUID storeId, String neighborhoodKey, UUID id);
+    Optional<DeliveryZone> findByStoreIdAndNeighborhoodKey(UUID storeId, String neighborhoodKey);
 }
