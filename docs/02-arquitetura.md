@@ -160,8 +160,11 @@ precisamos de broker nem de biblioteca de mensageria.
   fica parado.
 - Um comentário de keepalive a cada 25 segundos evita que proxies fechem a
   conexão.
-- O `EventSource` nativo não envia `Authorization`. Por isso o frontend usa um
-  cliente SSE baseado em `fetch` (por exemplo, `@microsoft/fetch-event-source`).
+- O `EventSource` nativo não envia `Authorization`. Por isso o frontend lê o
+  stream com `fetch` (`shared/api/stream.ts`, sem biblioteca), com o token de
+  acesso e a renovação automática da sessão. Se a conexão cai, reconecta
+  sozinho, esperando mais a cada falha (até 30 s), e ao voltar recarrega as
+  listas, porque pode ter perdido avisos. É uma conexão por aba.
 - **Mais de uma instância da API:** a interface `RealtimeBroadcaster` começa com
   uma implementação em memória. Quando houver duas ou mais instâncias, ganha uma
   implementação com `LISTEN/NOTIFY` do PostgreSQL. Sem Redis.

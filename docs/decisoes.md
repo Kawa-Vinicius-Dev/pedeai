@@ -207,3 +207,33 @@ aponta para a antiga, sem apagar a antiga.
 - **Consequências:** uma requisição por mudança na montagem do item. Se a
   latência incomodar no PDV, dá para calcular uma prévia na tela, mas o valor
   gravado continua vindo do servidor.
+
+## D20 · Cliente identificado pelo telefone e gravado pelo próprio pedido
+
+- **Contexto:** no delivery por telefone, o atendente não tem tempo de abrir um
+  cadastro de cliente antes de lançar o pedido.
+- **Decisão:** o telefone (normalizado para E.164) identifica o cliente na
+  loja. Ao lançar o pedido, a API acha o cliente pelo telefone ou cria um,
+  atualiza o nome e reaproveita o endereço igual já salvo. O pedido guarda a
+  própria cópia do nome, do telefone e do endereço.
+- **Alternativas:** cadastro de cliente obrigatório antes do pedido (mais lento
+  no balcão); cliente só no pedido, sem cadastro (perde o "cliente e endereços
+  aparecem ao digitar o telefone").
+- **Consequências:** dois clientes com o mesmo telefone viram um só, o que é o
+  esperado numa casa. Mudar o cadastro não altera pedidos antigos. Cliente de
+  marketplace não entra aqui: fica só no pedido.
+
+## D21 · Taxa de entrega sugerida pela tabela e decidida no pedido
+
+- **Contexto:** a taxa por bairro é a regra, mas o restaurante pequeno dá frete
+  grátis para cliente fiel, cobra a mais em dia de chuva e atende bairro que
+  não está na tabela.
+- **Decisão:** a tela preenche a taxa pela tabela de bairros e a pessoa pode
+  digitar outra. A API grava a taxa que veio no pedido. Se o bairro muda para um
+  sem taxa, a taxa sugerida sai do campo, para ninguém cobrar a do bairro
+  anterior sem perceber. Bairro que está na tabela vai com o nome da tabela.
+- **Alternativas:** a API calcular a taxa pelo bairro, como faz com o preço dos
+  itens ([D19](#d19--preço-do-item-calculado-só-no-servidor)). Mais rígido do
+  que o balcão precisa.
+- **Consequências:** o valor da taxa é decisão de quem lança o pedido e fica
+  registrado no pedido. Se virar problema, dá para limitar quem altera a taxa.

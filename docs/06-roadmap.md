@@ -70,6 +70,16 @@ cadastrado, e os testes de preço cobrem cada regra.
 todos os status, em duas telas abertas que se atualizam sozinhas. Os totais
 batem nos testes.
 
+> **Situação (set/2026):** API, telas e testes prontos. Num navegador real contra
+> PostgreSQL, o caixa lançou um delivery com pizza meio a meio, dois
+> refrigerantes, taxa do bairro e troco para R$ 100 (total R$ 74,90, troco de
+> R$ 25,10). O pedido percorreu todos os status em três telas abertas (caixa,
+> dona e cozinha), que se atualizaram sozinhas em menos de um segundo. A cozinha
+> só consegue iniciar o preparo e marcar pronto. No pedido seguinte, o mesmo
+> telefone trouxe o cliente e o endereço salvos. Os totais batem nos testes de
+> unidade e de integração, e a numeração diária foi testada com 8 pedidos
+> lançados ao mesmo tempo.
+
 ## Etapa 3 · Cozinha e impressão
 
 - Tela da cozinha: tela cheia, filtro por setor, cronômetro, iniciar, pronto e
