@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -63,7 +64,9 @@ public class OptionGroup {
 
     /**
      * Substitui os dados do grupo. Opções com id são atualizadas, sem id são criadas, e as que não vieram
-     * são retiradas (ficam inativas, nunca apagadas, porque pedidos antigos apontam para elas).
+     * são retiradas (ficam inativas, nunca apagadas, porque pedidos antigos apontam para elas). Uma opção
+     * nova com o código PDV de uma opção que ficou de fora traz essa opção de volta, em vez de duplicar o
+     * código.
      */
     public void update(String name, int minChoices, int maxChoices, PricingRule pricingRule, boolean active,
                        List<OptionDraft> drafts, Instant now) {
@@ -76,16 +79,21 @@ public class OptionGroup {
 
         Map<UUID, OptionItem> existing = options.stream()
                 .collect(Collectors.toMap(OptionItem::getId, Function.identity()));
+        Set<UUID> requestedIds = drafts.stream().map(OptionDraft::id).filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<String, OptionItem> reusableByCode = options.stream()
+                .filter(option -> option.getCode() != null && !requestedIds.contains(option.getId()))
+                .collect(Collectors.toMap(OptionItem::getCode, Function.identity(), (first, second) -> first));
         Set<UUID> kept = new HashSet<>();
         int position = 0;
         for (OptionDraft draft : drafts) {
-            if (draft.id() == null) {
+            OptionItem item = draft.id() != null ? existing.get(draft.id()) : reusableByCode.remove(draft.code());
+            if (item == null && draft.id() != null) {
+                throw new BusinessRuleException("A opção informada não pertence a este grupo.");
+            }
+            if (item == null) {
                 options.add(new OptionItem(storeId, draft, position++, now));
                 continue;
-            }
-            OptionItem item = existing.get(draft.id());
-            if (item == null) {
-                throw new BusinessRuleException("A opção informada não pertence a este grupo.");
             }
             item.apply(draft, position++, now);
             kept.add(item.getId());

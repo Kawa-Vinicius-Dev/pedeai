@@ -81,6 +81,22 @@ class CatalogIntegrationTest {
                 {"quantity":1,"options":[{"optionId":"%s","quantity":1}]}""".formatted(flavorIds.get(0)))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.message").value("Opção indisponível no momento: Calabresa."));
+
+        // Saiu do cardápio e voltou depois: o mesmo código PDV traz a opção antiga de volta, sem duplicar.
+        send(owner, put("/api/option-groups/" + flavors), """
+                {"name":"Sabores","minChoices":1,"maxChoices":2,"pricingRule":"MAX","active":true,"options":[
+                  {"id":"%s","code":"102","name":"Quatro queijos","priceCents":5290,"available":true,"active":true}]}"""
+                .formatted(flavorIds.get(1))).andExpect(status().isOk());
+        send(owner, put("/api/option-groups/" + flavors), """
+                {"name":"Sabores","minChoices":1,"maxChoices":2,"pricingRule":"MAX","active":true,"options":[
+                  {"id":"%s","code":"102","name":"Quatro queijos","priceCents":5290,"available":true,"active":true},
+                  {"code":"101","name":"Calabresa","priceCents":4690,"available":true,"active":true}]}"""
+                .formatted(flavorIds.get(1)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.options.length()").value(2))
+                .andExpect(jsonPath("$.options[1].id").value(flavorIds.get(0)))
+                .andExpect(jsonPath("$.options[1].active").value(true))
+                .andExpect(jsonPath("$.options[1].priceCents").value(4690));
     }
 
     @Test

@@ -32,6 +32,29 @@ class OptionGroupTest {
     }
 
     @Test
+    void newOptionWithTheCodeOfARetiredOneBringsItBack() {
+        OptionGroup group = new OptionGroup(UUID.randomUUID(), "Sabores", 1, 2, PricingRule.MAX, true, List.of(
+                new OptionDraft(null, "10", "Calabresa", 4590, true, true),
+                new OptionDraft(null, "11", "Atum", 4790, true, true)), NOW);
+        UUID calabresa = group.getOptions().get(0).getId();
+        UUID atum = group.getOptions().get(1).getId();
+        group.update("Sabores", 1, 2, PricingRule.MAX, true,
+                List.of(new OptionDraft(atum, "11", "Atum", 4790, true, true)), NOW);
+
+        group.update("Sabores", 1, 2, PricingRule.MAX, true, List.of(
+                new OptionDraft(atum, "11", "Atum", 4790, true, true),
+                new OptionDraft(null, "10", "Calabresa especial", 4890, true, true)), NOW);
+
+        // O código PDV é único no grupo: em vez de uma segunda "10", a opção antiga volta com os dados novos.
+        assertThat(group.getOptions()).hasSize(2);
+        OptionItem back = group.findOption(calabresa).orElseThrow();
+        assertThat(back.isActive()).isTrue();
+        assertThat(back.getName()).isEqualTo("Calabresa especial");
+        assertThat(back.getPriceCents()).isEqualTo(4890);
+        assertThat(group.getOptions()).extracting(OptionItem::getName).containsExactly("Atum", "Calabresa especial");
+    }
+
+    @Test
     void rejectsOptionFromAnotherGroup() {
         OptionGroup group = new OptionGroup(UUID.randomUUID(), "Sabores", 1, 2, PricingRule.MAX, true,
                 List.of(new OptionDraft(null, null, "Calabresa", 4590, true, true)), NOW);
