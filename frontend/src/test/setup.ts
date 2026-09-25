@@ -26,6 +26,10 @@ class ResizeObserverStub {
 }
 globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
 window.HTMLElement.prototype.scrollIntoView = () => {};
+// O Textarea com autosize escuta o carregamento de fontes (document.fonts), que o jsdom não tem.
+Object.defineProperty(document, 'fonts', {
+  value: { addEventListener: vi.fn(), removeEventListener: vi.fn(), ready: Promise.resolve() },
+});
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
