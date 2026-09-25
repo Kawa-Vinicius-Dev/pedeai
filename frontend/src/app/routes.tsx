@@ -4,9 +4,14 @@ import { LoginPage } from '../features/auth/LoginPage';
 import { SignupPage } from '../features/auth/SignupPage';
 import { CatalogPage } from '../features/catalog/CatalogPage';
 import { HomePage } from '../features/home/HomePage';
+import { NewOrderPage } from '../features/orders/NewOrderPage';
+import { OrdersBoardPage } from '../features/orders/OrdersBoardPage';
+import { OrdersHistoryPage } from '../features/orders/OrdersHistoryPage';
+import { DeliveryZonesPage } from '../features/settings/DeliveryZonesPage';
+import { PaymentMethodsPage } from '../features/settings/PaymentMethodsPage';
 import { StoreSettingsPage } from '../features/settings/StoreSettingsPage';
 import { UsersPage } from '../features/settings/UsersPage';
-import { AVAILABILITY_TOGGLERS } from '../shared/lib/roles';
+import { AVAILABILITY_TOGGLERS, ORDER_TAKERS, ORDER_VIEWERS, SETTINGS_MANAGERS } from '../shared/lib/roles';
 import { AppLayout } from './AppLayout';
 
 export const routes: RouteObject[] = [
@@ -29,6 +34,24 @@ export const routes: RouteObject[] = [
             children: [
               { path: '/cardapio', element: <Navigate to="/cardapio/produtos" replace /> },
               { path: '/cardapio/:tab', element: <CatalogPage /> },
+            ],
+          },
+          {
+            element: <RequireRole roles={ORDER_VIEWERS} />,
+            children: [
+              { path: '/pedidos', element: <OrdersBoardPage /> },
+              { path: '/pedidos/historico', element: <OrdersHistoryPage /> },
+            ],
+          },
+          {
+            element: <RequireRole roles={ORDER_TAKERS} />,
+            children: [{ path: '/pedidos/novo', element: <NewOrderPage /> }],
+          },
+          {
+            element: <RequireRole roles={SETTINGS_MANAGERS} />,
+            children: [
+              { path: '/configuracoes/pagamentos', element: <PaymentMethodsPage /> },
+              { path: '/configuracoes/taxas', element: <DeliveryZonesPage /> },
             ],
           },
           {

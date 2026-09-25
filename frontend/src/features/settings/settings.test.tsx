@@ -1,8 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { User } from '../../shared/api/types';
-import { apiError, store, user as userFixture } from '../../test/fixtures';
+import type { DeliveryZone, PaymentMethod, User } from '../../shared/api/types';
+import { apiError, deliveryZone, ORDER_IDS, paymentMethod, store, user as userFixture } from '../../test/fixtures';
 import { loggedInAs, renderApp } from '../../test/render';
 import { server } from '../../test/server';
 
@@ -98,5 +98,99 @@ describe('dados da loja', () => {
     await user.click(screen.getByRole('button', { name: 'Salvar' }));
 
     await waitFor(() => expect(patch).toMatchObject({ serviceFeeBp: 1250, businessDayCutoff: '05:00' }));
+  });
+});
+
+describe('formas de pagamento', () => {
+  it('lista as formas da loja e cadastra uma nova', async () => {
+    loggedInAs('MANAGER');
+    const methods: PaymentMethod[] = [
+      paymentMethod(),
+      paymentMethod({ id: ORDER_IDS.pix, name: 'Pix', type: 'PIX', active: false }),
+    ];
+    let created: unknown;
+    server.use(
+      http.get('/api/payment-methods', () => HttpResponse.json(methods)),
+      http.post('/api/payment-methods', async ({ request }) => {
+        created = await request.json();
+        const saved = paymentMethod({ id: '01a0d567-0000-7000-8000-0000000000e9', name: 'Vale Alelo', type: 'VOUCHER' });
+        methods.push(saved);
+        return HttpResponse.json(saved, { status: 201 });
+      }),
+    );
+    const { user } = renderApp('/configuracoes/pagamentos');
+
+    const pixRow = (await screen.findByRole('button', { name: 'Editar Pix' })).closest('tr') as HTMLElement;
+    expect(within(pixRow).getByText('Inativa')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Nova forma' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Nova forma de pagamento' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nome' }), 'Vale Alelo');
+    await user.click(within(dialog).getByRole('combobox', { name: 'Tipo' }));
+    await user.click(await screen.findByRole('option', { name: 'Vale-refeição' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(created).toEqual({ name: 'Vale Alelo', type: 'VOUCHER', active: true }));
+    expect(await screen.findByText('Vale Alelo')).toBeInTheDocument();
+  });
+
+  it('não abre para o caixa', async () => {
+    loggedInAs('CASHIER');
+    renderApp('/configuracoes/pagamentos');
+
+    expect(await screen.findByRole('heading', { name: 'Olá, Ana!' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Pagamentos' })).not.toBeInTheDocument();
+  });
+});
+
+describe('taxas de entrega', () => {
+  it('cadastra a taxa do bairro digitada em reais e envia centavos', async () => {
+    loggedInAs('MANAGER');
+    const zones: DeliveryZone[] = [];
+    let created: unknown;
+    server.use(
+      http.get('/api/delivery-zones', () => HttpResponse.json(zones)),
+      http.post('/api/delivery-zones', async ({ request }) => {
+        created = await request.json();
+        const saved = deliveryZone({ neighborhood: 'Jardim América', feeCents: 750 });
+        zones.push(saved);
+        return HttpResponse.json(saved, { status: 201 });
+      }),
+    );
+    const { user } = renderApp('/configuracoes/taxas');
+
+    expect(await screen.findByText('Nenhum bairro cadastrado ainda.')).toBeInTheDocument();
+    // Gerente vê pagamentos e taxas, mas os dados da loja e a equipe são só do dono.
+    expect(screen.getByRole('link', { name: 'Taxas de entrega' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Equipe' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Novo bairro' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Novo bairro' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Bairro' }), 'Jardim América');
+    await user.type(within(dialog).getByRole('textbox', { name: 'Taxa de entrega' }), '7,5');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(created).toEqual({ neighborhood: 'Jardim América', feeCents: 750, active: true }));
+    const row = (await screen.findByText('Jardim América')).closest('tr') as HTMLElement;
+    expect(within(row).getByText('R$ 7,50')).toBeInTheDocument();
+  });
+
+  it('mostra o bairro repetido devolvido pela API', async () => {
+    loggedInAs('OWNER');
+    server.use(
+      http.get('/api/delivery-zones', () => HttpResponse.json([deliveryZone()])),
+      http.post('/api/delivery-zones', () =>
+        HttpResponse.json(apiError(409, 'Já existe uma taxa para o bairro Centro.'), { status: 409 }),
+      ),
+    );
+    const { user } = renderApp('/configuracoes/taxas');
+
+    await user.click(await screen.findByRole('button', { name: 'Novo bairro' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Novo bairro' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Bairro' }), 'centro');
+    await user.type(within(dialog).getByRole('textbox', { name: 'Taxa de entrega' }), '8');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+
+    expect(await within(dialog).findByText('Já existe uma taxa para o bairro Centro.')).toBeInTheDocument();
   });
 });

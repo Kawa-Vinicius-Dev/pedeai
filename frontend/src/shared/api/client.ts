@@ -78,3 +78,8 @@ function isAuthEndpoint(request: Request): boolean {
 }
 
 export const api = createClient<paths>({ baseUrl, credentials: 'include', fetch: authFetch });
+
+/** fetch com o token de acesso e a renovação automática, para o que o openapi-fetch não cobre (o SSE). */
+export function authorizedFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  return authFetch(new Request(`${baseUrl}${path}`, { ...init, credentials: 'include' }));
+}

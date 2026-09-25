@@ -14,17 +14,7 @@ import {
   sector,
 } from '../../test/fixtures';
 import { loggedInAs, renderApp } from '../../test/render';
-import { server } from '../../test/server';
-
-/** A API do cardápio lendo de um objeto que o teste pode alterar (o que foi salvo aparece na lista). */
-function serveMenu(menu: Menu) {
-  server.use(
-    http.get('/api/sectors', () => HttpResponse.json(menu.sectors)),
-    http.get('/api/categories', () => HttpResponse.json(menu.categories)),
-    http.get('/api/option-groups', () => HttpResponse.json(menu.optionGroups)),
-    http.get('/api/products', () => HttpResponse.json(menu.products)),
-  );
-}
+import { server, serveMenu } from '../../test/server';
 
 describe('cardápio: produtos', () => {
   beforeEach(() => loggedInAs('OWNER'));
