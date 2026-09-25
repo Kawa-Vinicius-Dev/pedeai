@@ -197,6 +197,47 @@
         }
       }
     },
+    "/api/payment-methods/{id}": {
+      "put": {
+        "tags": [
+          "payment-method-controller"
+        ],
+        "operationId": "update_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentMethodRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/option-groups/{id}": {
       "get": {
         "tags": [
@@ -231,7 +272,7 @@
         "tags": [
           "option-group-controller"
         ],
-        "operationId": "update_2",
+        "operationId": "update_3",
         "parameters": [
           {
             "name": "id",
@@ -317,12 +358,204 @@
         }
       }
     },
+    "/api/delivery-zones/{id}": {
+      "put": {
+        "tags": [
+          "delivery-zone-controller"
+        ],
+        "operationId": "update_4",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryZoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryZoneResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/{id}": {
+      "get": {
+        "tags": [
+          "customer-controller"
+        ],
+        "operationId": "get_3",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "customer-controller"
+        ],
+        "operationId": "update_5",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/{id}/addresses/{addressId}": {
+      "put": {
+        "tags": [
+          "customer-controller"
+        ],
+        "operationId": "updateAddress",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerAddressResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "customer-controller"
+        ],
+        "operationId": "removeAddress",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/categories/{id}": {
       "get": {
         "tags": [
           "category-controller"
         ],
-        "operationId": "get_3",
+        "operationId": "get_4",
         "parameters": [
           {
             "name": "id",
@@ -351,7 +584,7 @@
         "tags": [
           "category-controller"
         ],
-        "operationId": "update_3",
+        "operationId": "update_6",
         "parameters": [
           {
             "name": "id",
@@ -632,12 +865,256 @@
         }
       }
     },
+    "/api/payment-methods": {
+      "get": {
+        "tags": [
+          "payment-method-controller"
+        ],
+        "operationId": "list_3",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentMethodResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "payment-method-controller"
+        ],
+        "operationId": "create_3",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentMethodRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders": {
+      "get": {
+        "tags": [
+          "order-controller"
+        ],
+        "operationId": "search",
+        "parameters": [
+          {
+            "name": "businessDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "RECEIVED",
+                "CONFIRMED",
+                "IN_PREPARATION",
+                "READY",
+                "DISPATCHED",
+                "COMPLETED",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "TAKEOUT",
+                "DELIVERY",
+                "DINE_IN"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseOrderSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "order-controller"
+        ],
+        "operationId": "create_4",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{orderId}/payments": {
+      "get": {
+        "tags": [
+          "order-payment-controller"
+        ],
+        "operationId": "list_4",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "order-payment-controller"
+        ],
+        "operationId": "register_1",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/option-groups": {
       "get": {
         "tags": [
           "option-group-controller"
         ],
-        "operationId": "list_3",
+        "operationId": "list_5",
         "responses": {
           "200": {
             "description": "OK",
@@ -658,7 +1135,7 @@
         "tags": [
           "option-group-controller"
         ],
-        "operationId": "create_3",
+        "operationId": "create_5",
         "requestBody": {
           "content": {
             "application/json": {
@@ -683,12 +1160,193 @@
         }
       }
     },
+    "/api/delivery-zones": {
+      "get": {
+        "tags": [
+          "delivery-zone-controller"
+        ],
+        "operationId": "list_6",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeliveryZoneResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "delivery-zone-controller"
+        ],
+        "operationId": "create_6",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryZoneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryZoneResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers": {
+      "get": {
+        "tags": [
+          "customer-controller"
+        ],
+        "operationId": "search_1",
+        "parameters": [
+          {
+            "name": "phone",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseCustomerResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "customer-controller"
+        ],
+        "operationId": "create_7",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/customers/{id}/addresses": {
+      "post": {
+        "tags": [
+          "customer-controller"
+        ],
+        "operationId": "addAddress",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerAddressResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/categories": {
       "get": {
         "tags": [
           "category-controller"
         ],
-        "operationId": "list_4",
+        "operationId": "list_7",
         "responses": {
           "200": {
             "description": "OK",
@@ -709,7 +1367,7 @@
         "tags": [
           "category-controller"
         ],
-        "operationId": "create_4",
+        "operationId": "create_8",
         "requestBody": {
           "content": {
             "application/json": {
@@ -822,7 +1480,7 @@
         "tags": [
           "user-controller"
         ],
-        "operationId": "get_4",
+        "operationId": "get_5",
         "parameters": [
           {
             "name": "id",
@@ -851,7 +1509,7 @@
         "tags": [
           "user-controller"
         ],
-        "operationId": "update_4",
+        "operationId": "update_7",
         "parameters": [
           {
             "name": "id",
@@ -892,7 +1550,7 @@
         "tags": [
           "store-controller"
         ],
-        "operationId": "get_5",
+        "operationId": "get_6",
         "responses": {
           "200": {
             "description": "OK",
@@ -910,7 +1568,7 @@
         "tags": [
           "store-controller"
         ],
-        "operationId": "update_5",
+        "operationId": "update_8",
         "requestBody": {
           "content": {
             "application/json": {
@@ -928,6 +1586,206 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{orderId}/payments/{paymentId}": {
+      "patch": {
+        "tags": [
+          "order-payment-controller"
+        ],
+        "operationId": "changeStatus",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{id}/status": {
+      "patch": {
+        "tags": [
+          "order-status-controller"
+        ],
+        "operationId": "change",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeOrderStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stream": {
+      "get": {
+        "tags": [
+          "stream-controller"
+        ],
+        "summary": "Avisos em tempo real da loja (SSE): order.created e order.status_changed",
+        "operationId": "stream",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{id}": {
+      "get": {
+        "tags": [
+          "order-controller"
+        ],
+        "operationId": "get_7",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{id}/history": {
+      "get": {
+        "tags": [
+          "order-controller"
+        ],
+        "operationId": "history",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderStatusHistoryResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/active": {
+      "get": {
+        "tags": [
+          "order-controller"
+        ],
+        "operationId": "active",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrderSummaryResponse"
+                  }
                 }
               }
             }
@@ -1143,6 +2001,69 @@
           "available"
         ]
       },
+      "PaymentMethodRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 0
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "PIX",
+              "CREDIT",
+              "DEBIT",
+              "VOUCHER",
+              "ONLINE",
+              "OTHER"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "name",
+          "type"
+        ]
+      },
+      "PaymentMethodResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "PIX",
+              "CREDIT",
+              "DEBIT",
+              "VOUCHER",
+              "ONLINE",
+              "OTHER"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "id",
+          "name",
+          "type"
+        ]
+      },
       "OptionGroupRequest": {
         "type": "object",
         "properties": {
@@ -1309,6 +2230,247 @@
           "id",
           "name",
           "priceCents"
+        ]
+      },
+      "DeliveryZoneRequest": {
+        "type": "object",
+        "properties": {
+          "neighborhood": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "feeCents": {
+            "type": "integer",
+            "format": "int64",
+            "maximum": 100000,
+            "minimum": 0
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "feeCents",
+          "neighborhood"
+        ]
+      },
+      "DeliveryZoneResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "neighborhood": {
+            "type": "string"
+          },
+          "feeCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "feeCents",
+          "id",
+          "neighborhood"
+        ]
+      },
+      "CustomerRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 0
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 0
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "minLength": 0
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "name",
+          "phone"
+        ]
+      },
+      "CustomerAddressResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "street": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "complement": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "neighborhood": {
+            "type": "string"
+          },
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "postalCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reference": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "city",
+          "complement",
+          "id",
+          "label",
+          "neighborhood",
+          "number",
+          "postalCode",
+          "reference",
+          "state",
+          "street"
+        ]
+      },
+      "CustomerResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerAddressResponse"
+            }
+          }
+        },
+        "required": [
+          "addresses",
+          "email",
+          "id",
+          "name",
+          "notes",
+          "phone"
+        ]
+      },
+      "AddressRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "street": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 0
+          },
+          "number": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 0
+          },
+          "complement": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "neighborhood": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "state": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "postalCode": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 0
+          },
+          "reference": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "neighborhood",
+          "number",
+          "street"
         ]
       },
       "CategoryRequest": {
@@ -1670,6 +2832,624 @@
           "unitPriceCents"
         ]
       },
+      "CreateOrderRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "TAKEOUT",
+              "DELIVERY",
+              "DINE_IN"
+            ]
+          },
+          "customer": {
+            "$ref": "#/components/schemas/OrderCustomerRequest"
+          },
+          "deliveryAddress": {
+            "$ref": "#/components/schemas/AddressRequest"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemRequest"
+            },
+            "maxItems": 100,
+            "minItems": 0
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
+          },
+          "discountCents": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "deliveryFeeCents": {
+            "type": "integer",
+            "format": "int64",
+            "maximum": 100000,
+            "minimum": 0
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderPaymentRequest"
+            },
+            "maxItems": 5,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "deliveryFeeCents",
+          "discountCents",
+          "items",
+          "payments",
+          "type"
+        ]
+      },
+      "OrderCustomerRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 0
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "OrderItemRequest": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 999,
+            "minimum": 1
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionChoice"
+            },
+            "maxItems": 50,
+            "minItems": 0
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "options",
+          "productId",
+          "quantity"
+        ]
+      },
+      "OrderPaymentRequest": {
+        "type": "object",
+        "properties": {
+          "paymentMethodId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountCents": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "changeForCents": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "paid": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "amountCents",
+          "paid",
+          "paymentMethodId"
+        ]
+      },
+      "DeliveryAddressResponse": {
+        "type": "object",
+        "properties": {
+          "street": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "complement": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "neighborhood": {
+            "type": "string"
+          },
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "postalCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reference": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "city",
+          "complement",
+          "neighborhood",
+          "number",
+          "postalCode",
+          "reference",
+          "state",
+          "street"
+        ]
+      },
+      "OrderItemOptionResponse": {
+        "type": "object",
+        "properties": {
+          "optionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "groupName": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unitPriceCents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "code",
+          "groupName",
+          "name",
+          "optionId",
+          "quantity",
+          "unitPriceCents"
+        ]
+      },
+      "OrderItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "sectorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unitPriceCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "optionsPriceCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "CANCELLED"
+            ]
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOptionResponse"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "id",
+          "name",
+          "notes",
+          "options",
+          "optionsPriceCents",
+          "productId",
+          "quantity",
+          "sectorId",
+          "status",
+          "totalCents",
+          "unitPriceCents"
+        ]
+      },
+      "OrderResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "businessDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TAKEOUT",
+              "DELIVERY",
+              "DINE_IN"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "PEDEAI",
+              "IFOOD",
+              "NINETY_NINE_FOOD"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "CONFIRMED",
+              "IN_PREPARATION",
+              "READY",
+              "DISPATCHED",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "customerId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "customerName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "customerPhone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deliveryAddress": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryAddressResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemResponse"
+            }
+          },
+          "subtotalCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "discountCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "deliveryFeeCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "additionalFeeCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "platformSubsidyCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "confirmedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "preparationStartedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "readyAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "dispatchedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "cancelledAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "cancelReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "additionalFeeCents",
+          "businessDate",
+          "cancelReason",
+          "cancelledAt",
+          "completedAt",
+          "confirmedAt",
+          "createdAt",
+          "customerId",
+          "customerName",
+          "customerPhone",
+          "deliveryAddress",
+          "deliveryFeeCents",
+          "discountCents",
+          "dispatchedAt",
+          "id",
+          "items",
+          "notes",
+          "number",
+          "platformSubsidyCents",
+          "preparationStartedAt",
+          "readyAt",
+          "source",
+          "status",
+          "subtotalCents",
+          "totalCents",
+          "type",
+          "version"
+        ]
+      },
+      "PaymentRequest": {
+        "type": "object",
+        "properties": {
+          "paymentMethodId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountCents": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "changeForCents": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "paid": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "amountCents",
+          "paid",
+          "paymentMethodId"
+        ]
+      },
+      "PaymentResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "paymentMethodId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "methodName": {
+            "type": "string"
+          },
+          "methodType": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "PIX",
+              "CREDIT",
+              "DEBIT",
+              "VOUCHER",
+              "ONLINE",
+              "OTHER"
+            ]
+          },
+          "amountCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "changeForCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "changeCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PAID",
+              "CANCELLED"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "LOCAL",
+              "MARKETPLACE"
+            ]
+          },
+          "paidAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "amountCents",
+          "changeCents",
+          "changeForCents",
+          "createdAt",
+          "id",
+          "methodName",
+          "methodType",
+          "origin",
+          "paidAt",
+          "paymentMethodId",
+          "status"
+        ]
+      },
       "LoginRequest": {
         "type": "object",
         "properties": {
@@ -1813,6 +3593,245 @@
           "timezone"
         ]
       },
+      "PaymentStatusRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PAID",
+              "CANCELLED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ChangeOrderStatusRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "CONFIRMED",
+              "IN_PREPARATION",
+              "READY",
+              "DISPATCHED",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 0
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "OrderSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "businessDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TAKEOUT",
+              "DELIVERY",
+              "DINE_IN"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "PEDEAI",
+              "IFOOD",
+              "NINETY_NINE_FOOD"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "CONFIRMED",
+              "IN_PREPARATION",
+              "READY",
+              "DISPATCHED",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "customerName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deliveryNeighborhood": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "totalCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "itemCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsSummary": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "businessDate",
+          "createdAt",
+          "customerName",
+          "deliveryNeighborhood",
+          "id",
+          "itemCount",
+          "itemsSummary",
+          "number",
+          "source",
+          "status",
+          "totalCents",
+          "type",
+          "updatedAt",
+          "version"
+        ]
+      },
+      "PageResponseOrderSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderSummaryResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "content",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "OrderStatusHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "fromStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "RECEIVED",
+              "CONFIRMED",
+              "IN_PREPARATION",
+              "READY",
+              "DISPATCHED",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "toStatus": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "CONFIRMED",
+              "IN_PREPARATION",
+              "READY",
+              "DISPATCHED",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "actorType": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "SYSTEM",
+              "MARKETPLACE"
+            ]
+          },
+          "actorName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "actorName",
+          "actorType",
+          "createdAt",
+          "fromStatus",
+          "reason",
+          "toStatus"
+        ]
+      },
       "MeResponse": {
         "type": "object",
         "properties": {
@@ -1826,6 +3845,40 @@
         "required": [
           "store",
           "user"
+        ]
+      },
+      "PageResponseCustomerResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "content",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
         ]
       }
     },

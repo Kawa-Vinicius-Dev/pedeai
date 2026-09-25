@@ -2,10 +2,12 @@ import { AppShell, Badge, Burger, Button, Group, NavLink, Stack, Text } from '@m
 import { useDisclosure } from '@mantine/hooks';
 import {
   Armchair,
+  Bike,
   BookOpen,
   ChartColumn,
   ChefHat,
   ClipboardList,
+  CreditCard,
   House,
   LogOut,
   type LucideIcon,
@@ -14,11 +16,11 @@ import {
 } from 'lucide-react';
 import { NavLink as RouterNavLink, Outlet, useMatch } from 'react-router';
 import { useAuth, useSession } from '../features/auth/auth-context';
-import { AVAILABILITY_TOGGLERS, ROLE_LABELS } from '../shared/lib/roles';
+import { useOrderStream } from '../features/orders/realtime';
+import { AVAILABILITY_TOGGLERS, ORDER_VIEWERS, ROLE_LABELS, SETTINGS_MANAGERS } from '../shared/lib/roles';
 
 /** Áreas que chegam nas próximas etapas do roadmap (docs/06-roadmap.md). */
 const UPCOMING: { label: string; icon: LucideIcon }[] = [
-  { label: 'Pedidos', icon: ClipboardList },
   { label: 'Cozinha', icon: ChefHat },
   { label: 'Salão', icon: Armchair },
   { label: 'Relatórios', icon: ChartColumn },
@@ -28,6 +30,9 @@ export function AppLayout() {
   const [opened, { toggle, close }] = useDisclosure();
   const { logout } = useAuth();
   const { user, store } = useSession();
+  const seesOrders = ORDER_VIEWERS.includes(user.role);
+  // Uma conexão de tempo real por aba: o quadro, o detalhe e o histórico se atualizam sozinhos.
+  useOrderStream(seesOrders);
 
   return (
     <AppShell
@@ -64,6 +69,7 @@ export function AppLayout() {
 
       <AppShell.Navbar p="sm">
         <NavItem to="/" label="Início" icon={House} onNavigate={close} end />
+        {seesOrders && <NavItem to="/pedidos" label="Pedidos" icon={ClipboardList} onNavigate={close} />}
         {AVAILABILITY_TOGGLERS.includes(user.role) && (
           <NavItem to="/cardapio" label="Cardápio" icon={BookOpen} onNavigate={close} />
         )}
@@ -80,13 +86,19 @@ export function AppLayout() {
             disabled
           />
         ))}
-        {user.role === 'OWNER' && (
+        {SETTINGS_MANAGERS.includes(user.role) && (
           <>
             <Text size="xs" c="dimmed" tt="uppercase" fw={700} mt="md" mb={4} px="sm">
               Configurações
             </Text>
-            <NavItem to="/configuracoes/loja" label="Loja" icon={Store} onNavigate={close} />
-            <NavItem to="/configuracoes/equipe" label="Equipe" icon={Users} onNavigate={close} />
+            {user.role === 'OWNER' && (
+              <>
+                <NavItem to="/configuracoes/loja" label="Loja" icon={Store} onNavigate={close} />
+                <NavItem to="/configuracoes/equipe" label="Equipe" icon={Users} onNavigate={close} />
+              </>
+            )}
+            <NavItem to="/configuracoes/pagamentos" label="Pagamentos" icon={CreditCard} onNavigate={close} />
+            <NavItem to="/configuracoes/taxas" label="Taxas de entrega" icon={Bike} onNavigate={close} />
           </>
         )}
       </AppShell.Navbar>

@@ -19,6 +19,7 @@ import com.pedeai.catalog.repository.SectorRepository;
 import com.pedeai.shared.exception.BusinessRuleException;
 import com.pedeai.shared.exception.ConflictException;
 import com.pedeai.shared.exception.ResourceNotFoundException;
+import com.pedeai.shared.text.Texts;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

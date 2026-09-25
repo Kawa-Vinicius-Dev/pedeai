@@ -6,6 +6,7 @@ import com.pedeai.shared.security.Role;
 import com.pedeai.store.domain.AppUser;
 import com.pedeai.store.domain.Store;
 import com.pedeai.store.dto.RegisterStoreRequest;
+import com.pedeai.store.event.StoreRegistered;
 import com.pedeai.store.repository.AppUserRepository;
 import com.pedeai.store.repository.StoreRepository;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -35,6 +37,8 @@ class StoreRegistrationServiceTest {
     private AppUserRepository userRepository;
     @Mock
     private AuthService authService;
+    @Mock
+    private ApplicationEventPublisher events;
 
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
     private final RegisterStoreRequest request =
@@ -57,6 +61,8 @@ class StoreRegistrationServiceTest {
         assertThat(owner.getValue().getEmail()).isEqualTo("ana@example.com");
         assertThat(owner.getValue().getStoreId()).isEqualTo(store.getValue().getId());
         assertThat(passwordEncoder.matches("senha-forte-1", owner.getValue().getPasswordHash())).isTrue();
+        // Formas de pagamento e outros cadastros padrão nascem com a loja (ouvintes do evento).
+        verify(events).publishEvent(new StoreRegistered(store.getValue().getId()));
     }
 
     @Test
@@ -79,6 +85,6 @@ class StoreRegistrationServiceTest {
 
     private StoreRegistrationService service(boolean signupEnabled) {
         return new StoreRegistrationService(storeRepository, userRepository, passwordEncoder, authService,
-                properties(signupEnabled), CLOCK);
+                properties(signupEnabled), events, CLOCK);
     }
 }

@@ -18,3 +18,12 @@ export const CATALOG_MANAGERS: Role[] = ['OWNER', 'MANAGER'];
 
 /** Pausar e liberar item durante o serviço. */
 export const AVAILABILITY_TOGGLERS: Role[] = ['OWNER', 'MANAGER', 'CASHIER', 'KITCHEN'];
+
+/** Lançar pedido de balcão, telefone e delivery, e receber pagamento. */
+export const ORDER_TAKERS: Role[] = ['OWNER', 'MANAGER', 'CASHIER'];
+
+/** Ver o quadro e mudar o status. A cozinha só marca "em preparo" e "pronto". */
+export const ORDER_VIEWERS: Role[] = ['OWNER', 'MANAGER', 'CASHIER', 'KITCHEN'];
+
+/** Formas de pagamento e taxas de entrega. */
+export const SETTINGS_MANAGERS: Role[] = ['OWNER', 'MANAGER'];

@@ -35,6 +35,21 @@ export function moneyField(message: string) {
     .transform((reais) => Math.round(reais * 100));
 }
 
+/** Valor opcional em reais (o "troco para"): vazio vira nulo; senão, centavos. */
+export function optionalMoneyField(message: string) {
+  return z.union([z.number(), z.string()]).transform((value, context) => {
+    if (typeof value === 'string' && value.trim() === '') {
+      return null;
+    }
+    const reais = typeof value === 'number' ? value : parseDecimal(value);
+    if (!Number.isFinite(reais) || reais < 0 || reais > 100_000) {
+      context.addIssue({ code: 'custom', message });
+      return z.NEVER;
+    }
+    return Math.round(reais * 100);
+  });
+}
+
 /** Centavos da API para o valor do campo em reais. */
 export function centsToReais(cents: number): number {
   return cents / 100;

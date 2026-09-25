@@ -5,11 +5,13 @@ canais (balcão, telefone, mesa, iFood, 99Food), organiza, manda para a cozinha,
 imprime nas impressoras térmicas certas e acompanha cada pedido até a entrega,
 com uma visão financeira básica.
 
-> **Status:** Etapas 0 (fundação) e 1 (cardápio) prontas: cadastro de loja,
-> login, equipe, setores de produção, categorias, produtos com código PDV,
-> adicionais e pizza meio a meio, com backend, frontend, testes e CI. Falta o
-> protótipo de impressão, que precisa das impressoras do restaurante-piloto.
-> Próxima: Etapa 2 (pedidos). Ver o [roadmap](docs/06-roadmap.md).
+> **Status:** Etapas 0 (fundação), 1 (cardápio) e 2 (pedidos) prontas: cadastro
+> de loja, login, equipe, cardápio com código PDV, adicionais e pizza meio a
+> meio, PDV de retirada e delivery (cliente pelo telefone, taxa por bairro,
+> troco), quadro de pedidos em tempo real, histórico e pagamentos no pedido,
+> com backend, frontend, testes e CI. Falta o protótipo de impressão, que
+> precisa das impressoras do restaurante-piloto. Próxima: Etapa 3 (cozinha e
+> impressão). Ver o [roadmap](docs/06-roadmap.md).
 
 ## Como rodar localmente
 

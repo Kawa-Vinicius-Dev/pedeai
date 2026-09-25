@@ -1,13 +1,14 @@
 import { Anchor, Card, List, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
-import { Armchair, BookOpen, ChefHat, ClipboardList, type LucideIcon, Plug, Store, Users } from 'lucide-react';
+import { Armchair, Bike, BookOpen, ChartColumn, ChefHat, ClipboardList, CreditCard, type LucideIcon, Plug, Plus, Store, Users } from 'lucide-react';
 import { Link } from 'react-router';
+import { ORDER_TAKERS, ORDER_VIEWERS } from '../../shared/lib/roles';
 import { useSession } from '../auth/auth-context';
 
 const UPCOMING: { label: string; icon: LucideIcon }[] = [
-  { label: 'Pedidos de balcão, telefone e delivery', icon: ClipboardList },
   { label: 'Tela da cozinha e impressão automática', icon: ChefHat },
   { label: 'Mesas e comandas', icon: Armchair },
   { label: 'Pedidos do iFood e da 99Food', icon: Plug },
+  { label: 'Caixa e relatórios de vendas', icon: ChartColumn },
 ];
 
 function ItemIcon({ icon: Icon, color }: { icon: LucideIcon; color: string }) {
@@ -53,6 +54,42 @@ export function HomePage() {
                   </Anchor>{' '}
                   (setores, categorias, adicionais e produtos)
                 </List.Item>
+                <List.Item icon={<ItemIcon icon={CreditCard} color="orange" />}>
+                  <Anchor component={Link} to="/configuracoes/pagamentos">
+                    Confira as formas de pagamento
+                  </Anchor>{' '}
+                  que a loja aceita
+                </List.Item>
+                <List.Item icon={<ItemIcon icon={Bike} color="orange" />}>
+                  <Anchor component={Link} to="/configuracoes/taxas">
+                    Cadastre as taxas de entrega
+                  </Anchor>{' '}
+                  por bairro, se fizer delivery
+                </List.Item>
+              </List>
+            </Stack>
+          </Card>
+        )}
+
+        {ORDER_VIEWERS.includes(user.role) && (
+          <Card withBorder radius="lg" padding="lg">
+            <Stack gap="sm">
+              <Title order={4}>Pedidos</Title>
+              <List spacing="sm" center>
+                <List.Item icon={<ItemIcon icon={ClipboardList} color="orange" />}>
+                  <Anchor component={Link} to="/pedidos">
+                    Quadro de pedidos
+                  </Anchor>{' '}
+                  (atualiza sozinho em todas as telas)
+                </List.Item>
+                {ORDER_TAKERS.includes(user.role) && (
+                  <List.Item icon={<ItemIcon icon={Plus} color="orange" />}>
+                    <Anchor component={Link} to="/pedidos/novo">
+                      Lançar pedido
+                    </Anchor>{' '}
+                    de balcão, telefone ou delivery
+                  </List.Item>
+                )}
               </List>
             </Stack>
           </Card>

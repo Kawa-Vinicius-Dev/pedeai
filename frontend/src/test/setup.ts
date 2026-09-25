@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { setAccessToken } from '../shared/api/client';
-import { server } from './server';
+import { closeStreams, server } from './server';
 
 // O Mantine usa APIs de layout que o jsdom não implementa.
 Object.defineProperty(window, 'matchMedia', {
@@ -34,6 +34,7 @@ Object.defineProperty(document, 'fonts', {
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   cleanup();
+  closeStreams();
   server.resetHandlers();
   setAccessToken(null);
 });
