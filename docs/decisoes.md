@@ -181,3 +181,29 @@ aponta para a antiga, sem apagar a antiga.
 - **Consequências:** algumas regras (por exemplo, "uma comanda aberta por mesa")
   ficam no serviço em vez de numa constraint. Se o H2 começar a esconder bugs,
   reavaliar com Testcontainers.
+
+## D18 · Setor padrão marcado no próprio setor
+
+- **Contexto:** o item sem setor (nem no produto, nem na categoria) precisa ir
+  para algum lugar: tela da cozinha e impressora. A proposta inicial guardava
+  `store.default_sector_id`.
+- **Decisão:** a flag `is_default` fica no `sector`. O serviço garante que há
+  um só padrão: o primeiro setor criado já nasce padrão, marcar outro desmarca o
+  anterior, e o padrão não pode ser desmarcado nem desativado.
+- **Alternativas:** `store.default_sector_id` (chave estrangeira circular entre
+  `store` e `sector`, e o módulo da loja passaria a conhecer o cardápio).
+- **Consequências:** a regra de "um só padrão" fica no serviço, porque índice
+  único parcial não é portável ([D17](#d17--h2-nos-testes-sql-portável-e-smoke-test-em-postgresql)).
+
+## D19 · Preço do item calculado só no servidor
+
+- **Contexto:** o preço de um item com adicionais depende da regra de cada grupo
+  (soma, maior valor, média), do mínimo e do máximo, e de opções pausadas.
+- **Decisão:** a conta existe num lugar só, `ItemPricing`, exposta em
+  `POST /api/products/{id}/price-quotes`. O simulador do cardápio já usa esse
+  endpoint, e a tela de pedido (Etapa 2) vai usar o mesmo cálculo.
+- **Alternativas:** repetir a conta no frontend (resposta instantânea, mas duas
+  implementações que podem divergir em dinheiro).
+- **Consequências:** uma requisição por mudança na montagem do item. Se a
+  latência incomodar no PDV, dá para calcular uma prévia na tela, mas o valor
+  gravado continua vindo do servidor.

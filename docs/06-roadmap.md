@@ -51,6 +51,11 @@ certo nas impressoras do piloto.
 **Pronto quando:** o cardápio real do piloto, inclusive pizza meio a meio, está
 cadastrado, e os testes de preço cobrem cada regra.
 
+> **Situação (set/2026):** API, telas e testes prontos. O cardápio de uma
+> pizzaria (meio a meio pelo sabor mais caro, borda, bebida indo para o Bar) foi
+> montado num navegador real contra PostgreSQL, inclusive pelo celular, e o caixa
+> consegue pausar e liberar itens. Falta cadastrar o cardápio real do piloto.
+
 ## Etapa 2 · Pedidos
 
 - Clientes, endereços e taxa de entrega por bairro. Formas de pagamento.

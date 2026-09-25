@@ -14,14 +14,13 @@ import {
 } from 'lucide-react';
 import { NavLink as RouterNavLink, Outlet, useMatch } from 'react-router';
 import { useAuth, useSession } from '../features/auth/auth-context';
-import { ROLE_LABELS } from '../shared/lib/roles';
+import { AVAILABILITY_TOGGLERS, ROLE_LABELS } from '../shared/lib/roles';
 
 /** Áreas que chegam nas próximas etapas do roadmap (docs/06-roadmap.md). */
 const UPCOMING: { label: string; icon: LucideIcon }[] = [
   { label: 'Pedidos', icon: ClipboardList },
   { label: 'Cozinha', icon: ChefHat },
   { label: 'Salão', icon: Armchair },
-  { label: 'Cardápio', icon: BookOpen },
   { label: 'Relatórios', icon: ChartColumn },
 ];
 
@@ -65,6 +64,9 @@ export function AppLayout() {
 
       <AppShell.Navbar p="sm">
         <NavItem to="/" label="Início" icon={House} onNavigate={close} end />
+        {AVAILABILITY_TOGGLERS.includes(user.role) && (
+          <NavItem to="/cardapio" label="Cardápio" icon={BookOpen} onNavigate={close} />
+        )}
         {UPCOMING.map(({ label, icon: Icon }) => (
           <NavLink
             key={label}

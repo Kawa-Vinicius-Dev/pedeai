@@ -24,6 +24,7 @@ import { api } from '../../shared/api/client';
 import { errorMessage, unwrap } from '../../shared/api/errors';
 import type { Store, UpdateStoreRequest } from '../../shared/api/types';
 import { applyApiError } from '../../shared/lib/forms';
+import { decimalField } from '../../shared/lib/numbers';
 import { useAuth } from '../auth/auth-context';
 
 const TIME_ZONES = [
@@ -49,27 +50,15 @@ const schema = z.object({
   phone: z.string().trim().max(20, 'Use até 20 caracteres.'),
   timezone: z.string().min(1, 'Escolha o fuso horário.'),
   businessDayCutoff: z.string().regex(/^\d{2}:\d{2}$/, 'Informe o horário.'),
-  // Durante a digitação o campo pode valer um texto intermediário, como "12,". Só vira número na validação.
-  serviceFeePercent: z
-    .union([z.number(), z.string()])
-    .transform((value) => (typeof value === 'number' ? value : parseDecimal(value)))
-    .pipe(
-      z
-        .number({ error: 'Informe a taxa (use 0 se não cobra).' })
-        .min(0, 'A taxa não pode ser negativa.')
-        .max(30, 'A taxa pode ser no máximo 30%.'),
-    ),
+  serviceFeePercent: decimalField('Informe a taxa (use 0 se não cobra).').pipe(
+    z.number().min(0, 'A taxa não pode ser negativa.').max(30, 'A taxa pode ser no máximo 30%.'),
+  ),
   autoConfirmOwnOrders: z.boolean(),
   startPreparationOnConfirm: z.boolean(),
 });
 
 type StoreFormInput = z.input<typeof schema>;
 type StoreForm = z.output<typeof schema>;
-
-function parseDecimal(text: string): number {
-  const normalized = text.trim().replace(',', '.');
-  return normalized === '' ? Number.NaN : Number(normalized);
-}
 
 function toForm(store: Store): StoreFormInput {
   return {
