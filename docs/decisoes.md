@@ -250,3 +250,18 @@ aponta para a antiga, sem apagar a antiga.
   um "voltou para o preparo" ao iFood); desfazer só por gerente no quadro.
 - **Consequências:** a outra tela só vê a mudança depois dos 5 s. Nenhum status
   volta atrás, então marketplace e impressão nunca recebem um passo desfeito.
+
+## D23 · Impressão pelo navegador desenha as linhas prontas do servidor
+
+- **Contexto:** a impressão de contingência precisa sair igual ao ticket da
+  térmica, e o plano previa um `HtmlRenderer` no servidor.
+- **Decisão:** o servidor quebra o texto na largura do papel e devolve as linhas
+  com estilo (`TicketResponse`). A tela só desenha essas linhas numa fonte
+  monoespaçada, com o tamanho calculado para as colunas ocuparem a largura útil
+  do papel (72mm no de 80mm, 48mm no de 58mm), e chama `window.print()`. O
+  papel (58 ou 80mm) fica guardado no aparelho.
+- **Alternativas:** `HtmlRenderer` no servidor devolvendo HTML pronto (um
+  segundo formato para manter, e HTML vindo da API para dentro da página).
+- **Consequências:** o layout existe num lugar só, testado com golden files de
+  texto, e o ESC/POS vai consumir as mesmas linhas. A tela não decide nada do
+  conteúdo.

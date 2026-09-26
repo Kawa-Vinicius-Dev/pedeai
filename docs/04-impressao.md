@@ -189,13 +189,16 @@ Os layouts são código (um por documento), com poucas opções configuráveis:
 mostrar preço no ticket de produção, tamanho da fonte dos itens e se o telefone
 do cliente sai na via. Um editor visual de layout não entra no escopo.
 
-A renderização passa por um modelo intermediário, `TicketDocument`: linhas com
-estilo (alinhamento, negrito, tamanho, separador, QR code). Dois renderizadores
-usam esse modelo:
+Os layouts (`TicketLayout`) montam um modelo intermediário, `TicketResponse`:
+linhas já quebradas na largura do papel, cada uma com alinhamento, negrito e
+fonte dupla. A linha em fonte dupla é quebrada em metade das colunas. Duas
+saídas usam esse modelo:
 
-- `EscPosRenderer` gera os bytes para a impressora.
-- `HtmlRenderer` gera a **prévia na tela** e a **impressão de contingência pelo
-  navegador**.
+- `EscPosRenderer`, no servidor, vai gerar os bytes para a impressora (com o
+  agente).
+- A tela desenha as mesmas linhas em fonte monoespaçada para a **impressão de
+  contingência pelo navegador** (`GET /api/orders/{id}/tickets/{documento}`).
+  Ver [D23](decisoes.md#d23--impressão-pelo-navegador-desenha-as-linhas-prontas-do-servidor).
 
 ## Roteamento
 

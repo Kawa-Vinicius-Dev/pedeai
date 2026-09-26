@@ -92,7 +92,7 @@ com.pedeai
 ├── catalog  …        (mesma estrutura)
 ├── printing
 │   ├── controller  service  repository  dto  domain  event
-│   ├── rendering     TicketDocument, EscPosRenderer, HtmlRenderer, layouts por documento
+│   ├── rendering     TicketResponse, TicketLayout (um layout por documento), EscPosRenderer
 │   └── agent         API usada pelo agente (autenticada por token de dispositivo)
 └── integration
     ├── controller  service  repository  dto  domain

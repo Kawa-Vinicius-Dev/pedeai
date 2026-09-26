@@ -15,4 +15,12 @@ public final class Money {
         NumberFormat format = NumberFormat.getCurrencyInstance(BRAZIL);
         return format.format(BigDecimal.valueOf(cents, 2)).replace(' ', ' ');
     }
+
+    /** Sem o "R$", para colunas de valor ("1.234,56"). */
+    public static String plain(long cents) {
+        NumberFormat format = NumberFormat.getNumberInstance(BRAZIL);
+        format.setMinimumFractionDigits(2);
+        format.setMaximumFractionDigits(2);
+        return format.format(BigDecimal.valueOf(cents, 2));
+    }
 }

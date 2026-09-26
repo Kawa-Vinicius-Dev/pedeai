@@ -1,0 +1,36 @@
+/* O ticket só aparece na impressão; na impressão, só ele aparece. */
+.ticket-print {
+  display: none;
+}
+
+@media print {
+  body > *:not(.ticket-print) {
+    display: none !important;
+  }
+
+  .ticket-print {
+    display: block;
+    color: #000;
+    font-family: 'Courier New', monospace;
+    line-height: 1.25;
+  }
+
+  .ticket-print pre {
+    margin: 0;
+    font: inherit;
+    white-space: pre;
+  }
+
+  .ticket-print .bold {
+    font-weight: 700;
+  }
+
+  /* Fonte dupla, como na térmica: a linha grande foi quebrada em metade das colunas. */
+  .ticket-print .big {
+    font-size: 200%;
+  }
+
+  .ticket-print .center {
+    text-align: center;
+  }
+}

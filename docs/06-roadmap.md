@@ -107,6 +107,12 @@ batem nos testes.
 > de um segundo e o pedido pronto saiu da tela. Falta toda a parte de
 > impressão, que depende de saber marca, modelo e conexão das impressoras do
 > piloto.
+>
+> A impressão de contingência pelo navegador também está pronta: no detalhe do
+> pedido, "Imprimir" gera a via completa ou o ticket de produção de cada setor,
+> em papel de 58 ou 80mm, montados no servidor
+> ([D23](decisoes.md#d23--impressão-pelo-navegador-desenha-as-linhas-prontas-do-servidor)).
+> Uma loja pequena já opera sem agente. A cozinha só imprime produção.
 
 ## Etapa 4 · Salão
 

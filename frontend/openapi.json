@@ -1705,12 +1705,76 @@
         }
       }
     },
+    "/api/orders/{orderId}/tickets/{documentType}": {
+      "get": {
+        "tags": [
+          "ticket-controller"
+        ],
+        "operationId": "get_7",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "documentType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PRODUCTION_TICKET",
+                "ORDER_TICKET"
+              ]
+            }
+          },
+          {
+            "name": "sectorId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "columns",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 48,
+              "maximum": 64,
+              "minimum": 24
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/orders/{id}": {
       "get": {
         "tags": [
           "order-controller"
         ],
-        "operationId": "get_7",
+        "operationId": "get_8",
         "parameters": [
           {
             "name": "id",
@@ -3800,6 +3864,60 @@
           "size",
           "totalElements",
           "totalPages"
+        ]
+      },
+      "TicketLineResponse": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "align": {
+            "type": "string",
+            "enum": [
+              "LEFT",
+              "CENTER"
+            ]
+          },
+          "bold": {
+            "type": "boolean"
+          },
+          "big": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "align",
+          "big",
+          "bold",
+          "text"
+        ]
+      },
+      "TicketResponse": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "PRODUCTION_TICKET",
+              "ORDER_TICKET"
+            ]
+          },
+          "columns": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TicketLineResponse"
+            }
+          }
+        },
+        "required": [
+          "columns",
+          "documentType",
+          "lines"
         ]
       },
       "OrderStatusHistoryResponse": {

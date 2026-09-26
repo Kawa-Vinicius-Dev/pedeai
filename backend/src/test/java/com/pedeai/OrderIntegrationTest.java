@@ -229,6 +229,35 @@ class OrderIntegrationTest {
     }
 
     @Test
+    void ticketsComeReadyToPrintForTheRightPeople() throws Exception {
+        String owner = register("iara");
+        String other = register("jade");
+        Menu menu = pizzeria(owner);
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        send(owner, post("/api/users"), """
+                {"name":"Chef","email":"chef-%s@example.com","password":"senha-do-chef","role":"KITCHEN"}"""
+                .formatted(suffix)).andExpect(status().isCreated());
+        String kitchen = login("chef-" + suffix + "@example.com", "senha-do-chef");
+        String orderId = id(send(owner, post("/api/orders"), """
+                {"type":"TAKEOUT","customer":{"name":"Maria"},"items":[{"productId":"%s","quantity":1,"options":[
+                   {"optionId":"%s","quantity":1}]}],"discountCents":0,"deliveryFeeCents":0,"payments":[]}"""
+                .formatted(menu.pizza(), menu.calabresa())));
+        String tickets = "/api/orders/" + orderId + "/tickets/";
+
+        send(owner, get(tickets + "ORDER_TICKET").param("columns", "32"), "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.columns").value(32))
+                .andExpect(jsonPath("$.lines[0].big").value(true))
+                .andExpect(jsonPath("$.lines[?(@.text =~ /TOTAL +45,90/)]").exists());
+        send(kitchen, get(tickets + "PRODUCTION_TICKET").param("sectorId", menu.kitchen()), "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lines[?(@.text == '1x PIZZA GRANDE')].bold").value(true));
+        send(kitchen, get(tickets + "ORDER_TICKET"), "").andExpect(status().isForbidden());
+        send(owner, get(tickets + "PRODUCTION_TICKET"), "").andExpect(status().isUnprocessableContent());
+        send(other, get(tickets + "ORDER_TICKET"), "").andExpect(status().isNotFound());
+    }
+
+    @Test
     void storesCreatedBeforeStage2GetTheDefaultPaymentMethods() throws Exception {
         UUID oldStore = UUID.randomUUID();
         Timestamp now = Timestamp.from(Instant.now());
