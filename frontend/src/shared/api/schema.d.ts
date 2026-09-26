@@ -501,7 +501,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orders/{id}": {
+    "/api/orders/{orderId}/tickets/{documentType}": {
         parameters: {
             query?: never;
             header?: never;
@@ -509,6 +509,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_7"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1089,6 +1105,20 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+        };
+        TicketLineResponse: {
+            text: string;
+            /** @enum {string} */
+            align: "LEFT" | "CENTER";
+            bold: boolean;
+            big: boolean;
+        };
+        TicketResponse: {
+            /** @enum {string} */
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            /** Format: int32 */
+            columns: number;
+            lines: components["schemas"]["TicketLineResponse"][];
         };
         OrderStatusHistoryResponse: {
             /** @enum {string|null} */
@@ -2287,6 +2317,32 @@ export interface operations {
         };
     };
     get_7: {
+        parameters: {
+            query?: {
+                sectorId?: string;
+                columns?: number;
+            };
+            header?: never;
+            path: {
+                orderId: string;
+                documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TicketResponse"];
+                };
+            };
+        };
+    };
+    get_8: {
         parameters: {
             query?: never;
             header?: never;

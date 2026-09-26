@@ -43,3 +43,5 @@ export type PaymentMethod = Schemas['PaymentMethodResponse'];
 export type PaymentMethodRequest = Schemas['PaymentMethodRequest'];
 export type PaymentMethodType = PaymentMethod['type'];
 export type Payment = Schemas['PaymentResponse'];
+
+export type TicketDocument = Schemas['TicketResponse'];

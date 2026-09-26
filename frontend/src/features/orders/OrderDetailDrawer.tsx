@@ -26,6 +26,7 @@ import { formatCents, parseDecimal } from '../../shared/lib/numbers';
 import { ORDER_TAKERS } from '../../shared/lib/roles';
 import { MoneyInput } from '../../shared/ui/MoneyInput';
 import { useSession } from '../auth/auth-context';
+import { PrintMenu } from '../printing/PrintMenu';
 import { orderKeys, useChangeStatus, useOrder, useOrderHistory, useOrderPayments, usePaymentMethods } from './api';
 import { canCancel, formatPhone, nextActions, STATUS_COLORS, STATUS_LABELS, TYPE_LABELS } from './labels';
 
@@ -150,25 +151,24 @@ function OrderDetail({ order }: { order: Order }) {
         <TotalLine label="Total" cents={order.totalCents} strong />
       </Stack>
 
-      {(actions.length > 0 || canCancel(order, user.role)) && (
-        <Group gap="xs">
-          {actions.map((action, index) => (
-            <Button
-              key={action.status}
-              variant={index === 0 ? 'filled' : 'light'}
-              loading={changeStatus.isPending && changeStatus.variables?.status === action.status}
-              onClick={() => advance(action.status)}
-            >
-              {action.label}
-            </Button>
-          ))}
-          {canCancel(order, user.role) && (
-            <Button variant="subtle" color="red" onClick={() => setCancelling(true)}>
-              Cancelar pedido
-            </Button>
-          )}
-        </Group>
-      )}
+      <Group gap="xs">
+        <PrintMenu order={order} />
+        {actions.map((action, index) => (
+          <Button
+            key={action.status}
+            variant={index === 0 ? 'filled' : 'light'}
+            loading={changeStatus.isPending && changeStatus.variables?.status === action.status}
+            onClick={() => advance(action.status)}
+          >
+            {action.label}
+          </Button>
+        ))}
+        {canCancel(order, user.role) && (
+          <Button variant="subtle" color="red" onClick={() => setCancelling(true)}>
+            Cancelar pedido
+          </Button>
+        )}
+      </Group>
 
       {takesOrders && (
         <>
