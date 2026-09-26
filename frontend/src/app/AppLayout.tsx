@@ -21,7 +21,6 @@ import { AVAILABILITY_TOGGLERS, ORDER_VIEWERS, ROLE_LABELS, SETTINGS_MANAGERS } 
 
 /** Áreas que chegam nas próximas etapas do roadmap (docs/06-roadmap.md). */
 const UPCOMING: { label: string; icon: LucideIcon }[] = [
-  { label: 'Cozinha', icon: ChefHat },
   { label: 'Salão', icon: Armchair },
   { label: 'Relatórios', icon: ChartColumn },
 ];
@@ -70,6 +69,7 @@ export function AppLayout() {
       <AppShell.Navbar p="sm">
         <NavItem to="/" label="Início" icon={House} onNavigate={close} end />
         {seesOrders && <NavItem to="/pedidos" label="Pedidos" icon={ClipboardList} onNavigate={close} />}
+        {seesOrders && <NavItem to="/cozinha" label="Cozinha" icon={ChefHat} onNavigate={close} />}
         {AVAILABILITY_TOGGLERS.includes(user.role) && (
           <NavItem to="/cardapio" label="Cardápio" icon={BookOpen} onNavigate={close} />
         )}

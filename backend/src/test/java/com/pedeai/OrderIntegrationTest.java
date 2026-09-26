@@ -196,6 +196,39 @@ class OrderIntegrationTest {
     }
 
     @Test
+    void kitchenScreenShowsOnlyWhatEachSectorStillHasToPrepare() throws Exception {
+        String owner = register("gabi");
+        String other = register("hana");
+        Menu menu = pizzeria(owner);
+        String bar = id(send(owner, post("/api/sectors"), """
+                {"name":"Bar","defaultSector":false,"active":true}"""));
+        String category = id(send(owner, post("/api/categories"), """
+                {"name":"Cervejas","active":true}"""));
+        String beer = id(send(owner, post("/api/products"), """
+                {"categoryId":"%s","sectorId":"%s","code":"950","name":"Cerveja","priceCents":1200,
+                 "optionGroupIds":[],"available":true,"active":true}""".formatted(category, bar)));
+        String orderId = id(send(owner, post("/api/orders"), """
+                {"type":"TAKEOUT","items":[{"productId":"%s","quantity":1,"options":[
+                   {"optionId":"%s","quantity":1}]},{"productId":"%s","quantity":2,"options":[]}],
+                 "discountCents":0,"deliveryFeeCents":0,"payments":[]}"""
+                .formatted(menu.pizza(), menu.calabresa(), beer)));
+
+        send(owner, get("/api/kitchen/orders"), "").andExpect(jsonPath("$[0].items.length()").value(2));
+        send(owner, get("/api/kitchen/orders").param("sectorId", menu.kitchen()), "")
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].items.length()").value(1))
+                .andExpect(jsonPath("$[0].items[0].name").value("Pizza Grande"));
+        send(owner, get("/api/kitchen/orders").param("sectorId", bar), "")
+                .andExpect(jsonPath("$[0].items[0].name").value("Cerveja"))
+                .andExpect(jsonPath("$[0].items[0].quantity").value(2));
+        send(other, get("/api/kitchen/orders"), "").andExpect(jsonPath("$.length()").value(0));
+
+        send(owner, patch("/api/orders/" + orderId + "/status"), """
+                {"status":"READY"}""").andExpect(status().isOk());
+        send(owner, get("/api/kitchen/orders"), "").andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void storesCreatedBeforeStage2GetTheDefaultPaymentMethods() throws Exception {
         UUID oldStore = UUID.randomUUID();
         Timestamp now = Timestamp.from(Instant.now());

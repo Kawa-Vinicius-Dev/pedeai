@@ -237,3 +237,16 @@ aponta para a antiga, sem apagar a antiga.
   que o balcão precisa.
 - **Consequências:** o valor da taxa é decisão de quem lança o pedido e fica
   registrado no pedido. Se virar problema, dá para limitar quem altera a taxa.
+
+## D22 · "Desfazer" da cozinha é um prazo antes de gravar
+
+- **Contexto:** na cozinha, com a mão molhada, é fácil tocar "Pronto" no pedido
+  errado. A tela precisa de "desfazer", mas o status só anda para frente
+  ([01 · Fluxos](01-fluxos.md#regras-de-transição)).
+- **Decisão:** o toque em "Iniciar" ou "Pronto" espera 5 s antes de ir para a
+  API. Nesse tempo o cartão mostra "Desfazer", que cancela o envio. Se a pessoa
+  sai da tela antes do prazo, o toque vale.
+- **Alternativas:** permitir voltar o status na API (quebra a regra e mandaria
+  um "voltou para o preparo" ao iFood); desfazer só por gerente no quadro.
+- **Consequências:** a outra tela só vê a mudança depois dos 5 s. Nenhum status
+  volta atrás, então marketplace e impressão nunca recebem um passo desfeito.
