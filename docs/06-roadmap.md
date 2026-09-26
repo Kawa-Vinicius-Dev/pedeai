@@ -98,6 +98,16 @@ batem nos testes.
 - Reiniciar o agente no meio de um trabalho não duplica nada.
 - A reimpressão sai marcada.
 
+> **Situação (set/2026):** a tela da cozinha está pronta
+> (`GET /api/kitchen/orders?sectorId=`): tela cheia, filtro por setor guardado
+> no aparelho, cronômetro verde, laranja (15 min) e vermelho (25 min), iniciar,
+> pronto e desfazer ([D22](decisoes.md#d22--desfazer-da-cozinha-é-um-prazo-antes-de-gravar)),
+> com a tela sem apagar. Num navegador real contra PostgreSQL, o filtro do Bar
+> mostrou só as cervejas, um pedido lançado pela dona apareceu sozinho em menos
+> de um segundo e o pedido pronto saiu da tela. Falta toda a parte de
+> impressão, que depende de saber marca, modelo e conexão das impressoras do
+> piloto.
+
 ## Etapa 4 · Salão
 
 - Mesas e comandas. Rodadas enviadas à produção. Pré-conta. Taxa de serviço

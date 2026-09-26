@@ -46,13 +46,17 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 /** Lançamento e consulta de pedidos. As mudanças de status ficam no {@link OrderStatusService}. */
 @Service
 public class OrderService {
     static final String NOT_FOUND = "Pedido não encontrado.";
+    private static final Set<OrderStatus> KITCHEN_QUEUE = EnumSet.of(OrderStatus.CONFIRMED, OrderStatus.IN_PREPARATION);
     static final String DINE_IN_BY_TAB = "Pedido de mesa é lançado pela comanda.";
     static final String DELIVERY_NEEDS_CUSTOMER = "Para delivery, informe o nome e o telefone do cliente.";
     static final String DELIVERY_NEEDS_ADDRESS = "Para delivery, informe o endereço de entrega.";
@@ -131,6 +135,20 @@ public class OrderService {
     public List<OrderSummaryResponse> listActive(UUID storeId) {
         return orderRepository.findAllByStoreIdAndStatusInOrderByCreatedAtAsc(storeId, OrderStatus.ACTIVE).stream()
                 .map(OrderSummaryResponse::from)
+                .toList();
+    }
+
+    /**
+     * Tela da cozinha: o que falta preparar, do mais antigo para o mais novo. Com {@code sectorId}, só os itens
+     * daquele setor, e some o pedido que não tem nada para ele.
+     */
+    @Transactional(readOnly = true)
+    public List<OrderResponse> listForKitchen(UUID storeId, UUID sectorId) {
+        Predicate<OrderItem> forScreen = item -> item.isActive()
+                && (sectorId == null || sectorId.equals(item.getSectorId()));
+        return orderRepository.findAllByStoreIdAndStatusInOrderByCreatedAtAsc(storeId, KITCHEN_QUEUE).stream()
+                .map(order -> OrderResponse.from(order, forScreen))
+                .filter(order -> !order.items().isEmpty())
                 .toList();
     }
 

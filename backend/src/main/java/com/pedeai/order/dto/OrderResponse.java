@@ -1,6 +1,7 @@
 package com.pedeai.order.dto;
 
 import com.pedeai.order.domain.Order;
+import com.pedeai.order.domain.OrderItem;
 import com.pedeai.order.domain.OrderSource;
 import com.pedeai.order.domain.OrderStatus;
 import com.pedeai.order.domain.OrderType;
@@ -10,6 +11,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 /** Pedido completo: itens com opções, cliente, endereço, totais e os horários de cada etapa. */
 public record OrderResponse(
@@ -42,10 +44,15 @@ public record OrderResponse(
         long version
 ) {
     public static OrderResponse from(Order order) {
+        return from(order, item -> true);
+    }
+
+    /** Só com os itens que passam no filtro. Os totais continuam sendo os do pedido inteiro. */
+    public static OrderResponse from(Order order, Predicate<OrderItem> itemFilter) {
         return new OrderResponse(order.getId(), order.getNumber(), order.getBusinessDate(), order.getType(),
                 order.getSource(), order.getStatus(), order.getCustomerId(), order.getCustomerName(),
                 order.getCustomerPhone(), DeliveryAddressResponse.from(order.getDeliveryAddress()), order.getNotes(),
-                order.getItems().stream().map(OrderItemResponse::from).toList(), order.getSubtotalCents(),
+                order.getItems().stream().filter(itemFilter).map(OrderItemResponse::from).toList(), order.getSubtotalCents(),
                 order.getDiscountCents(), order.getDeliveryFeeCents(), order.getAdditionalFeeCents(),
                 order.getPlatformSubsidyCents(), order.getTotalCents(), order.getCreatedAt(), order.getConfirmedAt(),
                 order.getPreparationStartedAt(), order.getReadyAt(), order.getDispatchedAt(), order.getCompletedAt(),

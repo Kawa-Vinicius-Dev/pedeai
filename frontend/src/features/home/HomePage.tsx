@@ -5,7 +5,7 @@ import { ORDER_TAKERS, ORDER_VIEWERS } from '../../shared/lib/roles';
 import { useSession } from '../auth/auth-context';
 
 const UPCOMING: { label: string; icon: LucideIcon }[] = [
-  { label: 'Tela da cozinha e impressão automática', icon: ChefHat },
+  { label: 'Impressão automática por setor', icon: ChefHat },
   { label: 'Mesas e comandas', icon: Armchair },
   { label: 'Pedidos do iFood e da 99Food', icon: Plug },
   { label: 'Caixa e relatórios de vendas', icon: ChartColumn },

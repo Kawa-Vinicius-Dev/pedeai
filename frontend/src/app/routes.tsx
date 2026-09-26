@@ -4,6 +4,7 @@ import { LoginPage } from '../features/auth/LoginPage';
 import { SignupPage } from '../features/auth/SignupPage';
 import { CatalogPage } from '../features/catalog/CatalogPage';
 import { HomePage } from '../features/home/HomePage';
+import { KitchenPage } from '../features/kitchen/KitchenPage';
 import { NewOrderPage } from '../features/orders/NewOrderPage';
 import { OrdersBoardPage } from '../features/orders/OrdersBoardPage';
 import { OrdersHistoryPage } from '../features/orders/OrdersHistoryPage';
@@ -41,6 +42,7 @@ export const routes: RouteObject[] = [
             children: [
               { path: '/pedidos', element: <OrdersBoardPage /> },
               { path: '/pedidos/historico', element: <OrdersHistoryPage /> },
+              { path: '/cozinha', element: <KitchenPage /> },
             ],
           },
           {
