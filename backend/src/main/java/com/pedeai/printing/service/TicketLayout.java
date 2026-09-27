@@ -119,6 +119,18 @@ final class TicketLayout {
         return out.document(DocumentType.ORDER_TICKET);
     }
 
+    /** O mesmo documento com a faixa "REIMPRESSÃO" e o horário em que saiu a primeira vez. */
+    static TicketResponse reprint(TicketResponse ticket, Instant original, ZoneId zone) {
+        Lines out = new Lines(ticket.columns());
+        out.rule('*');
+        out.boldCenter("*** REIMPRESSÃO ***");
+        out.center("Original: " + SHORT.format(original.atZone(zone)));
+        out.rule('*');
+        List<TicketLineResponse> lines = new ArrayList<>(out.lines);
+        lines.addAll(ticket.lines());
+        return new TicketResponse(ticket.documentType(), ticket.columns(), List.copyOf(lines));
+    }
+
     private static void customer(Lines out, OrderResponse order) {
         DeliveryAddressResponse address = order.deliveryAddress();
         if (order.customerName() == null && order.customerPhone() == null && address == null) {
@@ -176,6 +188,10 @@ final class TicketLayout {
 
         void center(String text) {
             wrap(text, columns).forEach(line -> add(line, Align.CENTER, false, false));
+        }
+
+        void boldCenter(String text) {
+            wrap(text, columns).forEach(line -> add(line, Align.CENTER, true, false));
         }
 
         void big(String text, Align align) {

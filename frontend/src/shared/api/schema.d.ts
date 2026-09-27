@@ -308,6 +308,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/print-jobs/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/print-agents/pairing-codes": {
         parameters: {
             query?: never;
@@ -350,6 +366,22 @@ export interface paths {
         get: operations["search"];
         put?: never;
         post: operations["create_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{orderId}/print-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["printJobs"];
+        put?: never;
+        post: operations["reprint"];
         delete?: never;
         options?: never;
         head?: never;
@@ -629,6 +661,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/print-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/print-alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["alerts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/print-agents": {
         parameters: {
             query?: never;
@@ -653,22 +717,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_7"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orders/{orderId}/print-jobs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["printJobs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1146,6 +1194,31 @@ export interface components {
             /** Format: int64 */
             unitPriceCents: number;
         };
+        PrintJobResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string | null;
+            title: string;
+            /** Format: uuid */
+            printerId: string;
+            /** @enum {string} */
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            /** Format: uuid */
+            sectorId: string | null;
+            /** @enum {string} */
+            reason: "AUTO" | "MANUAL" | "REPRINT" | "TEST";
+            /** @enum {string} */
+            status: "PENDING" | "SENT" | "PRINTED" | "FAILED" | "UNCERTAIN" | "EXPIRED" | "CANCELLED";
+            /** Format: int32 */
+            attempts: number;
+            lastError: string | null;
+            preview: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            printedAt: string | null;
+        };
         PairingCodeResponse: {
             code: string;
             /** Format: date-time */
@@ -1278,6 +1351,14 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        ReprintRequest: {
+            /** @enum {string} */
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            /** Format: uuid */
+            sectorId?: string;
+            /** Format: uuid */
+            printerId: string;
+        };
         PaymentRequest: {
             /** Format: uuid */
             paymentMethodId: string;
@@ -1377,6 +1458,13 @@ export interface components {
             status: "SENT" | "PRINTED" | "FAILED" | "UNCERTAIN";
             error?: string;
         };
+        PrintAlertResponse: {
+            /** Format: uuid */
+            printerId: string | null;
+            message: string;
+            /** Format: int32 */
+            waitingJobs: number;
+        };
         PrintAgentResponse: {
             /** Format: uuid */
             id: string;
@@ -1440,28 +1528,6 @@ export interface components {
             /** Format: int32 */
             columns: number;
             lines: components["schemas"]["TicketLineResponse"][];
-        };
-        PrintJobResponse: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            printerId: string;
-            /** @enum {string} */
-            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
-            /** Format: uuid */
-            sectorId: string | null;
-            /** @enum {string} */
-            reason: "AUTO" | "MANUAL" | "REPRINT" | "TEST";
-            /** @enum {string} */
-            status: "PENDING" | "SENT" | "PRINTED" | "FAILED" | "UNCERTAIN" | "EXPIRED" | "CANCELLED";
-            /** Format: int32 */
-            attempts: number;
-            lastError: string | null;
-            preview: string;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            printedAt: string | null;
         };
         OrderStatusHistoryResponse: {
             /** @enum {string|null} */
@@ -2233,6 +2299,30 @@ export interface operations {
             };
         };
     };
+    retry: {
+        parameters: {
+            query?: {
+                printerId?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrintJobResponse"];
+                };
+            };
+        };
+    };
     createPairingCode: {
         parameters: {
             query?: never;
@@ -2344,6 +2434,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["OrderResponse"];
+                };
+            };
+        };
+    };
+    printJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrintJobResponse"][];
+                };
+            };
+        };
+    };
+    reprint: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReprintRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrintJobResponse"];
                 };
             };
         };
@@ -2902,6 +3042,46 @@ export interface operations {
             };
         };
     };
+    recent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrintJobResponse"][];
+                };
+            };
+        };
+    };
+    alerts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrintAlertResponse"][];
+                };
+            };
+        };
+    };
     list_9: {
         parameters: {
             query?: never;
@@ -2944,28 +3124,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TicketResponse"];
-                };
-            };
-        };
-    };
-    printJobs: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PrintJobResponse"][];
                 };
             };
         };

@@ -223,6 +223,77 @@ class PrintingIntegrationTest {
                 .andExpect(jsonPath("$[0].reason").value("AUTO"));
     }
 
+    @Test
+    void panelShowsWhatNeedsAttentionAndPrintsItAgain() throws Exception {
+        String owner = register("rosa");
+        String paired = pairAgent(owner);
+        String agent = "Bearer " + JsonPath.read(paired, "$.token");
+        String agentId = JsonPath.read(paired, "$.agentId");
+        String kitchenPrinter = id(send(owner, post("/api/printers"), printer(agentId, "Cozinha", "NETWORK", "10.0.0.5")));
+        String cashierPrinter = id(send(owner, post("/api/printers"), printer(agentId, "Caixa", "SYSTEM", null)));
+        String kitchen = sectorId(owner);
+        send(owner, put("/api/sectors/" + kitchen + "/printer"), """
+                {"printerId":"%s","copies":1,"enabled":true}""".formatted(kitchenPrinter)).andExpect(status().isOk());
+        String category = id(send(owner, post("/api/categories"), """
+                {"name":"Lanches","active":true}"""));
+        String burger = product(owner, category, null, "10", "X-Burger");
+        String orderId = id(send(owner, post("/api/orders"), """
+                {"type":"TAKEOUT","items":[{"productId":"%s","quantity":1,"options":[]}],
+                 "discountCents":0,"deliveryFeeCents":0,"payments":[]}""".formatted(burger)));
+
+        // Impressora da cozinha caiu com o pedido na fila: alerta com a contagem.
+        send(agent, put("/api/agent/status"), """
+                {"printers":[{"printerId":"%s","status":"OFFLINE"}]}""".formatted(kitchenPrinter))
+                .andExpect(status().isNoContent());
+        send(owner, get("/api/print-alerts"), "")
+                .andExpect(jsonPath("$[0].message").value("Impressora Cozinha offline: 1 impressão aguardando."));
+
+        // O agente caiu no meio da impressão: fica incerto, e a pessoa manda para o Caixa.
+        String jobId = JsonPath.read(send(agent, get("/api/agent/jobs"), "").andReturn().getResponse()
+                .getContentAsString(), "$[0].id");
+        send(agent, patch("/api/agent/jobs/" + jobId), """
+                {"status":"SENT"}""").andExpect(status().isNoContent());
+        send(agent, patch("/api/agent/jobs/" + jobId), """
+                {"status":"UNCERTAIN","error":"Agente reiniciou"}""").andExpect(status().isNoContent());
+        send(owner, get("/api/print-alerts"), "")
+                .andExpect(jsonPath("$[?(@.printerId == null)].message").value("1 impressão precisa de atenção."));
+        send(owner, get("/api/print-jobs"), "")
+                .andExpect(jsonPath("$[0].status").value("UNCERTAIN"))
+                .andExpect(jsonPath("$[0].title").value(containsString("Cozinha")));
+
+        send(owner, post("/api/print-jobs/" + jobId + "/retry").param("printerId", cashierPrinter), "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.printerId").value(cashierPrinter));
+        send(owner, post("/api/print-jobs/" + jobId + "/retry"), "").andExpect(status().isConflict());
+        send(agent, get("/api/agent/jobs"), "")
+                .andExpect(jsonPath("$[0].printerId").value(cashierPrinter))
+                .andExpect(jsonPath("$[0].id").value(jobId));
+
+        // Reimpressão: faixa REIMPRESSÃO, e o duplo clique (mesma chave) não imprime duas vezes.
+        String reprint = """
+                {"documentType":"ORDER_TICKET","printerId":"%s"}""".formatted(cashierPrinter);
+        String first = JsonPath.read(send(owner, post("/api/orders/" + orderId + "/print-jobs")
+                        .header("Idempotency-Key", "clique-1"), reprint)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.reason").value("REPRINT"))
+                .andExpect(jsonPath("$.preview").value(containsString("*** REIMPRESSÃO ***")))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+        send(owner, post("/api/orders/" + orderId + "/print-jobs").header("Idempotency-Key", "clique-1"), reprint)
+                .andExpect(jsonPath("$.id").value(first));
+
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        send(owner, post("/api/users"), """
+                {"name":"Chef","email":"chef-%s@example.com","password":"senha-do-chef","role":"KITCHEN"}"""
+                .formatted(suffix)).andExpect(status().isCreated());
+        String kitchenUser = login("chef-" + suffix + "@example.com", "senha-do-chef");
+        send(kitchenUser, post("/api/orders/" + orderId + "/print-jobs"), reprint).andExpect(status().isForbidden());
+        send(kitchenUser, post("/api/orders/" + orderId + "/print-jobs"), """
+                {"documentType":"PRODUCTION_TICKET","sectorId":"%s","printerId":"%s"}"""
+                .formatted(kitchen, kitchenPrinter)).andExpect(status().isCreated());
+        send(register("sara"), get("/api/print-jobs"), "").andExpect(jsonPath("$.length()").value(0));
+    }
+
     private String pairAgent(String owner) throws Exception {
         String code = JsonPath.read(send(owner, post("/api/print-agents/pairing-codes"), "")
                 .andReturn().getResponse().getContentAsString(), "$.code");

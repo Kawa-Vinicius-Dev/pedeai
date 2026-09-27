@@ -14,7 +14,7 @@ class PrintJobTest {
 
     private static PrintJob job() {
         return new PrintJob(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), DocumentType.PRODUCTION_TICKET,
-                UUID.randomUUID(), UUID.randomUUID(), PrintJob.Reason.AUTO, "chave", new byte[]{1}, "texto",
+                UUID.randomUUID(), UUID.randomUUID(), PrintJob.Reason.AUTO, "chave", "Pedido 1 · Cozinha", new byte[]{1}, "texto",
                 Duration.ofMinutes(20), NOW);
     }
 

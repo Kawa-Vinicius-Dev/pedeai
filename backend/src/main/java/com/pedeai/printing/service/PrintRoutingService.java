@@ -118,7 +118,8 @@ public class PrintRoutingService {
             byte[] payload = EscPosRenderer.render(ticket, printer.get().getCodepage(), printer.get().getCutMode(),
                     config.get().getCopies());
             jobRepository.save(new PrintJob(storeId, printer.get().getId(), printer.get().getAgentId(),
-                    DocumentType.PRODUCTION_TICKET, orderId, sectorId, PrintJob.Reason.AUTO, key, payload,
+                    DocumentType.PRODUCTION_TICKET, orderId, sectorId, PrintJob.Reason.AUTO, key,
+                    "Pedido " + order.number() + " · " + sectorName, payload,
                     EscPosRenderer.preview(ticket), PRODUCTION_MAX_AGE, now));
         });
     }
