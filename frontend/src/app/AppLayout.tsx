@@ -18,6 +18,7 @@ import {
 import { NavLink as RouterNavLink, Outlet, useMatch } from 'react-router';
 import { useAuth, useSession } from '../features/auth/auth-context';
 import { useOrderStream } from '../features/orders/realtime';
+import { PrintAlertsBar } from '../features/printing/PrintAlertsBar';
 import { AVAILABILITY_TOGGLERS, ORDER_VIEWERS, ROLE_LABELS, SETTINGS_MANAGERS } from '../shared/lib/roles';
 
 /** Áreas que chegam nas próximas etapas do roadmap (docs/06-roadmap.md). */
@@ -71,6 +72,7 @@ export function AppLayout() {
         <NavItem to="/" label="Início" icon={House} onNavigate={close} end />
         {seesOrders && <NavItem to="/pedidos" label="Pedidos" icon={ClipboardList} onNavigate={close} />}
         {seesOrders && <NavItem to="/cozinha" label="Cozinha" icon={ChefHat} onNavigate={close} />}
+        {seesOrders && <NavItem to="/impressoes" label="Impressões" icon={Printer} onNavigate={close} />}
         {AVAILABILITY_TOGGLERS.includes(user.role) && (
           <NavItem to="/cardapio" label="Cardápio" icon={BookOpen} onNavigate={close} />
         )}
@@ -106,6 +108,7 @@ export function AppLayout() {
       </AppShell.Navbar>
 
       <AppShell.Main>
+        <PrintAlertsBar enabled={seesOrders} />
         <Outlet />
       </AppShell.Main>
     </AppShell>

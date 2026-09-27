@@ -26,6 +26,7 @@ import { formatCents, parseDecimal } from '../../shared/lib/numbers';
 import { ORDER_TAKERS } from '../../shared/lib/roles';
 import { MoneyInput } from '../../shared/ui/MoneyInput';
 import { useSession } from '../auth/auth-context';
+import { OrderPrintJobs } from '../printing/OrderPrintJobs';
 import { PrintMenu } from '../printing/PrintMenu';
 import { orderKeys, useChangeStatus, useOrder, useOrderHistory, useOrderPayments, usePaymentMethods } from './api';
 import { canCancel, formatPhone, nextActions, STATUS_COLORS, STATUS_LABELS, TYPE_LABELS } from './labels';
@@ -169,6 +170,8 @@ function OrderDetail({ order }: { order: Order }) {
           </Button>
         )}
       </Group>
+
+      <OrderPrintJobs order={order} />
 
       {takesOrders && (
         <>

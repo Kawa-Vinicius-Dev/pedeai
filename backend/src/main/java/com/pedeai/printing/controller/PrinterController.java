@@ -30,7 +30,9 @@ public class PrinterController {
         this.printerService = printerService;
     }
 
+    /** Quem imprime (caixa, cozinha) também escolhe a impressora ao reimprimir; só o cadastro é do gerente. */
     @GetMapping("/api/printers")
+    @PreAuthorize(Permissions.ADVANCE_ORDERS)
     public List<PrinterResponse> list(CurrentUser user) {
         return printerService.list(user.storeId());
     }

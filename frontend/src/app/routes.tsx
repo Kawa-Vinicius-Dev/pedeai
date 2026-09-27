@@ -8,6 +8,7 @@ import { KitchenPage } from '../features/kitchen/KitchenPage';
 import { NewOrderPage } from '../features/orders/NewOrderPage';
 import { OrdersBoardPage } from '../features/orders/OrdersBoardPage';
 import { OrdersHistoryPage } from '../features/orders/OrdersHistoryPage';
+import { PrintJobsPage } from '../features/printing/PrintJobsPage';
 import { PrintingSettingsPage } from '../features/printing/PrintingSettingsPage';
 import { DeliveryZonesPage } from '../features/settings/DeliveryZonesPage';
 import { PaymentMethodsPage } from '../features/settings/PaymentMethodsPage';
@@ -44,6 +45,7 @@ export const routes: RouteObject[] = [
               { path: '/pedidos', element: <OrdersBoardPage /> },
               { path: '/pedidos/historico', element: <OrdersHistoryPage /> },
               { path: '/cozinha', element: <KitchenPage /> },
+              { path: '/impressoes', element: <PrintJobsPage /> },
             ],
           },
           {

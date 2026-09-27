@@ -136,10 +136,15 @@ batem nos testes.
 > O agente agora pareia (`parear`) e imprime a fila (`rodar`), com o diário
 > local contra duplicidade e o trabalho incerto quando cai no meio. Ponta a
 > ponta, com a API, o agente de verdade e uma impressora de rede falsa, o pedido
-> confirmado chegou ao papel em 2,3 s, uma vez só. Falta: instalador MSI e
-> serviço do Windows, aviso em tempo real para o agente (hoje ele consulta a
-> cada 2 s), alertas de impressora offline na tela, painel de impressões com
-> reimpressão e contingência, e rodar tudo nas impressoras reais do piloto.
+> confirmado chegou ao papel em 2,3 s, uma vez só.
+>
+> Painel de impressões pronto: faixa de alerta em todas as telas ("Impressora
+> Cozinha offline: 3 impressões aguardando"), tela **Impressões** com o que
+> falhou, ficou incerto ou expirou e o botão de imprimir de novo (na mesma ou em
+> outra impressora), e reimpressão pelo detalhe do pedido com a faixa
+> REIMPRESSÃO, sem duplicar no duplo clique. Falta: instalador MSI e serviço do
+> Windows, aviso de cancelamento nos setores, aviso em tempo real para o agente
+> (hoje ele consulta a cada 2 s) e rodar tudo nas impressoras reais do piloto.
 
 ## Etapa 4 · Salão
 

@@ -119,7 +119,9 @@ class PrintingIntegrationTest {
                 {"name":"Caio","email":"caio-%s@example.com","password":"senha-do-caio","role":"CASHIER"}"""
                 .formatted(suffix)).andExpect(status().isCreated());
         String cashier = login("caio-" + suffix + "@example.com", "senha-do-caio");
-        send(cashier, get("/api/printers"), "").andExpect(status().isForbidden());
+        send(cashier, get("/api/printers"), "").andExpect(status().isOk());
+        send(cashier, post("/api/printers"), printer(agentId, "Outra", "NETWORK", "10.0.0.8"))
+                .andExpect(status().isForbidden());
         send(cashier, post("/api/print-agents/pairing-codes"), "").andExpect(status().isForbidden());
     }
 

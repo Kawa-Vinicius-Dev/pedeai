@@ -60,4 +60,8 @@ export const server = setupServer(
     HttpResponse.json(apiError(401, 'Sua sessão expirou. Faça login novamente.'), { status: 401 }),
   ),
   http.get('/api/stream', openStream),
+  // A faixa de alertas de impressão aparece em todas as telas; sem problema, lista vazia.
+  http.get('/api/print-alerts', () => HttpResponse.json([])),
+  http.get('/api/orders/:orderId/print-jobs', () => HttpResponse.json([])),
+  http.get('/api/printers', () => HttpResponse.json([])),
 );
