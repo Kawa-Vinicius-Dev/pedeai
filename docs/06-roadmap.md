@@ -113,6 +113,13 @@ batem nos testes.
 > em papel de 58 ou 80mm, montados no servidor
 > ([D23](decisoes.md#d23--impressão-pelo-navegador-desenha-as-linhas-prontas-do-servidor)).
 > Uma loja pequena já opera sem agente. A cozinha só imprime produção.
+>
+> O protótipo do agente ([agent/](../agent/README.md)) está pronto para levar ao
+> piloto: imprime a página de teste pela rede (9100) ou pelo spooler do Windows,
+> com uma linha de acentos por tabela de caracteres, régua de colunas, fonte
+> dupla e corte. Foi testado contra uma impressora falsa e empacotado com
+> `jpackage` (roda sem Java instalado). Falta rodar nas impressoras reais e
+> anotar o resultado de cada uma.
 
 ## Etapa 4 · Salão
 
