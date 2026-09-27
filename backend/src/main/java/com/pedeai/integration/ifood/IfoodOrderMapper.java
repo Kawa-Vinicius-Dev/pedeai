@@ -63,12 +63,23 @@ public class IfoodOrderMapper {
                         cut(Optional.ofNullable(text(option, "name")).orElse("Opção"), 80),
                         cut(text(option, "externalCode"), 40), quantity(option), cents(option.path("unitPrice"))));
             }
+            String name = Optional.ofNullable(text(item, "name")).orElse("Item");
+            int quantity = quantity(item);
+            long unitPrice = cents(item.path("unitPrice"));
+            long optionsPrice = cents(item.path("optionsPrice"));
+            double exactQuantity = item.path("quantity").asDouble(1);
+            if (exactQuantity != Math.rint(exactQuantity)) {
+                // Venda por peso (2,4 kg): o PedeAí ainda não tem quantidade quebrada. O item entra como 1 unidade com
+                // o total do iFood, para o valor bater com o que o cliente pagou.
+                name = name + " (" + item.path("quantity").asString() + " " + Optional.ofNullable(text(item, "unit"))
+                        .orElse("un").toLowerCase(Locale.ROOT) + ")";
+                quantity = 1;
+                unitPrice = cents(item.path("totalPrice")) - optionsPrice;
+            }
             items.add(new MarketplaceOrderRequest.Item(product == null ? null : product.id(), cut(code, 40),
-                    cut(Optional.ofNullable(text(item, "name")).orElse("Item"), 120),
-                    product == null || product.effectiveSectorId() == null ? defaultSector
+                    cut(name, 120), product == null || product.effectiveSectorId() == null ? defaultSector
                             : product.effectiveSectorId(),
-                    quantity(item), cents(item.path("unitPrice")), cents(item.path("optionsPrice")),
-                    cut(text(item, "observations"), 300), options));
+                    quantity, unitPrice, optionsPrice, cut(text(item, "observations"), 300), options));
         }
 
         long merchantDiscount = 0;
@@ -176,7 +187,7 @@ public class IfoodOrderMapper {
         return new BigDecimal(value.asString()).movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
     }
 
-    /** Venda por peso ainda não existe: quantidade quebrada vira 1, sem zerar o item. */
+    /** Quantidade inteira (itens e opções). A quebrada, de venda por peso, é tratada no item. */
     private static int quantity(JsonNode node) {
         return Math.max(1, (int) Math.round(node.path("quantity").asDouble(1)));
     }

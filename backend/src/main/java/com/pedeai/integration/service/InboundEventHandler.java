@@ -104,9 +104,21 @@ public class InboundEventHandler {
     }
 
     /** Numa transação nova: a do processamento pode ter sido desfeita pelo próprio erro. */
+    /**
+     * Guarda o erro no evento e no vínculo da loja, para aparecer na tela de integrações: um pedido que não entra
+     * precisa ser visto antes de o iFood cancelá-lo por falta de aceite.
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void retryLater(UUID eventId, String error) {
-        events.findById(eventId).ifPresent(event -> event.retryLater(error, Instant.now(clock)));
+        Instant now = Instant.now(clock);
+        events.findById(eventId).ifPresent(event -> {
+            event.retryLater(error, now);
+            if (event.getExternalMerchantId() != null) {
+                connections.findByProviderAndExternalMerchantId(event.getProvider(), event.getExternalMerchantId())
+                        .ifPresent(connection -> connection.failed("Evento " + event.getEventCode() + " do pedido "
+                                + event.getExternalOrderId() + " não entrou: " + error, now));
+            }
+        });
     }
 
     /**

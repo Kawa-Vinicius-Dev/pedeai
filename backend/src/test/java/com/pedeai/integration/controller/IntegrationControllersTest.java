@@ -76,7 +76,8 @@ class IntegrationControllersTest {
 
     @Test
     void cancellationRequestIsAcceptedForLaterAndTheKitchenCannotAskForIt() throws Exception {
-        when(marketplaceOrderService.requestCancellation(eq(STORE_ID), eq(ORDER), any())).thenReturn(
+        when(marketplaceOrderService.requestCancellation(any(com.pedeai.shared.security.CurrentUser.class), eq(ORDER),
+                any())).thenReturn(
                 new OutboundActionResponse(UUID.randomUUID(), OutboundAction.Action.REQUEST_CANCELLATION,
                         OutboundAction.Status.PENDING, 0, null, NOW));
         String body = "{\"code\":\"503\",\"description\":\"Item indisponível\"}";

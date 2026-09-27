@@ -113,6 +113,21 @@ class IfoodOrderMapperTest {
     }
 
     @Test
+    void weighedItemKeepsTheIfoodTotalSoThePaymentFits() {
+        JsonNode weighed = json.readTree("""
+                {"id":"w","displayId":"2","orderType":"DELIVERY","orderTiming":"IMMEDIATE","customer":{"name":"Ana"},
+                 "items":[{"name":"Picanha","externalCode":"77","unit":"KG","quantity":2.4,"unitPrice":80.0,
+                   "optionsPrice":0,"totalPrice":192.0,"options":[]}],
+                 "total":{"deliveryFee":0},"payments":{"methods":[]}}""");
+
+        MarketplaceOrderRequest.Item item = mapper.map(STORE, weighed, false).items().getFirst();
+
+        assertThat(item.quantity()).isEqualTo(1);
+        assertThat(item.unitPriceCents()).isEqualTo(19200);
+        assertThat(item.name()).isEqualTo("Picanha (2.4 kg)");
+    }
+
+    @Test
     void onlinePaymentIsPaidInTheIfoodMethodAndTakeoutHasNoAddress() {
         JsonNode takeout = json.readTree("""
                 {"id":"x","displayId":"1","orderType":"TAKEOUT","orderTiming":"IMMEDIATE","customer":{"name":"Ana"},

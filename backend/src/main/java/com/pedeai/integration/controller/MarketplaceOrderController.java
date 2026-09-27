@@ -48,7 +48,7 @@ public class MarketplaceOrderController {
     @PreAuthorize(Permissions.TAKE_ORDERS)
     public OutboundActionResponse requestCancellation(CurrentUser user, @PathVariable UUID orderId,
                                                       @Valid @RequestBody MarketplaceCancellationRequest request) {
-        return service.requestCancellation(user.storeId(), orderId, request);
+        return service.requestCancellation(user, orderId, request);
     }
 
     @PostMapping("/api/marketplace-actions/{id}/retry")

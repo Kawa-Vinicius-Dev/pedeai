@@ -10,6 +10,8 @@ import com.pedeai.integration.repository.OutboundActionRepository;
 import com.pedeai.order.domain.OrderSource;
 import com.pedeai.order.dto.OrderResponse;
 import com.pedeai.order.service.OrderService;
+import com.pedeai.order.service.OrderStatusService;
+import com.pedeai.shared.security.CurrentUser;
 import com.pedeai.shared.exception.BusinessRuleException;
 import com.pedeai.shared.exception.ConflictException;
 import com.pedeai.shared.exception.ResourceNotFoundException;
@@ -43,15 +45,18 @@ public class MarketplaceOrderService {
             new CancellationReasonResponse("509", "Dificuldades internas do restaurante"));
 
     private final OrderService orderService;
+    private final OrderStatusService orderStatusService;
     private final OutboxService outbox;
     private final OutboundActionRepository actions;
     private final IfoodClient ifood;
     private final IfoodProperties properties;
     private final Clock clock;
 
-    public MarketplaceOrderService(OrderService orderService, OutboxService outbox, OutboundActionRepository actions,
-                                   IfoodClient ifood, IfoodProperties properties, Clock clock) {
+    public MarketplaceOrderService(OrderService orderService, OrderStatusService orderStatusService,
+                                   OutboxService outbox, OutboundActionRepository actions, IfoodClient ifood,
+                                   IfoodProperties properties, Clock clock) {
         this.orderService = orderService;
+        this.orderStatusService = orderStatusService;
         this.outbox = outbox;
         this.actions = actions;
         this.ifood = ifood;
@@ -78,11 +83,23 @@ public class MarketplaceOrderService {
                 .map(reason -> new CancellationReasonResponse(reason.code(), reason.description())).toList();
     }
 
-    /** O pedido só é cancelado aqui quando o iFood confirmar, pelo evento de cancelado. */
+    /**
+     * O pedido só é cancelado aqui quando o iFood confirmar, pelo evento de cancelado. Com a integração desligada no
+     * servidor, não há a quem pedir: cancela aqui mesmo, senão o pedido ficaria aberto para sempre.
+     */
     @Transactional
-    public OutboundActionResponse requestCancellation(UUID storeId, UUID orderId,
+    public OutboundActionResponse requestCancellation(CurrentUser user, UUID orderId,
                                                       MarketplaceCancellationRequest request) {
+        UUID storeId = user.storeId();
         OrderResponse order = marketplaceOrder(storeId, orderId);
+        if (!properties.configured() && !properties.simulator()) {
+            orderStatusService.cancelWithoutPlatform(user, orderId, request.description().trim());
+            OutboundAction skipped = outbox.requestCancellation(storeId, order, request.code().trim(),
+                    request.description().trim());
+            skipped.skipped("Integração desligada: cancelado só no PedeAí. Confira no Portal do Parceiro.",
+                    Instant.now(clock));
+            return OutboundActionResponse.from(skipped);
+        }
         boolean pending = actions.findAllByOrderIdOrderByCreatedAtAsc(orderId).stream()
                 .anyMatch(action -> action.getAction() == OutboundAction.Action.REQUEST_CANCELLATION
                         && (action.getStatus() == OutboundAction.Status.PENDING

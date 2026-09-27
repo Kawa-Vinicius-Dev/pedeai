@@ -64,7 +64,7 @@ public class MarketplaceConnection {
     }
 
     public void failed(String error, Instant now) {
-        this.lastError = error;
+        this.lastError = error == null || error.length() <= 300 ? error : error.substring(0, 300);
         this.updatedAt = now;
     }
 

@@ -61,6 +61,20 @@ public class OrderStatusService {
 
     @Transactional
     public OrderResponse change(CurrentUser user, UUID orderId, ChangeOrderStatusRequest request) {
+        return change(user, orderId, request, false);
+    }
+
+    /**
+     * Cancelamento local de pedido de marketplace quando não há plataforma para pedir (integração desligada no
+     * servidor). As outras regras de quem pode cancelar continuam valendo.
+     */
+    @Transactional
+    public OrderResponse cancelWithoutPlatform(CurrentUser user, UUID orderId, String reason) {
+        return change(user, orderId, new ChangeOrderStatusRequest(OrderStatus.CANCELLED, reason, null), true);
+    }
+
+    private OrderResponse change(CurrentUser user, UUID orderId, ChangeOrderStatusRequest request,
+                                 boolean withoutPlatform) {
         Order order = orderRepository.findByIdAndStoreId(orderId, user.storeId())
                 .orElseThrow(() -> new ResourceNotFoundException(OrderService.NOT_FOUND));
         OrderStatus target = request.status();
@@ -76,7 +90,7 @@ public class OrderStatusService {
         String reason = null;
         if (target == OrderStatus.CANCELLED) {
             reason = Texts.trimToNull(request.reason());
-            checkCanCancel(user, order, reason);
+            checkCanCancel(user, order, reason, withoutPlatform);
             order.cancel(reason, now);
         } else {
             if (user.role() == Role.KITCHEN && !KITCHEN_TARGETS.contains(target)) {
@@ -123,11 +137,11 @@ public class OrderStatusService {
         return true;
     }
 
-    private static void checkCanCancel(CurrentUser user, Order order, String reason) {
+    private static void checkCanCancel(CurrentUser user, Order order, String reason, boolean withoutPlatform) {
         if (reason == null) {
             throw new BusinessRuleException(REASON_REQUIRED);
         }
-        if (order.getSource() != OrderSource.PEDEAI && order.getStatus() != OrderStatus.COMPLETED) {
+        if (!withoutPlatform && order.getSource() != OrderSource.PEDEAI && order.getStatus() != OrderStatus.COMPLETED) {
             throw new BusinessRuleException(MARKETPLACE_CANCEL_BY_REQUEST);
         }
         boolean manager = user.role() == Role.OWNER || user.role() == Role.MANAGER;
