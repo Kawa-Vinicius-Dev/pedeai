@@ -131,9 +131,15 @@ batem nos testes.
 > caracteres e o corte da impressora) na mesma transação, com chave de
 > idempotência, reserva de 2 min, nova tentativa com espera crescente, falha na
 > 5ª tentativa, expiração em 20 min, impressora reserva quando a principal está
-> fora e cancelamento dos pendentes quando o pedido é cancelado. Falta o agente
-> buscar essa fila (com o diário local), o aviso em tempo real para o agente e o
-> painel de impressões.
+> fora e cancelamento dos pendentes quando o pedido é cancelado.
+>
+> O agente agora pareia (`parear`) e imprime a fila (`rodar`), com o diário
+> local contra duplicidade e o trabalho incerto quando cai no meio. Ponta a
+> ponta, com a API, o agente de verdade e uma impressora de rede falsa, o pedido
+> confirmado chegou ao papel em 2,3 s, uma vez só. Falta: instalador MSI e
+> serviço do Windows, aviso em tempo real para o agente (hoje ele consulta a
+> cada 2 s), alertas de impressora offline na tela, painel de impressões com
+> reimpressão e contingência, e rodar tudo nas impressoras reais do piloto.
 
 ## Etapa 4 · Salão
 
