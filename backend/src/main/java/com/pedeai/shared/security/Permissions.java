@@ -8,6 +8,8 @@ public final class Permissions {
     public static final String TOGGLE_AVAILABILITY = "hasAnyRole('OWNER', 'MANAGER', 'CASHIER', 'KITCHEN')";
     /** Formas de pagamento e taxas de entrega. */
     public static final String MANAGE_SETTINGS = "hasAnyRole('OWNER', 'MANAGER')";
+    /** Computadores de impressão, impressoras e a impressora de cada setor. */
+    public static final String MANAGE_PRINTING = "hasAnyRole('OWNER', 'MANAGER')";
     /** Lançar pedido de balcão, telefone e delivery, e receber pagamento. */
     public static final String TAKE_ORDERS = "hasAnyRole('OWNER', 'MANAGER', 'CASHIER')";
     /** Mudar o status do pedido. A cozinha só marca "em preparo" e "pronto" (regra no serviço). */

@@ -2,33 +2,26 @@ package com.pedeai.store.service;
 
 import com.pedeai.shared.config.AppProperties;
 import com.pedeai.shared.exception.InvalidCredentialsException;
+import com.pedeai.shared.security.SecretTokens;
 import com.pedeai.store.domain.AppUser;
 import com.pedeai.store.domain.RefreshToken;
 import com.pedeai.store.domain.RevokeReason;
 import com.pedeai.store.repository.RefreshTokenRepository;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Base64;
-import java.util.HexFormat;
 import java.util.UUID;
 
 /** Emite, valida e revoga refresh tokens. Roda dentro da transação de quem chama. */
 @Service
 public class RefreshTokenService {
     static final String SESSION_EXPIRED = "Sua sessão expirou. Faça login novamente.";
-    private static final int TOKEN_BYTES = 32;
     private static final int MAX_DEVICE_NAME = 200;
 
     private final RefreshTokenRepository repository;
     private final AppProperties properties;
     private final Clock clock;
-    private final SecureRandom random = new SecureRandom();
 
     public RefreshTokenService(RefreshTokenRepository repository, AppProperties properties, Clock clock) {
         this.repository = repository;
@@ -39,7 +32,7 @@ public class RefreshTokenService {
     public IssuedRefreshToken issue(AppUser user, String deviceName) {
         Instant now = Instant.now(clock);
         Instant expiresAt = now.plus(properties.auth().refreshTokenTtl());
-        String value = newTokenValue();
+        String value = SecretTokens.newValue();
         repository.save(new RefreshToken(user.getStoreId(), user.getId(), hash(value), truncate(deviceName), now,
                 expiresAt));
         return new IssuedRefreshToken(value, expiresAt);
@@ -85,18 +78,7 @@ public class RefreshTokenService {
     }
 
     static String hash(String value) {
-        try {
-            byte[] digest = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(digest);
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 indisponível", exception);
-        }
-    }
-
-    private String newTokenValue() {
-        byte[] bytes = new byte[TOKEN_BYTES];
-        random.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        return SecretTokens.sha256(value);
     }
 
     private static String truncate(String deviceName) {
