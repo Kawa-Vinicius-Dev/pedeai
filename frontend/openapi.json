@@ -16,6 +16,47 @@
     }
   ],
   "paths": {
+    "/api/sectors/{sectorId}/printer": {
+      "put": {
+        "tags": [
+          "printer-controller"
+        ],
+        "operationId": "assign",
+        "parameters": [
+          {
+            "name": "sectorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SectorPrinterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorPrinterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sectors/{id}": {
       "get": {
         "tags": [
@@ -197,12 +238,53 @@
         }
       }
     },
+    "/api/printers/{id}": {
+      "put": {
+        "tags": [
+          "printer-controller"
+        ],
+        "operationId": "update_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrinterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrinterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/payment-methods/{id}": {
       "put": {
         "tags": [
           "payment-method-controller"
         ],
-        "operationId": "update_2",
+        "operationId": "update_3",
         "parameters": [
           {
             "name": "id",
@@ -272,7 +354,7 @@
         "tags": [
           "option-group-controller"
         ],
-        "operationId": "update_3",
+        "operationId": "update_4",
         "parameters": [
           {
             "name": "id",
@@ -363,7 +445,7 @@
         "tags": [
           "delivery-zone-controller"
         ],
-        "operationId": "update_4",
+        "operationId": "update_5",
         "parameters": [
           {
             "name": "id",
@@ -433,7 +515,7 @@
         "tags": [
           "customer-controller"
         ],
-        "operationId": "update_5",
+        "operationId": "update_6",
         "parameters": [
           {
             "name": "id",
@@ -584,7 +666,7 @@
         "tags": [
           "category-controller"
         ],
-        "operationId": "update_6",
+        "operationId": "update_7",
         "parameters": [
           {
             "name": "id",
@@ -616,6 +698,29 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/agent/status": {
+      "put": {
+        "tags": [
+          "agent-api-controller"
+        ],
+        "operationId": "status",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
           }
         }
       }
@@ -865,12 +970,83 @@
         }
       }
     },
+    "/api/printers": {
+      "get": {
+        "tags": [
+          "printer-controller"
+        ],
+        "operationId": "list_3",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrinterResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "printer-controller"
+        ],
+        "operationId": "create_3",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrinterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrinterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/print-agents/pairing-codes": {
+      "post": {
+        "tags": [
+          "print-agent-controller"
+        ],
+        "operationId": "createPairingCode",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairingCodeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/payment-methods": {
       "get": {
         "tags": [
           "payment-method-controller"
         ],
-        "operationId": "list_3",
+        "operationId": "list_4",
         "responses": {
           "200": {
             "description": "OK",
@@ -891,7 +1067,7 @@
         "tags": [
           "payment-method-controller"
         ],
-        "operationId": "create_3",
+        "operationId": "create_4",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1011,7 +1187,7 @@
         "tags": [
           "order-controller"
         ],
-        "operationId": "create_4",
+        "operationId": "create_5",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1041,7 +1217,7 @@
         "tags": [
           "order-payment-controller"
         ],
-        "operationId": "list_4",
+        "operationId": "list_5",
         "parameters": [
           {
             "name": "orderId",
@@ -1114,7 +1290,7 @@
         "tags": [
           "option-group-controller"
         ],
-        "operationId": "list_5",
+        "operationId": "list_6",
         "responses": {
           "200": {
             "description": "OK",
@@ -1135,7 +1311,7 @@
         "tags": [
           "option-group-controller"
         ],
-        "operationId": "create_5",
+        "operationId": "create_6",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1165,7 +1341,7 @@
         "tags": [
           "delivery-zone-controller"
         ],
-        "operationId": "list_6",
+        "operationId": "list_7",
         "responses": {
           "200": {
             "description": "OK",
@@ -1186,7 +1362,7 @@
         "tags": [
           "delivery-zone-controller"
         ],
-        "operationId": "create_6",
+        "operationId": "create_7",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1275,7 +1451,7 @@
         "tags": [
           "customer-controller"
         ],
-        "operationId": "create_7",
+        "operationId": "create_8",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1346,7 +1522,7 @@
         "tags": [
           "category-controller"
         ],
-        "operationId": "list_7",
+        "operationId": "list_8",
         "responses": {
           "200": {
             "description": "OK",
@@ -1367,7 +1543,7 @@
         "tags": [
           "category-controller"
         ],
-        "operationId": "create_8",
+        "operationId": "create_9",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1475,6 +1651,36 @@
         }
       }
     },
+    "/api/agent/pairings": {
+      "post": {
+        "tags": [
+          "agent-api-controller"
+        ],
+        "operationId": "pair",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentPairingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentPairingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users/{id}": {
       "get": {
         "tags": [
@@ -1509,7 +1715,7 @@
         "tags": [
           "user-controller"
         ],
-        "operationId": "update_7",
+        "operationId": "update_8",
         "parameters": [
           {
             "name": "id",
@@ -1568,7 +1774,7 @@
         "tags": [
           "store-controller"
         ],
-        "operationId": "update_8",
+        "operationId": "update_9",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1684,6 +1890,40 @@
         }
       }
     },
+    "/api/agent/jobs/{id}": {
+      "patch": {
+        "tags": [
+          "agent-api-controller"
+        ],
+        "operationId": "updateJob",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentJobUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/stream": {
       "get": {
         "tags": [
@@ -1698,6 +1938,52 @@
               "text/event-stream": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sector-printers": {
+      "get": {
+        "tags": [
+          "printer-controller"
+        ],
+        "operationId": "sectorPrinters",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SectorPrinterResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/print-agents": {
+      "get": {
+        "tags": [
+          "print-agent-controller"
+        ],
+        "operationId": "list_9",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrintAgentResponse"
+                  }
                 }
               }
             }
@@ -1762,6 +2048,40 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{orderId}/print-jobs": {
+      "get": {
+        "tags": [
+          "ticket-controller"
+        ],
+        "operationId": "printJobs",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrintJobResponse"
+                  }
                 }
               }
             }
@@ -1910,10 +2230,138 @@
           }
         }
       }
+    },
+    "/api/agent/jobs": {
+      "get": {
+        "tags": [
+          "agent-api-controller"
+        ],
+        "operationId": "jobs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgentJobResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/config": {
+      "get": {
+        "tags": [
+          "agent-api-controller"
+        ],
+        "operationId": "config",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/print-agents/{id}": {
+      "delete": {
+        "tags": [
+          "print-agent-controller"
+        ],
+        "operationId": "revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "SectorPrinterRequest": {
+        "type": "object",
+        "properties": {
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "backupPrinterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "copies": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 5,
+            "minimum": 1
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "copies",
+          "enabled",
+          "printerId"
+        ]
+      },
+      "SectorPrinterResponse": {
+        "type": "object",
+        "properties": {
+          "sectorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "backupPrinterId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "copies": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "backupPrinterId",
+          "copies",
+          "enabled",
+          "printerId",
+          "sectorId"
+        ]
+      },
       "SectorRequest": {
         "type": "object",
         "properties": {
@@ -2097,6 +2545,196 @@
         },
         "required": [
           "available"
+        ]
+      },
+      "PrinterRequest": {
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 0
+          },
+          "connectionType": {
+            "type": "string",
+            "enum": [
+              "NETWORK",
+              "SYSTEM"
+            ]
+          },
+          "host": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "port": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 65535,
+            "minimum": 1
+          },
+          "systemName": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "paperWidthMm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "columns": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 64,
+            "minimum": 24
+          },
+          "codepage": {
+            "type": "string",
+            "enum": [
+              "PC437",
+              "PC850",
+              "PC860",
+              "WPC1252",
+              "PC858",
+              "NO_ACCENTS"
+            ]
+          },
+          "cutMode": {
+            "type": "string",
+            "enum": [
+              "PARTIAL",
+              "FULL",
+              "NONE"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "agentId",
+          "codepage",
+          "columns",
+          "connectionType",
+          "cutMode",
+          "name",
+          "paperWidthMm"
+        ]
+      },
+      "PrinterResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "connectionType": {
+            "type": "string",
+            "enum": [
+              "NETWORK",
+              "SYSTEM"
+            ]
+          },
+          "host": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "port": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "systemName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "paperWidthMm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "columns": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codepage": {
+            "type": "string",
+            "enum": [
+              "PC437",
+              "PC850",
+              "PC860",
+              "WPC1252",
+              "PC858",
+              "NO_ACCENTS"
+            ]
+          },
+          "cutMode": {
+            "type": "string",
+            "enum": [
+              "PARTIAL",
+              "FULL",
+              "NONE"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "ONLINE",
+              "OFFLINE",
+              "ERROR"
+            ]
+          },
+          "statusDetail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "statusUpdatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "active",
+          "agentId",
+          "codepage",
+          "columns",
+          "connectionType",
+          "cutMode",
+          "host",
+          "id",
+          "name",
+          "paperWidthMm",
+          "port",
+          "status",
+          "statusDetail",
+          "statusUpdatedAt",
+          "systemName"
         ]
       },
       "PaymentMethodRequest": {
@@ -2630,6 +3268,52 @@
           "sortOrder"
         ]
       },
+      "AgentStatusRequest": {
+        "type": "object",
+        "properties": {
+          "agentVersion": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "printers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrinterStatusReport"
+            }
+          }
+        },
+        "required": [
+          "printers"
+        ]
+      },
+      "PrinterStatusReport": {
+        "type": "object",
+        "properties": {
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "ONLINE",
+              "OFFLINE",
+              "ERROR"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "printerId",
+          "status"
+        ]
+      },
       "CreateUserRequest": {
         "type": "object",
         "properties": {
@@ -2928,6 +3612,22 @@
           "optionId",
           "quantity",
           "unitPriceCents"
+        ]
+      },
+      "PairingCodeResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "code",
+          "expiresAt"
         ]
       },
       "CreateOrderRequest": {
@@ -3568,6 +4268,59 @@
           "password"
         ]
       },
+      "AgentPairingRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\d{6}"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "os": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "agentVersion": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "AgentPairingResponse": {
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agentName": {
+            "type": "string"
+          },
+          "storeName": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "agentId",
+          "agentName",
+          "storeName",
+          "token"
+        ]
+      },
       "UpdateUserRequest": {
         "type": "object",
         "properties": {
@@ -3734,6 +4487,75 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "AgentJobUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "SENT",
+              "PRINTED",
+              "FAILED",
+              "UNCERTAIN"
+            ]
+          },
+          "error": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "PrintAgentResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "os": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "agentVersion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "lastSeenAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "agentVersion",
+          "createdAt",
+          "id",
+          "lastSeenAt",
+          "name",
+          "online",
+          "os"
         ]
       },
       "OrderSummaryResponse": {
@@ -3920,6 +4742,91 @@
           "lines"
         ]
       },
+      "PrintJobResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "PRODUCTION_TICKET",
+              "ORDER_TICKET"
+            ]
+          },
+          "sectorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "AUTO",
+              "MANUAL",
+              "REPRINT",
+              "TEST"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "SENT",
+              "PRINTED",
+              "FAILED",
+              "UNCERTAIN",
+              "EXPIRED",
+              "CANCELLED"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "preview": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "printedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "attempts",
+          "createdAt",
+          "documentType",
+          "id",
+          "lastError",
+          "preview",
+          "printedAt",
+          "printerId",
+          "reason",
+          "sectorId",
+          "status"
+        ]
+      },
       "OrderStatusHistoryResponse": {
         "type": "object",
         "properties": {
@@ -4031,6 +4938,137 @@
           "size",
           "totalElements",
           "totalPages"
+        ]
+      },
+      "AgentJobResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deliveryKey": {
+            "type": "string"
+          },
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "PRODUCTION_TICKET",
+              "ORDER_TICKET"
+            ]
+          },
+          "payload": {
+            "type": "string",
+            "format": "byte"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "createdAt",
+          "deliveryKey",
+          "documentType",
+          "id",
+          "payload",
+          "printerId"
+        ]
+      },
+      "AgentConfigResponse": {
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agentName": {
+            "type": "string"
+          },
+          "printers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentPrinterResponse"
+            }
+          }
+        },
+        "required": [
+          "agentId",
+          "agentName",
+          "printers"
+        ]
+      },
+      "AgentPrinterResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "connectionType": {
+            "type": "string",
+            "enum": [
+              "NETWORK",
+              "SYSTEM"
+            ]
+          },
+          "host": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "port": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "systemName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "columns": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "escPosCodepage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "charset": {
+            "type": "string"
+          },
+          "cutMode": {
+            "type": "string",
+            "enum": [
+              "PARTIAL",
+              "FULL",
+              "NONE"
+            ]
+          }
+        },
+        "required": [
+          "charset",
+          "columns",
+          "connectionType",
+          "cutMode",
+          "escPosCodepage",
+          "host",
+          "id",
+          "name",
+          "port",
+          "systemName"
         ]
       }
     },

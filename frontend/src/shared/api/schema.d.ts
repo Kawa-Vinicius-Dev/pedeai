@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/sectors/{sectorId}/printer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["assign"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sectors/{id}": {
         parameters: {
             query?: never;
@@ -52,7 +68,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/payment-methods/{id}": {
+    "/api/printers/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -68,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payment-methods/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["update_3"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/option-groups/{id}": {
         parameters: {
             query?: never;
@@ -76,7 +108,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_2"];
-        put: operations["update_3"];
+        put: operations["update_4"];
         post?: never;
         delete?: never;
         options?: never;
@@ -108,7 +140,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["update_4"];
+        put: operations["update_5"];
         post?: never;
         delete?: never;
         options?: never;
@@ -124,7 +156,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_3"];
-        put: operations["update_5"];
+        put: operations["update_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -156,7 +188,23 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_4"];
-        put: operations["update_6"];
+        put: operations["update_7"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["status"];
         post?: never;
         delete?: never;
         options?: never;
@@ -244,7 +292,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/payment-methods": {
+    "/api/printers": {
         parameters: {
             query?: never;
             header?: never;
@@ -260,6 +308,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/print-agents/pairing-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createPairingCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payment-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_4"];
+        put?: never;
+        post: operations["create_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders": {
         parameters: {
             query?: never;
@@ -269,7 +349,7 @@ export interface paths {
         };
         get: operations["search"];
         put?: never;
-        post: operations["create_4"];
+        post: operations["create_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -283,7 +363,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
         post: operations["register_1"];
         delete?: never;
@@ -299,9 +379,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
-        post: operations["create_5"];
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -315,9 +395,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
-        post: operations["create_6"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -333,7 +413,7 @@ export interface paths {
         };
         get: operations["search_1"];
         put?: never;
-        post: operations["create_7"];
+        post: operations["create_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -363,9 +443,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_8"];
         put?: never;
-        post: operations["create_8"];
+        post: operations["create_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -420,6 +500,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agent/pairings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["pair"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users/{id}": {
         parameters: {
             query?: never;
@@ -433,7 +529,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_7"];
+        patch: operations["update_8"];
         trace?: never;
     };
     "/api/store": {
@@ -449,7 +545,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_8"];
+        patch: operations["update_9"];
         trace?: never;
     };
     "/api/orders/{orderId}/payments/{paymentId}": {
@@ -484,6 +580,22 @@ export interface paths {
         patch: operations["change"];
         trace?: never;
     };
+    "/api/agent/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateJob"];
+        trace?: never;
+    };
     "/api/stream": {
         parameters: {
             query?: never;
@@ -501,6 +613,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sector-printers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sectorPrinters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/print-agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_9"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{orderId}/tickets/{documentType}": {
         parameters: {
             query?: never;
@@ -509,6 +653,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_7"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{orderId}/print-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["printJobs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -597,10 +757,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agent/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["jobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["config"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/print-agents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SectorPrinterRequest: {
+            /** Format: uuid */
+            printerId: string;
+            /** Format: uuid */
+            backupPrinterId?: string;
+            /** Format: int32 */
+            copies: number;
+            enabled: boolean;
+        };
+        SectorPrinterResponse: {
+            /** Format: uuid */
+            sectorId: string;
+            /** Format: uuid */
+            printerId: string;
+            /** Format: uuid */
+            backupPrinterId: string | null;
+            /** Format: int32 */
+            copies: number;
+            enabled: boolean;
+        };
         SectorRequest: {
             name: string;
             defaultSector: boolean;
@@ -647,6 +875,53 @@ export interface components {
         };
         AvailabilityRequest: {
             available: boolean;
+        };
+        PrinterRequest: {
+            /** Format: uuid */
+            agentId: string;
+            name: string;
+            /** @enum {string} */
+            connectionType: "NETWORK" | "SYSTEM";
+            host?: string;
+            /** Format: int32 */
+            port?: number;
+            systemName?: string;
+            /** Format: int32 */
+            paperWidthMm: number;
+            /** Format: int32 */
+            columns: number;
+            /** @enum {string} */
+            codepage: "PC437" | "PC850" | "PC860" | "WPC1252" | "PC858" | "NO_ACCENTS";
+            /** @enum {string} */
+            cutMode: "PARTIAL" | "FULL" | "NONE";
+            active: boolean;
+        };
+        PrinterResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            agentId: string;
+            name: string;
+            /** @enum {string} */
+            connectionType: "NETWORK" | "SYSTEM";
+            host: string | null;
+            /** Format: int32 */
+            port: number | null;
+            systemName: string | null;
+            /** Format: int32 */
+            paperWidthMm: number;
+            /** Format: int32 */
+            columns: number;
+            /** @enum {string} */
+            codepage: "PC437" | "PC850" | "PC860" | "WPC1252" | "PC858" | "NO_ACCENTS";
+            /** @enum {string} */
+            cutMode: "PARTIAL" | "FULL" | "NONE";
+            active: boolean;
+            /** @enum {string} */
+            status: "UNKNOWN" | "ONLINE" | "OFFLINE" | "ERROR";
+            statusDetail: string | null;
+            /** Format: date-time */
+            statusUpdatedAt: string | null;
         };
         PaymentMethodRequest: {
             name: string;
@@ -778,6 +1053,17 @@ export interface components {
             sortOrder: number;
             active: boolean;
         };
+        AgentStatusRequest: {
+            agentVersion?: string;
+            printers: components["schemas"]["PrinterStatusReport"][];
+        };
+        PrinterStatusReport: {
+            /** Format: uuid */
+            printerId: string;
+            /** @enum {string} */
+            status: "UNKNOWN" | "ONLINE" | "OFFLINE" | "ERROR";
+            detail?: string;
+        };
         CreateUserRequest: {
             name: string;
             /** Format: email */
@@ -859,6 +1145,11 @@ export interface components {
             quantity: number;
             /** Format: int64 */
             unitPriceCents: number;
+        };
+        PairingCodeResponse: {
+            code: string;
+            /** Format: date-time */
+            expiresAt: string;
         };
         CreateOrderRequest: {
             /** @enum {string} */
@@ -1024,6 +1315,19 @@ export interface components {
             email: string;
             password: string;
         };
+        AgentPairingRequest: {
+            code: string;
+            name: string;
+            os?: string;
+            agentVersion?: string;
+        };
+        AgentPairingResponse: {
+            /** Format: uuid */
+            agentId: string;
+            agentName: string;
+            storeName: string;
+            token: string;
+        };
         UpdateUserRequest: {
             name?: string;
             /** @enum {string} */
@@ -1067,6 +1371,23 @@ export interface components {
             reason?: string;
             /** Format: int64 */
             version?: number;
+        };
+        AgentJobUpdateRequest: {
+            /** @enum {string} */
+            status: "SENT" | "PRINTED" | "FAILED" | "UNCERTAIN";
+            error?: string;
+        };
+        PrintAgentResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            os: string | null;
+            agentVersion: string | null;
+            online: boolean;
+            /** Format: date-time */
+            lastSeenAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
         };
         OrderSummaryResponse: {
             /** Format: uuid */
@@ -1120,6 +1441,28 @@ export interface components {
             columns: number;
             lines: components["schemas"]["TicketLineResponse"][];
         };
+        PrintJobResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            printerId: string;
+            /** @enum {string} */
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            /** Format: uuid */
+            sectorId: string | null;
+            /** @enum {string} */
+            reason: "AUTO" | "MANUAL" | "REPRINT" | "TEST";
+            /** @enum {string} */
+            status: "PENDING" | "SENT" | "PRINTED" | "FAILED" | "UNCERTAIN" | "EXPIRED" | "CANCELLED";
+            /** Format: int32 */
+            attempts: number;
+            lastError: string | null;
+            preview: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            printedAt: string | null;
+        };
         OrderStatusHistoryResponse: {
             /** @enum {string|null} */
             fromStatus: "RECEIVED" | "CONFIRMED" | "IN_PREPARATION" | "READY" | "DISPATCHED" | "COMPLETED" | "CANCELLED" | null;
@@ -1147,6 +1490,43 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
         };
+        AgentJobResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            printerId: string;
+            deliveryKey: string;
+            /** @enum {string} */
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            /** Format: byte */
+            payload: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AgentConfigResponse: {
+            /** Format: uuid */
+            agentId: string;
+            agentName: string;
+            printers: components["schemas"]["AgentPrinterResponse"][];
+        };
+        AgentPrinterResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            connectionType: "NETWORK" | "SYSTEM";
+            host: string | null;
+            /** Format: int32 */
+            port: number | null;
+            systemName: string | null;
+            /** Format: int32 */
+            columns: number;
+            /** Format: int32 */
+            escPosCodepage: number;
+            charset: string;
+            /** @enum {string} */
+            cutMode: "PARTIAL" | "FULL" | "NONE";
+        };
     };
     responses: never;
     parameters: never;
@@ -1156,6 +1536,32 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sectorId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SectorPrinterRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SectorPrinterResponse"];
+                };
+            };
+        };
+    };
     get: {
         parameters: {
             query?: never;
@@ -1289,6 +1695,32 @@ export interface operations {
         };
         requestBody: {
             content: {
+                "application/json": components["schemas"]["PrinterRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrinterResponse"];
+                };
+            };
+        };
+    };
+    update_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
                 "application/json": components["schemas"]["PaymentMethodRequest"];
             };
         };
@@ -1326,7 +1758,7 @@ export interface operations {
             };
         };
     };
-    update_3: {
+    update_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1379,7 +1811,7 @@ export interface operations {
             };
         };
     };
-    update_4: {
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1427,7 +1859,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1523,7 +1955,7 @@ export interface operations {
             };
         };
     };
-    update_6: {
+    update_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -1546,6 +1978,28 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["CategoryResponse"];
                 };
+            };
+        };
+    };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1750,12 +2204,76 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PaymentMethodResponse"][];
+                    "*/*": components["schemas"]["PrinterResponse"][];
                 };
             };
         };
     };
     create_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrinterRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrinterResponse"];
+                };
+            };
+        };
+    };
+    createPairingCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PairingCodeResponse"];
+                };
+            };
+        };
+    };
+    list_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentMethodResponse"][];
+                };
+            };
+        };
+    };
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1806,7 +2324,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1830,7 +2348,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1878,7 +2396,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1898,7 +2416,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1922,7 +2440,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -1942,7 +2460,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -1991,7 +2509,7 @@ export interface operations {
             };
         };
     };
-    create_7: {
+    create_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -2041,7 +2559,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -2061,7 +2579,7 @@ export interface operations {
             };
         };
     };
-    create_8: {
+    create_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -2151,6 +2669,30 @@ export interface operations {
             };
         };
     };
+    pair: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentPairingRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AgentPairingResponse"];
+                };
+            };
+        };
+    };
     get_5: {
         parameters: {
             query?: never;
@@ -2173,7 +2715,7 @@ export interface operations {
             };
         };
     };
-    update_7: {
+    update_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -2219,7 +2761,7 @@ export interface operations {
             };
         };
     };
-    update_8: {
+    update_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -2296,6 +2838,30 @@ export interface operations {
             };
         };
     };
+    updateJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentJobUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     stream: {
         parameters: {
             query?: never;
@@ -2312,6 +2878,46 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": string;
+                };
+            };
+        };
+    };
+    sectorPrinters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SectorPrinterResponse"][];
+                };
+            };
+        };
+    };
+    list_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrintAgentResponse"][];
                 };
             };
         };
@@ -2338,6 +2944,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TicketResponse"];
+                };
+            };
+        };
+    };
+    printJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrintJobResponse"][];
                 };
             };
         };
@@ -2445,6 +3073,66 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["OrderResponse"][];
                 };
+            };
+        };
+    };
+    jobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AgentJobResponse"][];
+                };
+            };
+        };
+    };
+    config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AgentConfigResponse"];
+                };
+            };
+        };
+    };
+    revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

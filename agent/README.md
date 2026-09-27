@@ -1,10 +1,35 @@
-# Agente de impressão (protótipo)
+# Agente de impressão
 
-Primeiro passo da impressão automática ([04 · Impressão](../docs/04-impressao.md#primeiro-passo-recomendado-protótipo-de-impressão)):
-imprimir a **página de teste** nas impressoras reais do restaurante-piloto para descobrir, em cada uma,
-qual tabela de caracteres imprime os acentos, quantas colunas cabem, se a fonte dupla sai e se o corte funciona.
+Roda num computador da loja, busca a fila de impressão na API e manda os bytes ESC/POS para as impressoras
+térmicas, pela rede (porta 9100) ou pelo spooler do Windows ([04 · Impressão](../docs/04-impressao.md#o-agente)).
+Também imprime a **página de teste**, que descobre em cada impressora a tabela de caracteres, as colunas, a
+fonte dupla e o corte.
 
-Java puro, sem dependências. Ainda não conversa com a API.
+Java puro, sem Spring. Só o Jackson (para o JSON da API), embutido no jar.
+
+## Ligar à loja e imprimir
+
+1. Na tela **Configurações › Impressão**, clique em **Adicionar computador** e anote o código de 6 dígitos.
+2. No computador da loja:
+
+   ```bash
+   java -jar pedeai-agent.jar parear https://endereco-da-api 123456 --nome "Caixa"
+   ```
+
+3. Cadastre as impressoras na mesma tela (com o resultado da página de teste) e escolha a impressora de cada setor.
+4. Deixe rodando enquanto a loja funciona:
+
+   ```bash
+   java -jar pedeai-agent.jar rodar
+   ```
+
+O pareamento fica em `%APPDATA%\PedeAi\agente.properties` e o diário das impressões em
+`%APPDATA%\PedeAi\diario.log` (últimos 7 dias). O diário anota "recebido" antes de mandar para a impressora e
+"impresso" depois: a mesma chave nunca sai duas vezes, e se o computador desligar no meio, o trabalho aparece
+como **incerto** na tela em vez de sair de novo sozinho. Remover o computador na tela para o agente na hora.
+
+O agente consulta a fila a cada 2 s, testa as impressoras de rede e manda o status a cada 20 s. Sem
+internet, ele espera e tenta de novo.
 
 ## Gerar
 

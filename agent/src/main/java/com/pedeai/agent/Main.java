@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Protótipo do agente (docs/04-impressao.md#primeiro-passo-recomendado-protótipo-de-impressão): imprime a página de
- * teste nas impressoras reais do piloto para descobrir tabela de caracteres, colunas, fonte dupla e corte.
+ * Agente de impressão (docs/04-impressao.md#o-agente). {@code parear} liga o computador à loja, {@code rodar} imprime
+ * a fila, e {@code testar} imprime a página de teste para descobrir tabela de caracteres, colunas, fonte dupla e corte.
  */
 public final class Main {
     static final String ACCENTS = "ÁÉÍÓÚ ÂÊÔ ÃÕ Ç áéíóú ãõ ç";
@@ -29,6 +29,10 @@ public final class Main {
 
     private static final String USAGE = """
             Uso:
+              java -jar pedeai-agent.jar parear https://api.pedeai.com.br 123456 [--nome "Caixa"]
+                  Liga este computador à loja com o código da tela Configurações > Impressão.
+              java -jar pedeai-agent.jar rodar
+                  Busca os pedidos e imprime. Deixe aberto enquanto a loja funciona.
               java -jar pedeai-agent.jar listar
                   Mostra as impressoras instaladas no Windows.
               java -jar pedeai-agent.jar testar --rede 192.168.0.50[:9100] [--colunas 48]
@@ -42,9 +46,17 @@ public final class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        if (args.length == 0 || !List.of("listar", "testar").contains(args[0])) {
+        if (args.length == 0 || !List.of("listar", "testar", "parear", "rodar").contains(args[0])) {
             System.out.print(USAGE);
             System.exit(args.length == 0 ? 0 : 2);
+        }
+        if (args[0].equals("parear")) {
+            pair(args);
+            return;
+        }
+        if (args[0].equals("rodar")) {
+            run();
+            return;
         }
         if (args[0].equals("listar")) {
             List<String> printers = Printers.installed();
@@ -80,6 +92,48 @@ public final class Main {
             System.exit(1);
         }
         System.out.println("Página de teste enviada (" + page.length + " bytes).");
+    }
+
+    private static void pair(String[] args) {
+        if (args.length < 3) {
+            System.out.print(USAGE);
+            System.exit(2);
+        }
+        String name = option(args, "--nome");
+        try {
+            ApiClient.Pairing pairing = ApiClient.pair(args[1], args[2].trim(),
+                    name == null ? hostName() : name, System.getProperty("os.name"));
+            Settings.save(new Settings(args[1], pairing.token(), pairing.agentName()));
+            System.out.println("Pareado com " + pairing.storeName() + " como \"" + pairing.agentName() + "\".");
+            System.out.println("Agora cadastre as impressoras na tela e rode: java -jar pedeai-agent.jar rodar");
+        } catch (ApiClient.ApiException e) {
+            System.err.println(e.status == 401 ? "Código inválido ou vencido. Gere outro na tela de impressão."
+                    : "Não deu para parear: " + e.getMessage());
+            System.exit(1);
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Sem conexão com " + args[1] + ": " + e.getMessage());
+            System.exit(1);
+        }
+    }
+
+    private static void run() throws IOException {
+        Settings settings = Settings.load();
+        if (settings == null) {
+            System.err.println("Este computador ainda não foi pareado. Rode: java -jar pedeai-agent.jar parear ...");
+            System.exit(2);
+        }
+        System.out.println("PedeAí agente " + ApiClient.VERSION + ": " + settings.name() + " imprimindo. Ctrl+C para parar.");
+        Journal journal = new Journal(Settings.folder().resolve("diario.log"), java.time.Instant.now());
+        try {
+            new AgentRunner(new ApiClient(settings.url(), settings.token()), journal, java.time.Clock.systemUTC()).run();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private static String hostName() {
+        String name = System.getenv("COMPUTERNAME");
+        return name == null || name.isBlank() ? "Computador de impressão" : name;
     }
 
     /**

@@ -10,6 +10,7 @@ import {
   CreditCard,
   House,
   LogOut,
+  Printer,
   type LucideIcon,
   Store,
   Users,
@@ -99,6 +100,7 @@ export function AppLayout() {
             )}
             <NavItem to="/configuracoes/pagamentos" label="Pagamentos" icon={CreditCard} onNavigate={close} />
             <NavItem to="/configuracoes/taxas" label="Taxas de entrega" icon={Bike} onNavigate={close} />
+            <NavItem to="/configuracoes/impressao" label="Impressão" icon={Printer} onNavigate={close} />
           </>
         )}
       </AppShell.Navbar>

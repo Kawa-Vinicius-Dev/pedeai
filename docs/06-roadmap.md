@@ -120,6 +120,26 @@ batem nos testes.
 > dupla e corte. Foi testado contra uma impressora falsa e empacotado com
 > `jpackage` (roda sem Java instalado). Falta rodar nas impressoras reais e
 > anotar o resultado de cada uma.
+>
+> Também estão prontos o pareamento do computador de impressão (código de 6
+> dígitos e token de dispositivo em `/api/agent/**`), o heartbeat com o status de
+> cada impressora e a tela **Configurações › Impressão**, com computadores,
+> impressoras e a impressora de cada setor.
+>
+> A fila de impressão também está pronta no servidor: ao confirmar o pedido,
+> nasce um trabalho de produção por setor (bytes ESC/POS com a tabela de
+> caracteres e o corte da impressora) na mesma transação, com chave de
+> idempotência, reserva de 2 min, nova tentativa com espera crescente, falha na
+> 5ª tentativa, expiração em 20 min, impressora reserva quando a principal está
+> fora e cancelamento dos pendentes quando o pedido é cancelado.
+>
+> O agente agora pareia (`parear`) e imprime a fila (`rodar`), com o diário
+> local contra duplicidade e o trabalho incerto quando cai no meio. Ponta a
+> ponta, com a API, o agente de verdade e uma impressora de rede falsa, o pedido
+> confirmado chegou ao papel em 2,3 s, uma vez só. Falta: instalador MSI e
+> serviço do Windows, aviso em tempo real para o agente (hoje ele consulta a
+> cada 2 s), alertas de impressora offline na tela, painel de impressões com
+> reimpressão e contingência, e rodar tudo nas impressoras reais do piloto.
 
 ## Etapa 4 · Salão
 
