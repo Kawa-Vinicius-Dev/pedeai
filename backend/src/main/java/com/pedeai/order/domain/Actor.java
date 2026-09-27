@@ -8,6 +8,11 @@ public record Actor(ActorType type, UUID id, String name) {
         return new Actor(ActorType.USER, id, name);
     }
 
+    /** "iFood" ou "99Food" na linha do tempo. */
+    public static Actor marketplace(OrderSource source) {
+        return new Actor(ActorType.MARKETPLACE, null, source == OrderSource.IFOOD ? "iFood" : "99Food");
+    }
+
     public static Actor system() {
         return new Actor(ActorType.SYSTEM, null, null);
     }

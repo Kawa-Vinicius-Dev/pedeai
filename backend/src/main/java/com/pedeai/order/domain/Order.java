@@ -115,6 +115,41 @@ public class Order {
         return order;
     }
 
+    /**
+     * Pedido que veio do iFood ou da 99Food. Nasce recebido e espera o aceite. O total é o que a loja recebe: a parte
+     * do desconto paga pela plataforma não sai do total.
+     */
+    public static Order placeMarketplace(UUID storeId, LocalDate businessDate, int number, OrderSource source,
+                                         String externalId, String displayId, OrderType type, Instant scheduledFor,
+                                         String customerName, String customerPhone, DeliveryAddress deliveryAddress,
+                                         String notes, List<OrderItem> items, long discountCents,
+                                         long platformSubsidyCents, long deliveryFeeCents, long additionalFeeCents,
+                                         Instant now) {
+        Order order = new Order();
+        order.id = UuidV7.generate();
+        order.storeId = storeId;
+        order.businessDate = businessDate;
+        order.number = number;
+        order.type = type;
+        order.source = source;
+        order.status = OrderStatus.RECEIVED;
+        order.externalId = externalId;
+        order.externalDisplayId = displayId;
+        order.scheduledFor = scheduledFor;
+        order.customerName = customerName;
+        order.customerPhone = customerPhone;
+        order.deliveryAddress = deliveryAddress;
+        order.notes = notes;
+        order.items.addAll(items);
+        order.createdAt = now;
+        order.updatedAt = now;
+        order.applyTotals(discountCents, deliveryFeeCents);
+        order.platformSubsidyCents = platformSubsidyCents;
+        order.additionalFeeCents = additionalFeeCents;
+        order.totalCents = Math.addExact(order.totalCents, additionalFeeCents);
+        return order;
+    }
+
     private void applyTotals(long discountCents, long deliveryFeeCents) {
         long subtotal = items.stream().filter(OrderItem::isActive).mapToLong(OrderItem::getTotalCents).sum();
         if (discountCents > subtotal) {
@@ -284,6 +319,18 @@ public class Order {
 
     public String getCancelReason() {
         return cancelReason;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public String getExternalDisplayId() {
+        return externalDisplayId;
+    }
+
+    public Instant getScheduledFor() {
+        return scheduledFor;
     }
 
     public UUID getCreatedBy() {

@@ -28,7 +28,9 @@ public record OrderSummaryResponse(
         String itemsSummary,
         Instant createdAt,
         Instant updatedAt,
-        long version
+        long version,
+        @Schema(types = {"string", "null"}) String externalDisplayId,
+        @Schema(types = {"string", "null"}) Instant scheduledFor
 ) {
     public static OrderSummaryResponse from(Order order) {
         List<OrderItem> items = order.getActiveItems();
@@ -39,6 +41,7 @@ public record OrderSummaryResponse(
                 order.getSource(), order.getStatus(), order.getCustomerName(),
                 order.getDeliveryAddress() == null ? null : order.getDeliveryAddress().getNeighborhood(),
                 order.getTotalCents(), items.stream().mapToInt(OrderItem::getQuantity).sum(), summary,
-                order.getCreatedAt(), order.getUpdatedAt(), order.getVersion());
+                order.getCreatedAt(), order.getUpdatedAt(), order.getVersion(), order.getExternalDisplayId(),
+                order.getScheduledFor());
     }
 }

@@ -151,6 +151,6 @@ class TicketLayoutTest {
                 new DeliveryAddressResponse("Rua das Flores", "120", "apto 3", "Centro", "São Paulo", "SP", null,
                         "Portão azul"),
                 "Interfone quebrado", items, 6690, 0, 800, 0, 0, 7490, CREATED, CREATED, null, null, null, null,
-                null, null, 0);
+                null, null, 0, null, null);
     }
 }

@@ -169,13 +169,14 @@ class PaymentServiceTest {
     }
 
     private static OrderCreated created(long total, List<OrderPaymentRequest> payments) {
-        return new OrderCreated(STORE_ID, ORDER_ID, 1, OrderStatus.CONFIRMED, 0, total, payments, USER_ID);
+        return new OrderCreated(STORE_ID, ORDER_ID, 1, OrderStatus.CONFIRMED, 0, total, payments, USER_ID,
+                com.pedeai.order.domain.OrderSource.PEDEAI);
     }
 
     private static OrderResponse order(OrderStatus status, long total) {
         return new OrderResponse(ORDER_ID, 1, LocalDate.of(2026, 9, 24), OrderType.DELIVERY, OrderSource.PEDEAI,
                 status, null, "Maria", null, null, null, List.of(), total, 0, 0, 0, 0, total, NOW, null, null, null,
-                null, null, null, null, 0);
+                null, null, null, null, 0, null, null);
     }
 
     private static CurrentUser user(Role role) {
