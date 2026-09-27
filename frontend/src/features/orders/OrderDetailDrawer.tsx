@@ -26,6 +26,7 @@ import { formatCents, parseDecimal } from '../../shared/lib/numbers';
 import { ORDER_TAKERS } from '../../shared/lib/roles';
 import { MoneyInput } from '../../shared/ui/MoneyInput';
 import { useSession } from '../auth/auth-context';
+import { MarketplaceOrderPanel } from '../integrations/MarketplaceOrderPanel';
 import { OrderPrintJobs } from '../printing/OrderPrintJobs';
 import { PrintMenu } from '../printing/PrintMenu';
 import { orderKeys, useChangeStatus, useOrder, useOrderHistory, useOrderPayments, usePaymentMethods } from './api';
@@ -171,6 +172,7 @@ function OrderDetail({ order }: { order: Order }) {
         )}
       </Group>
 
+      {order.source !== 'PEDEAI' && <MarketplaceOrderPanel order={order} />}
       <OrderPrintJobs order={order} />
 
       {takesOrders && (

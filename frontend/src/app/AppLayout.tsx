@@ -1,7 +1,6 @@
 import { AppShell, Badge, Burger, Button, Group, NavLink, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
-  Armchair,
   Bike,
   BookOpen,
   ChartColumn,
@@ -10,6 +9,7 @@ import {
   CreditCard,
   House,
   LogOut,
+  Plug,
   Printer,
   type LucideIcon,
   Store,
@@ -23,7 +23,6 @@ import { AVAILABILITY_TOGGLERS, ORDER_VIEWERS, ROLE_LABELS, SETTINGS_MANAGERS } 
 
 /** Áreas que chegam nas próximas etapas do roadmap (docs/06-roadmap.md). */
 const UPCOMING: { label: string; icon: LucideIcon }[] = [
-  { label: 'Salão', icon: Armchair },
   { label: 'Relatórios', icon: ChartColumn },
 ];
 
@@ -103,6 +102,7 @@ export function AppLayout() {
             <NavItem to="/configuracoes/pagamentos" label="Pagamentos" icon={CreditCard} onNavigate={close} />
             <NavItem to="/configuracoes/taxas" label="Taxas de entrega" icon={Bike} onNavigate={close} />
             <NavItem to="/configuracoes/impressao" label="Impressão" icon={Printer} onNavigate={close} />
+            <NavItem to="/configuracoes/integracoes" label="Integrações" icon={Plug} onNavigate={close} />
           </>
         )}
       </AppShell.Navbar>

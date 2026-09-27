@@ -92,7 +92,7 @@ final class TicketLayout {
         out.big(storeName, Align.CENTER);
         out.center("Não é documento fiscal");
         out.rule('=');
-        out.pair("PEDIDO " + order.number(), SOURCES.get(order.source()));
+        out.pair("PEDIDO " + order.number(), sourceLabel(order));
         out.text(TYPES.get(order.type()));
         out.text(FULL.format(order.createdAt().atZone(zone)));
         customer(out, order);
@@ -174,8 +174,14 @@ final class TicketLayout {
     }
 
     private static String typeAndSource(OrderResponse order) {
-        String source = SOURCES.get(order.source());
+        String source = sourceLabel(order);
         return source.isEmpty() ? TYPES.get(order.type()) : TYPES.get(order.type()) + " - " + source;
+    }
+
+    /** "iFood 7391": o número que o entregador e o cliente veem no aplicativo. Pedido próprio: vazio. */
+    private static String sourceLabel(OrderResponse order) {
+        String source = SOURCES.get(order.source());
+        return source.isEmpty() || order.externalDisplayId() == null ? source : source + " " + order.externalDisplayId();
     }
 
     private static String option(OrderItemOptionResponse option) {

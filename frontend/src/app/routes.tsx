@@ -4,6 +4,7 @@ import { LoginPage } from '../features/auth/LoginPage';
 import { SignupPage } from '../features/auth/SignupPage';
 import { CatalogPage } from '../features/catalog/CatalogPage';
 import { HomePage } from '../features/home/HomePage';
+import { IntegrationsPage } from '../features/integrations/IntegrationsPage';
 import { KitchenPage } from '../features/kitchen/KitchenPage';
 import { NewOrderPage } from '../features/orders/NewOrderPage';
 import { OrdersBoardPage } from '../features/orders/OrdersBoardPage';
@@ -58,6 +59,7 @@ export const routes: RouteObject[] = [
               { path: '/configuracoes/pagamentos', element: <PaymentMethodsPage /> },
               { path: '/configuracoes/taxas', element: <DeliveryZonesPage /> },
               { path: '/configuracoes/impressao', element: <PrintingSettingsPage /> },
+              { path: '/configuracoes/integracoes', element: <IntegrationsPage /> },
             ],
           },
           {
