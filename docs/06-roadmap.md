@@ -124,8 +124,16 @@ batem nos testes.
 > Também estão prontos o pareamento do computador de impressão (código de 6
 > dígitos e token de dispositivo em `/api/agent/**`), o heartbeat com o status de
 > cada impressora e a tela **Configurações › Impressão**, com computadores,
-> impressoras e a impressora de cada setor. Falta a fila de trabalhos com
-> impressão automática ao confirmar e o agente de verdade buscando essa fila.
+> impressoras e a impressora de cada setor.
+>
+> A fila de impressão também está pronta no servidor: ao confirmar o pedido,
+> nasce um trabalho de produção por setor (bytes ESC/POS com a tabela de
+> caracteres e o corte da impressora) na mesma transação, com chave de
+> idempotência, reserva de 2 min, nova tentativa com espera crescente, falha na
+> 5ª tentativa, expiração em 20 min, impressora reserva quando a principal está
+> fora e cancelamento dos pendentes quando o pedido é cancelado. Falta o agente
+> buscar essa fila (com o diário local), o aviso em tempo real para o agente e o
+> painel de impressões.
 
 ## Etapa 4 · Salão
 

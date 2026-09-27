@@ -580,6 +580,22 @@ export interface paths {
         patch: operations["change"];
         trace?: never;
     };
+    "/api/agent/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateJob"];
+        trace?: never;
+    };
     "/api/stream": {
         parameters: {
             query?: never;
@@ -637,6 +653,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_7"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{orderId}/print-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["printJobs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -717,6 +749,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["orders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["jobs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1324,6 +1372,11 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        AgentJobUpdateRequest: {
+            /** @enum {string} */
+            status: "SENT" | "PRINTED" | "FAILED" | "UNCERTAIN";
+            error?: string;
+        };
         PrintAgentResponse: {
             /** Format: uuid */
             id: string;
@@ -1388,6 +1441,28 @@ export interface components {
             columns: number;
             lines: components["schemas"]["TicketLineResponse"][];
         };
+        PrintJobResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            printerId: string;
+            /** @enum {string} */
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            /** Format: uuid */
+            sectorId: string | null;
+            /** @enum {string} */
+            reason: "AUTO" | "MANUAL" | "REPRINT" | "TEST";
+            /** @enum {string} */
+            status: "PENDING" | "SENT" | "PRINTED" | "FAILED" | "UNCERTAIN" | "EXPIRED" | "CANCELLED";
+            /** Format: int32 */
+            attempts: number;
+            lastError: string | null;
+            preview: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            printedAt: string | null;
+        };
         OrderStatusHistoryResponse: {
             /** @enum {string|null} */
             fromStatus: "RECEIVED" | "CONFIRMED" | "IN_PREPARATION" | "READY" | "DISPATCHED" | "COMPLETED" | "CANCELLED" | null;
@@ -1414,6 +1489,19 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+        };
+        AgentJobResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            printerId: string;
+            deliveryKey: string;
+            /** @enum {string} */
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            /** Format: byte */
+            payload: string;
+            /** Format: date-time */
+            createdAt: string;
         };
         AgentConfigResponse: {
             /** Format: uuid */
@@ -2750,6 +2838,30 @@ export interface operations {
             };
         };
     };
+    updateJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentJobUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     stream: {
         parameters: {
             query?: never;
@@ -2832,6 +2944,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TicketResponse"];
+                };
+            };
+        };
+    };
+    printJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrintJobResponse"][];
                 };
             };
         };
@@ -2938,6 +3072,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["OrderResponse"][];
+                };
+            };
+        };
+    };
+    jobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AgentJobResponse"][];
                 };
             };
         };

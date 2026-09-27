@@ -1890,6 +1890,40 @@
         }
       }
     },
+    "/api/agent/jobs/{id}": {
+      "patch": {
+        "tags": [
+          "agent-api-controller"
+        ],
+        "operationId": "updateJob",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentJobUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/stream": {
       "get": {
         "tags": [
@@ -2014,6 +2048,40 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{orderId}/print-jobs": {
+      "get": {
+        "tags": [
+          "ticket-controller"
+        ],
+        "operationId": "printJobs",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrintJobResponse"
+                  }
                 }
               }
             }
@@ -2155,6 +2223,29 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrderResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/jobs": {
+      "get": {
+        "tags": [
+          "agent-api-controller"
+        ],
+        "operationId": "jobs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgentJobResponse"
                   }
                 }
               }
@@ -4398,6 +4489,28 @@
           "status"
         ]
       },
+      "AgentJobUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "SENT",
+              "PRINTED",
+              "FAILED",
+              "UNCERTAIN"
+            ]
+          },
+          "error": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
       "PrintAgentResponse": {
         "type": "object",
         "properties": {
@@ -4629,6 +4742,91 @@
           "lines"
         ]
       },
+      "PrintJobResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "PRODUCTION_TICKET",
+              "ORDER_TICKET"
+            ]
+          },
+          "sectorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "AUTO",
+              "MANUAL",
+              "REPRINT",
+              "TEST"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "SENT",
+              "PRINTED",
+              "FAILED",
+              "UNCERTAIN",
+              "EXPIRED",
+              "CANCELLED"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "preview": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "printedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "attempts",
+          "createdAt",
+          "documentType",
+          "id",
+          "lastError",
+          "preview",
+          "printedAt",
+          "printerId",
+          "reason",
+          "sectorId",
+          "status"
+        ]
+      },
       "OrderStatusHistoryResponse": {
         "type": "object",
         "properties": {
@@ -4740,6 +4938,45 @@
           "size",
           "totalElements",
           "totalPages"
+        ]
+      },
+      "AgentJobResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deliveryKey": {
+            "type": "string"
+          },
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "PRODUCTION_TICKET",
+              "ORDER_TICKET"
+            ]
+          },
+          "payload": {
+            "type": "string",
+            "format": "byte"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "createdAt",
+          "deliveryKey",
+          "documentType",
+          "id",
+          "payload",
+          "printerId"
         ]
       },
       "AgentConfigResponse": {
