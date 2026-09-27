@@ -45,3 +45,9 @@ export type PaymentMethodType = PaymentMethod['type'];
 export type Payment = Schemas['PaymentResponse'];
 
 export type TicketDocument = Schemas['TicketResponse'];
+export type PrintAgent = Schemas['PrintAgentResponse'];
+export type PairingCode = Schemas['PairingCodeResponse'];
+export type Printer = Schemas['PrinterResponse'];
+export type PrinterRequest = Schemas['PrinterRequest'];
+export type SectorPrinter = Schemas['SectorPrinterResponse'];
+export type SectorPrinterRequest = Schemas['SectorPrinterRequest'];

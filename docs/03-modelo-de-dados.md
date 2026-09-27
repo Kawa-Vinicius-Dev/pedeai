@@ -113,10 +113,10 @@ num pedido de R$ 50, a loja vendeu R$ 50.
 
 | Tabela | Colunas principais | Regras |
 | --- | --- | --- |
-| `print_agent` | `store_id`, `name`, `token_hash`, `os`, `version`, `last_seen_at`, `revoked_at` | Online ou offline é derivado de `last_seen_at`. |
-| `agent_pairing_code` | `store_id`, `code_hash`, `expires_at`, `used_at` | 6 dígitos, 10 minutos, uso único. |
-| `printer` | `store_id`, `agent_id`, `name`, `connection_type` (`NETWORK`, `SYSTEM`), `host`, `port`, `system_name`, `paper_width_mm`, `columns`, `codepage`, `cut_mode`, `beep`, `active`, `status`, `status_detail`, `status_updated_at` | Cada impressora pertence a um agente. |
-| `sector_printer` | `sector_id` (PK), `store_id`, `printer_id`, `backup_printer_id`, `copies`, `enabled` | Para qual impressora vai a produção de cada setor. |
+| `print_agent` | `store_id`, `name`, `token_hash`, `os`, `agent_version`, `last_seen_at`, `revoked_at` | Online ou offline é derivado de `last_seen_at` (sem heartbeat há 60 s, offline). O token de dispositivo só vale em `/api/agent/**`. Revogado não autentica. |
+| `agent_pairing_code` | `store_id`, `code_hash`, `expires_at`, `used_at` | 6 dígitos, 10 minutos, uso único. Depois de 10 tentativas erradas em 10 minutos, o mesmo IP fica bloqueado até a janela passar. |
+| `printer` | `store_id`, `agent_id`, `name`, `connection_type` (`NETWORK`, `SYSTEM`), `host`, `port`, `system_name`, `paper_width_mm`, `columns`, `codepage` (`PC437`, `PC850`, `PC860`, `WPC1252`, `PC858`, `NO_ACCENTS`), `cut_mode` (`PARTIAL`, `FULL`, `NONE`), `active`, `status` (`UNKNOWN`, `ONLINE`, `OFFLINE`, `ERROR`), `status_detail`, `status_updated_at` | Cada impressora pertence a um agente. `CHECK`: rede tem `host` e `port`, sistema tem `system_name`; papel de 58 ou 80mm; 24 a 64 colunas. A tabela de caracteres é a linha da página de teste do agente que saiu certa. O bip ficou de fora até alguma impressora do piloto precisar. |
+| `sector_printer` | `sector_id` (PK), `store_id`, `printer_id`, `backup_printer_id`, `copies`, `enabled` | Para qual impressora vai a produção de cada setor. 1 a 5 cópias; a reserva não pode ser a própria principal. |
 | `print_rule` | `store_id`, `document_type`, `trigger`, `order_type`, `order_source`, `printer_id`, `copies`, `active` | Filtros nulos valem para qualquer valor. Ver [04 · Impressão](04-impressao.md#regras-de-impressão). |
 | `print_job` | `store_id`, `printer_id`, `agent_id`, `document_type`, `order_id`, `tab_id`, `reason` (`AUTO`, `MANUAL`, `REPRINT`, `TEST`), `idempotency_key`, `delivery_key`, `status`, `attempts`, `next_attempt_at`, `lease_until`, `last_error`, `payload` (bytes ESC/POS), `preview` (texto), `requested_by`, `created_at`, `sent_at`, `printed_at` | `UNIQUE(store_id, idempotency_key)` barra duplicidade na origem. Índice `(agent_id, status)`. Limpeza periódica de trabalhos antigos. |
 

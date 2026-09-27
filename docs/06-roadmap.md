@@ -120,6 +120,12 @@ batem nos testes.
 > dupla e corte. Foi testado contra uma impressora falsa e empacotado com
 > `jpackage` (roda sem Java instalado). Falta rodar nas impressoras reais e
 > anotar o resultado de cada uma.
+>
+> Também estão prontos o pareamento do computador de impressão (código de 6
+> dígitos e token de dispositivo em `/api/agent/**`), o heartbeat com o status de
+> cada impressora e a tela **Configurações › Impressão**, com computadores,
+> impressoras e a impressora de cada setor. Falta a fila de trabalhos com
+> impressão automática ao confirmar e o agente de verdade buscando essa fila.
 
 ## Etapa 4 · Salão
 
