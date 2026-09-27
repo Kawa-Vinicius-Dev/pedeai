@@ -45,3 +45,9 @@ app:
     refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:true}
   signup-enabled: ${SIGNUP_ENABLED:true}
   cors-allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  # Aplicativo centralizado no iFood Developer. Sem credenciais, a integração fica desligada.
+  ifood:
+    enabled: ${IFOOD_ENABLED:false}
+    client-id: ${IFOOD_CLIENT_ID:}
+    client-secret: ${IFOOD_CLIENT_SECRET:}
+    simulator: ${IFOOD_SIMULATOR:false}

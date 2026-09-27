@@ -61,7 +61,7 @@ public final class PrintingFixtures {
                         ItemStatus.ACTIVE, List.of()));
         return new OrderResponse(ORDER_ID, 42, LocalDate.of(2026, 9, 24), OrderType.TAKEOUT, OrderSource.PEDEAI,
                 status, null, "Rita", null, null, null, items, 5390, 0, 0, 0, 0, 5390, NOW, NOW, null, null, null,
-                null, null, null, 0, null, null);
+                null, null, null, 0, null, null, null);
     }
 
     public static PrintJob job(Printer printer, PrintJob.Status status) {

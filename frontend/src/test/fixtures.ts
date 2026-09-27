@@ -279,6 +279,9 @@ export function order(overrides: Partial<Order> = {}): Order {
     cancelledAt: null,
     cancelReason: null,
     version: 0,
+    externalDisplayId: null,
+    scheduledFor: null,
+    externalId: null,
     ...overrides,
   };
 }
@@ -300,6 +303,8 @@ export function orderSummary(overrides: Partial<OrderSummary> = {}): OrderSummar
     createdAt: full.createdAt,
     updatedAt: full.createdAt,
     version: full.version,
+    externalDisplayId: full.externalDisplayId,
+    scheduledFor: full.scheduledFor,
     ...overrides,
   };
 }

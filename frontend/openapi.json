@@ -1406,6 +1406,47 @@
         }
       }
     },
+    "/api/orders/{orderId}/marketplace/cancellation": {
+      "post": {
+        "tags": [
+          "marketplace-order-controller"
+        ],
+        "operationId": "requestCancellation",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketplaceCancellationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/option-groups": {
       "get": {
         "tags": [
@@ -1457,12 +1498,128 @@
         }
       }
     },
+    "/api/marketplace-actions/{id}/retry": {
+      "post": {
+        "tags": [
+          "marketplace-order-controller"
+        ],
+        "operationId": "retry_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations": {
+      "get": {
+        "tags": [
+          "integration-controller"
+        ],
+        "operationId": "list_7",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConnectionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "integration-controller"
+        ],
+        "operationId": "connect",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/{id}/simulated-orders": {
+      "post": {
+        "tags": [
+          "integration-controller"
+        ],
+        "operationId": "simulate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/delivery-zones": {
       "get": {
         "tags": [
           "delivery-zone-controller"
         ],
-        "operationId": "list_7",
+        "operationId": "list_8",
         "responses": {
           "200": {
             "description": "OK",
@@ -1643,7 +1800,7 @@
         "tags": [
           "category-controller"
         ],
-        "operationId": "list_8",
+        "operationId": "list_9",
         "responses": {
           "200": {
             "description": "OK",
@@ -2011,6 +2168,47 @@
         }
       }
     },
+    "/api/integrations/{id}": {
+      "patch": {
+        "tags": [
+          "integration-controller"
+        ],
+        "operationId": "update_10",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectionUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/agent/jobs/{id}": {
       "patch": {
         "tags": [
@@ -2193,7 +2391,7 @@
         "tags": [
           "print-agent-controller"
         ],
-        "operationId": "list_9",
+        "operationId": "list_10",
         "responses": {
           "200": {
             "description": "OK",
@@ -2269,6 +2467,74 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/TicketResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{orderId}/marketplace/sync": {
+      "get": {
+        "tags": [
+          "marketplace-order-controller"
+        ],
+        "operationId": "sync",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OutboundActionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{orderId}/marketplace/cancellation-reasons": {
+      "get": {
+        "tags": [
+          "marketplace-order-controller"
+        ],
+        "operationId": "cancellationReasons",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CancellationReasonResponse"
+                  }
                 }
               }
             }
@@ -2410,6 +2676,49 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OrderResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/ifood/setup": {
+      "get": {
+        "tags": [
+          "integration-controller"
+        ],
+        "operationId": "setup",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IfoodSetupResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/ifood/merchants": {
+      "get": {
+        "tags": [
+          "integration-controller"
+        ],
+        "operationId": "merchants",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MerchantResponse"
                   }
                 }
               }
@@ -4389,6 +4698,25 @@
           "version": {
             "type": "integer",
             "format": "int64"
+          },
+          "externalDisplayId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scheduledFor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "externalId": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -4406,6 +4734,8 @@
           "deliveryFeeCents",
           "discountCents",
           "dispatchedAt",
+          "externalDisplayId",
+          "externalId",
           "id",
           "items",
           "notes",
@@ -4413,6 +4743,7 @@
           "platformSubsidyCents",
           "preparationStartedAt",
           "readyAt",
+          "scheduledFor",
           "source",
           "status",
           "subtotalCents",
@@ -4555,6 +4886,157 @@
           "origin",
           "paidAt",
           "paymentMethodId",
+          "status"
+        ]
+      },
+      "MarketplaceCancellationRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 0
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ]
+      },
+      "OutboundActionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "CONFIRM",
+              "START_PREPARATION",
+              "READY",
+              "DISPATCH",
+              "REQUEST_CANCELLATION"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "DONE",
+              "FAILED",
+              "SKIPPED"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "action",
+          "attempts",
+          "createdAt",
+          "id",
+          "lastError",
+          "status"
+        ]
+      },
+      "ConnectionRequest": {
+        "type": "object",
+        "properties": {
+          "externalMerchantId": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "autoConfirm": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "autoConfirm",
+          "externalMerchantId"
+        ]
+      },
+      "ConnectionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "PEDEAI",
+              "IFOOD",
+              "NINETY_NINE_FOOD"
+            ]
+          },
+          "externalMerchantId": {
+            "type": "string"
+          },
+          "merchantName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED",
+              "ERROR"
+            ]
+          },
+          "autoConfirm": {
+            "type": "boolean"
+          },
+          "lastEventAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "failedActions": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "autoConfirm",
+          "externalMerchantId",
+          "failedActions",
+          "id",
+          "lastError",
+          "lastEventAt",
+          "merchantName",
+          "provider",
           "status"
         ]
       },
@@ -4799,6 +5281,26 @@
           "status"
         ]
       },
+      "ConnectionUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED",
+              "ERROR"
+            ]
+          },
+          "autoConfirm": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "autoConfirm",
+          "status"
+        ]
+      },
       "AgentJobUpdateRequest": {
         "type": "object",
         "properties": {
@@ -5003,6 +5505,19 @@
           "version": {
             "type": "integer",
             "format": "int64"
+          },
+          "externalDisplayId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scheduledFor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         },
         "required": [
@@ -5010,10 +5525,12 @@
           "createdAt",
           "customerName",
           "deliveryNeighborhood",
+          "externalDisplayId",
           "id",
           "itemCount",
           "itemsSummary",
           "number",
+          "scheduledFor",
           "source",
           "status",
           "totalCents",
@@ -5111,6 +5628,21 @@
           "lines"
         ]
       },
+      "CancellationReasonResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ]
+      },
       "OrderStatusHistoryResponse": {
         "type": "object",
         "properties": {
@@ -5188,6 +5720,36 @@
         "required": [
           "store",
           "user"
+        ]
+      },
+      "IfoodSetupResponse": {
+        "type": "object",
+        "properties": {
+          "configured": {
+            "type": "boolean"
+          },
+          "simulator": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "configured",
+          "simulator"
+        ]
+      },
+      "MerchantResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
         ]
       },
       "PageResponseCustomerResponse": {

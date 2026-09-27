@@ -176,7 +176,7 @@ class PaymentServiceTest {
     private static OrderResponse order(OrderStatus status, long total) {
         return new OrderResponse(ORDER_ID, 1, LocalDate.of(2026, 9, 24), OrderType.DELIVERY, OrderSource.PEDEAI,
                 status, null, "Maria", null, null, null, List.of(), total, 0, 0, 0, 0, total, NOW, null, null, null,
-                null, null, null, null, 0, null, null);
+                null, null, null, null, 0, null, null, null);
     }
 
     private static CurrentUser user(Role role) {
