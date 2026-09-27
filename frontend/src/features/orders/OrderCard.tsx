@@ -1,7 +1,7 @@
 import { Badge, Button, Group, Paper, Stack, Text, UnstyledButton } from '@mantine/core';
 import type { OrderStatus, OrderSummary, Role } from '../../shared/api/types';
 import { formatCents } from '../../shared/lib/numbers';
-import { minutesSince, nextActions, STATUS_COLORS, STATUS_LABELS, TYPE_LABELS } from './labels';
+import { minutesSince, nextActions, sourceBadge, STATUS_COLORS, STATUS_LABELS, TYPE_LABELS } from './labels';
 
 /** Recebido há mais de 3 minutos: o iFood cancela sozinho aos 8 (docs/01-fluxos.md). */
 const RECEIVED_ALERT_MINUTES = 3;
@@ -45,6 +45,11 @@ export function OrderCard({
                 <Badge size="sm" variant="light" color={order.type === 'DELIVERY' ? 'grape' : 'cyan'}>
                   {TYPE_LABELS[order.type]}
                 </Badge>
+                {sourceBadge(order) && (
+                  <Badge size="sm" color="red" variant="filled">
+                    {sourceBadge(order)}
+                  </Badge>
+                )}
               </Group>
               <Text size="sm" fw={600} c={elapsedColor}>
                 {waiting} min

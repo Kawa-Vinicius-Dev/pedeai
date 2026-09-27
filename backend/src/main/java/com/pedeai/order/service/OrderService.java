@@ -13,10 +13,13 @@ import com.pedeai.order.domain.Order;
 import com.pedeai.order.domain.OrderCustomer;
 import com.pedeai.order.domain.OrderItem;
 import com.pedeai.order.domain.OrderItemOption;
+import com.pedeai.order.domain.OrderSource;
 import com.pedeai.order.domain.OrderStatus;
 import com.pedeai.order.domain.OrderStatusHistory;
 import com.pedeai.order.domain.OrderType;
 import com.pedeai.order.dto.CreateOrderRequest;
+import com.pedeai.order.dto.DeliveryAddressResponse;
+import com.pedeai.order.dto.MarketplaceOrderRequest;
 import com.pedeai.order.dto.OrderCustomerRequest;
 import com.pedeai.order.dto.OrderItemRequest;
 import com.pedeai.order.dto.OrderResponse;
@@ -121,8 +124,63 @@ public class OrderService {
         historyRepository.saveAll(timeline);
         orderRepository.flush();
         events.publishEvent(new OrderCreated(storeId, order.getId(), order.getNumber(), order.getStatus(),
-                order.getVersion(), order.getTotalCents(), request.payments(), user.userId()));
+                order.getVersion(), order.getTotalCents(), request.payments(), user.userId(), OrderSource.PEDEAI));
         return OrderResponse.from(order);
+    }
+
+    /**
+     * Importa um pedido de marketplace. Idempotente: o mesmo pedido chegando de novo (evento repetido, webhook e
+     * polling) devolve o que já existe, sem criar outro. Nasce recebido; com {@code autoConfirm}, já confirmado.
+     */
+    @Transactional
+    public OrderResponse importFromMarketplace(UUID storeId, MarketplaceOrderRequest request) {
+        var existing = orderRepository.findByStoreIdAndSourceAndExternalId(storeId, request.source(),
+                request.externalId());
+        if (existing.isPresent()) {
+            return OrderResponse.from(existing.get());
+        }
+        List<OrderItem> items = new ArrayList<>();
+        for (int index = 0; index < request.items().size(); index++) {
+            MarketplaceOrderRequest.Item item = request.items().get(index);
+            List<OrderItemOption> options = new ArrayList<>();
+            for (int position = 0; position < item.options().size(); position++) {
+                MarketplaceOrderRequest.Option option = item.options().get(position);
+                options.add(new OrderItemOption(storeId, null, option.groupName(), option.name(), option.code(),
+                        option.quantity(), option.unitPriceCents(), position));
+            }
+            items.add(new OrderItem(storeId, item.productId(), item.code(), item.name(), item.sectorId(),
+                    item.quantity(), item.unitPriceCents(), item.optionsPriceCents(), Texts.trimToNull(item.notes()),
+                    options, index));
+        }
+        StoreResponse store = storeService.get(storeId);
+        Instant now = Instant.now(clock);
+        LocalDate businessDate = BusinessDay.of(now, ZoneId.of(store.timezone()), store.businessDayCutoff());
+        int number = numberService.next(storeId, businessDate);
+        Order order = Order.placeMarketplace(storeId, businessDate, number, request.source(), request.externalId(),
+                request.displayId(), request.type(), request.scheduledFor(), request.customerName(),
+                request.customerPhone(), toDeliveryAddress(request.deliveryAddress()), Texts.trimToNull(request.notes()),
+                items, request.discountCents(), request.platformSubsidyCents(), request.deliveryFeeCents(),
+                request.additionalFeeCents(), now);
+        Actor platform = Actor.marketplace(request.source());
+        List<OrderStatusHistory> timeline = new ArrayList<>();
+        timeline.add(new OrderStatusHistory(order, null, OrderStatus.RECEIVED, platform, null, now));
+        if (request.autoConfirm()) {
+            order.advanceTo(OrderStatus.CONFIRMED, now);
+            timeline.add(new OrderStatusHistory(order, OrderStatus.RECEIVED, OrderStatus.CONFIRMED, Actor.system(),
+                    null, now));
+        }
+        orderRepository.save(order);
+        historyRepository.saveAll(timeline);
+        orderRepository.flush();
+        events.publishEvent(new OrderCreated(storeId, order.getId(), order.getNumber(), order.getStatus(),
+                order.getVersion(), order.getTotalCents(), request.payments(), null, request.source()));
+        return OrderResponse.from(order);
+    }
+
+    /** O pedido de marketplace pelo id da plataforma, se já foi importado. */
+    @Transactional(readOnly = true)
+    public java.util.Optional<OrderResponse> findExternal(UUID storeId, OrderSource source, String externalId) {
+        return orderRepository.findByStoreIdAndSourceAndExternalId(storeId, source, externalId).map(OrderResponse::from);
     }
 
     @Transactional(readOnly = true)
@@ -235,6 +293,11 @@ public class OrderService {
         var draft = request.toDraft();
         return new DeliveryAddress(draft.street(), draft.number(), draft.complement(), draft.neighborhood(),
                 draft.city(), draft.state(), draft.postalCode(), draft.reference());
+    }
+
+    private static DeliveryAddress toDeliveryAddress(DeliveryAddressResponse address) {
+        return address == null ? null : new DeliveryAddress(address.street(), address.number(), address.complement(),
+                address.neighborhood(), address.city(), address.state(), address.postalCode(), address.reference());
     }
 
     private Order find(UUID storeId, UUID id) {

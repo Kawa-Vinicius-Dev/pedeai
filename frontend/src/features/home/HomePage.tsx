@@ -1,13 +1,11 @@
 import { Anchor, Card, List, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
-import { Armchair, Bike, BookOpen, ChartColumn, ChefHat, ClipboardList, CreditCard, type LucideIcon, Plug, Plus, Store, Users } from 'lucide-react';
+import { Bike, BookOpen, ChartColumn, ClipboardList, CreditCard, type LucideIcon, Plug, Plus, Store, Users } from 'lucide-react';
 import { Link } from 'react-router';
 import { ORDER_TAKERS, ORDER_VIEWERS } from '../../shared/lib/roles';
 import { useSession } from '../auth/auth-context';
 
 const UPCOMING: { label: string; icon: LucideIcon }[] = [
-  { label: 'Impressão automática por setor', icon: ChefHat },
-  { label: 'Mesas e comandas', icon: Armchair },
-  { label: 'Pedidos do iFood e da 99Food', icon: Plug },
+  { label: 'Pedidos da 99Food', icon: Plug },
   { label: 'Caixa e relatórios de vendas', icon: ChartColumn },
 ];
 

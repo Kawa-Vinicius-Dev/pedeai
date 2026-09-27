@@ -74,12 +74,32 @@ export function canCancel(order: { status: OrderStatus; source: string }, role: 
   if (order.status === 'CANCELLED' || role === 'KITCHEN' || role === 'WAITER') {
     return false;
   }
+  // Pedido de marketplace em andamento é cancelado pela plataforma: ver canRequestMarketplaceCancel.
+  if (order.source !== 'PEDEAI' && order.status !== 'COMPLETED') {
+    return false;
+  }
   const manager = role === 'OWNER' || role === 'MANAGER';
   if (order.status === 'COMPLETED') {
     return manager && order.source === 'PEDEAI';
   }
   const preparationStarted = order.status === 'IN_PREPARATION' || order.status === 'READY' || order.status === 'DISPATCHED';
   return !preparationStarted || manager;
+}
+
+/** Pedido do iFood em andamento: o cancelamento é pedido à plataforma, com um motivo dela. */
+export function canRequestMarketplaceCancel(order: { status: OrderStatus; source: string }, role: Role): boolean {
+  const final = order.status === 'CANCELLED' || order.status === 'COMPLETED';
+  return order.source !== 'PEDEAI' && !final && ['OWNER', 'MANAGER', 'CASHIER'].includes(role);
+}
+
+export const SOURCE_LABELS: Record<string, string> = { PEDEAI: 'PedeAí', IFOOD: 'iFood', NINETY_NINE_FOOD: '99Food' };
+
+/** "iFood 7391": o número que o cliente e o entregador veem no aplicativo. */
+export function sourceBadge(order: { source: string; externalDisplayId: string | null }): string | null {
+  if (order.source === 'PEDEAI') {
+    return null;
+  }
+  return [SOURCE_LABELS[order.source] ?? order.source, order.externalDisplayId].filter(Boolean).join(' ');
 }
 
 /** "Pedido 12" — o número recomeça a cada dia operacional. */

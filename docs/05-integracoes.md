@@ -271,6 +271,14 @@ PedeAí: métricas de atraso do inbox, falhas por plataforma e taxa de `429` e
 
 ## Pendências para validar na documentação oficial
 
+> **Conferido em set/2026** (página de endpoints do módulo de pedidos): polling em
+> `GET /order/v1.0/orders:polling`, ack em `POST /order/v1.0/orders:acknowledgment`
+> com `{"acknowledgedEventIds": [...]}`, e ações em `POST /order/v1.0/orders/{id}/`
+> `confirm`, `startPreparation`, `readyToPickup`, `dispatch` e `requestCancellation`,
+> todas respondendo `202`. O PedeAí usa esses caminhos por padrão, configuráveis
+> ([D26](decisoes.md#d26--integração-com-o-ifood-sem-credenciais-simulador-e-caminhos-configuráveis)),
+> porque outras páginas ainda mostram `events:polling`. Confirmar na homologação.
+
 Antes da Etapa 5 (iFood):
 
 - Formato completo do payload do webhook e configuração do modo de presença.

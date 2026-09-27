@@ -89,7 +89,8 @@ class PrintRoutingServiceTest {
     }
 
     private static OrderCreated created(OrderStatus status) {
-        return new OrderCreated(STORE_ID, ORDER_ID, 42, status, 0, 5390, List.of(), USER_ID);
+        return new OrderCreated(STORE_ID, ORDER_ID, 42, status, 0, 5390, List.of(), USER_ID,
+                com.pedeai.order.domain.OrderSource.PEDEAI);
     }
 
     @Test
@@ -110,7 +111,7 @@ class PrintRoutingServiceTest {
         verify(jobs, never()).save(any());
 
         service.onStatusChanged(new OrderStatusChanged(STORE_ID, ORDER_ID, 42, OrderStatus.RECEIVED,
-                OrderStatus.CONFIRMED, 1));
+                OrderStatus.CONFIRMED, 1, com.pedeai.order.domain.ActorType.USER));
         verify(jobs).save(any());
     }
 
@@ -158,7 +159,7 @@ class PrintRoutingServiceTest {
                         com.pedeai.printing.dto.TicketLineResponse.Align.CENTER, false, true))));
 
         service.onStatusChanged(new OrderStatusChanged(STORE_ID, ORDER_ID, 42, OrderStatus.CONFIRMED,
-                OrderStatus.CANCELLED, 2));
+                OrderStatus.CANCELLED, 2, com.pedeai.order.domain.ActorType.USER));
 
         assertThat(waitingInBar.getStatus()).isEqualTo(PrintJob.Status.CANCELLED);
         ArgumentCaptor<PrintJob> saved = ArgumentCaptor.forClass(PrintJob.class);
@@ -175,7 +176,7 @@ class PrintRoutingServiceTest {
         when(jobs.findAllByOrderIdAndStatus(ORDER_ID, PrintJob.Status.PENDING)).thenReturn(List.of(pending));
 
         service.onStatusChanged(new OrderStatusChanged(STORE_ID, ORDER_ID, 42, OrderStatus.CONFIRMED,
-                OrderStatus.CANCELLED, 2));
+                OrderStatus.CANCELLED, 2, com.pedeai.order.domain.ActorType.USER));
 
         assertThat(pending.getStatus()).isEqualTo(PrintJob.Status.CANCELLED);
     }
