@@ -23,7 +23,7 @@ Java puro, sem Spring. Só o Jackson (para o JSON da API), embutido no jar.
    java -jar pedeai-agent.jar rodar
    ```
 
-O pareamento fica em `%APPDATA%\PedeAigente.properties` e o diário das impressões em
+O pareamento fica em `%APPDATA%\PedeAi\agente.properties` e o diário das impressões em
 `%APPDATA%\PedeAi\diario.log` (últimos 7 dias). O diário anota "recebido" antes de mandar para a impressora e
 "impresso" depois: a mesma chave nunca sai duas vezes, e se o computador desligar no meio, o trabalho aparece
 como **incerto** na tela em vez de sair de novo sozinho. Remover o computador na tela para o agente na hora.
