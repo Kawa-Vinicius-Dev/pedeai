@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -260,8 +261,9 @@ class PrintingIntegrationTest {
         send(owner, get("/api/print-alerts"), "")
                 .andExpect(jsonPath("$[?(@.printerId == null)].message").value("1 impressão precisa de atenção."));
         send(owner, get("/api/print-jobs"), "")
-                .andExpect(jsonPath("$[0].status").value("UNCERTAIN"))
-                .andExpect(jsonPath("$[0].title").value(containsString("Cozinha")));
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].status").value("UNCERTAIN"))
+                .andExpect(jsonPath("$.content[0].title").value(containsString("Cozinha")));
 
         send(owner, post("/api/print-jobs/" + jobId + "/retry").param("printerId", cashierPrinter), "")
                 .andExpect(status().isOk())
@@ -278,6 +280,7 @@ class PrintingIntegrationTest {
         String first = JsonPath.read(send(owner, post("/api/orders/" + orderId + "/print-jobs")
                         .header("Idempotency-Key", "clique-1"), reprint)
                 .andExpect(status().isCreated())
+                .andExpect(header().string(HttpHeaders.LOCATION, org.hamcrest.Matchers.startsWith("/api/print-jobs/")))
                 .andExpect(jsonPath("$.reason").value("REPRINT"))
                 .andExpect(jsonPath("$.preview").value(containsString("*** REIMPRESSÃO ***")))
                 .andReturn().getResponse().getContentAsString(), "$.id");
@@ -293,7 +296,10 @@ class PrintingIntegrationTest {
         send(kitchenUser, post("/api/orders/" + orderId + "/print-jobs"), """
                 {"documentType":"PRODUCTION_TICKET","sectorId":"%s","printerId":"%s"}"""
                 .formatted(kitchen, kitchenPrinter)).andExpect(status().isCreated());
-        send(register("sara"), get("/api/print-jobs"), "").andExpect(jsonPath("$.length()").value(0));
+        String other = register("sara");
+        send(other, get("/api/print-jobs"), "").andExpect(jsonPath("$.totalElements").value(0));
+        send(other, get("/api/print-jobs/" + jobId), "").andExpect(status().isNotFound());
+        send(owner, get("/api/print-jobs/" + jobId), "").andExpect(jsonPath("$.status").value("PENDING"));
     }
 
     private String pairAgent(String owner) throws Exception {

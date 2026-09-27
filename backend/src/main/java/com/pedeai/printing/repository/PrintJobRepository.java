@@ -1,6 +1,8 @@
 package com.pedeai.printing.repository;
 
 import com.pedeai.printing.domain.PrintJob;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.Instant;
@@ -17,7 +19,7 @@ public interface PrintJobRepository extends JpaRepository<PrintJob, UUID> {
 
     Optional<PrintJob> findByIdAndStoreId(UUID id, UUID storeId);
 
-    List<PrintJob> findAllByStoreIdAndCreatedAtAfterOrderByCreatedAtDesc(UUID storeId, Instant since);
+    Page<PrintJob> findAllByStoreIdAndCreatedAtAfter(UUID storeId, Instant since, Pageable pageable);
 
     long countByPrinterIdAndStatus(UUID printerId, PrintJob.Status status);
 

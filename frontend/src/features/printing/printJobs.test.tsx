@@ -74,10 +74,16 @@ describe('impressões', () => {
         HttpResponse.json([printer(KITCHEN_PRINTER, 'Cozinha'), printer(CASHIER_PRINTER, 'Caixa')]),
       ),
       http.get('/api/print-jobs', () =>
-        HttpResponse.json([
-          job({ id: 'ok', title: 'Pedido 11 · Cozinha' }),
-          job({ status: 'UNCERTAIN', lastError: 'Agente reiniciou', printedAt: null }),
-        ]),
+        HttpResponse.json({
+          content: [
+            job({ id: 'ok', title: 'Pedido 11 · Cozinha' }),
+            job({ status: 'UNCERTAIN', lastError: 'Agente reiniciou', printedAt: null }),
+          ],
+          page: 0,
+          size: 20,
+          totalElements: 2,
+          totalPages: 1,
+        }),
       ),
       http.post('/api/print-jobs/:id/retry', ({ request }) => {
         retried = new URL(request.url);

@@ -1,5 +1,6 @@
-import { Alert, Badge, Button, Card, Group, Loader, Menu, Stack, Table, Text, Title } from '@mantine/core';
+import { Alert, Badge, Button, Card, Group, Loader, Menu, Pagination, Stack, Table, Text, Title } from '@mantine/core';
 import { CircleAlert, RotateCcw } from 'lucide-react';
+import { useState } from 'react';
 import { errorMessage } from '../../shared/api/errors';
 import type { PrintJob, Printer } from '../../shared/api/types';
 import { useSession } from '../auth/auth-context';
@@ -16,10 +17,11 @@ const time = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digi
 
 /** Impressões das últimas 24 h. O que falhou, ficou incerto ou expirou vem primeiro, com "imprimir de novo". */
 export function PrintJobsPage() {
-  const jobs = useRecentPrintJobs();
+  const [page, setPage] = useState(0);
+  const jobs = useRecentPrintJobs(page);
   const printers = usePrinters();
   const printerName = (id: string) => printers.data?.find((printer) => printer.id === id)?.name ?? '—';
-  const sorted = [...(jobs.data ?? [])].sort(
+  const sorted = [...(jobs.data?.content ?? [])].sort(
     (a, b) => Number(NEEDS_ATTENTION.includes(b.status)) - Number(NEEDS_ATTENTION.includes(a.status)),
   );
 
@@ -28,7 +30,8 @@ export function PrintJobsPage() {
       <Stack gap={4}>
         <Title order={2}>Impressões</Title>
         <Text c="dimmed">
-          Últimas 24 horas. O que falhou, ficou incerto ou expirou não sai sozinho: decida se imprime de novo.
+          Últimas 24 horas, das mais novas para as mais antigas. O que falhou, ficou incerto ou expirou não sai
+          sozinho: decida se imprime de novo.
         </Text>
       </Stack>
       <Card withBorder radius="lg" padding={0}>
@@ -38,7 +41,7 @@ export function PrintJobsPage() {
             {errorMessage(jobs.error)}
           </Alert>
         )}
-        {jobs.data?.length === 0 && (
+        {jobs.data?.totalElements === 0 && (
           <Text c="dimmed" p="md">
             Nenhuma impressão nas últimas 24 horas.
           </Text>
@@ -82,6 +85,11 @@ export function PrintJobsPage() {
               ))}
             </Table.Tbody>
           </Table>
+        )}
+        {jobs.data && jobs.data.totalPages > 1 && (
+          <Group justify="center" p="md">
+            <Pagination total={jobs.data.totalPages} value={page + 1} onChange={(value) => setPage(value - 1)} />
+          </Group>
         )}
       </Card>
     </Stack>

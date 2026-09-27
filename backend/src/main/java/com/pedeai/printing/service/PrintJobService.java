@@ -17,6 +17,9 @@ import com.pedeai.shared.exception.BusinessRuleException;
 import com.pedeai.shared.exception.ConflictException;
 import com.pedeai.shared.exception.ResourceNotFoundException;
 import com.pedeai.shared.security.CurrentUser;
+import com.pedeai.shared.web.PageResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,13 +66,18 @@ public class PrintJobService {
         this.clock = clock;
     }
 
-    /** Impressões das últimas 24 h, da mais nova para a mais antiga. */
+    /** Impressões das últimas 24 h, da mais nova para a mais antiga, em páginas. */
     @Transactional(readOnly = true)
-    public List<PrintJobResponse> recent(UUID storeId) {
-        return jobRepository.findAllByStoreIdAndCreatedAtAfterOrderByCreatedAtDesc(storeId,
-                        Instant.now(clock).minus(PANEL_WINDOW)).stream()
-                .map(PrintJobResponse::from)
-                .toList();
+    public PageResponse<PrintJobResponse> recent(UUID storeId, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return PageResponse.from(jobRepository.findAllByStoreIdAndCreatedAtAfter(storeId,
+                Instant.now(clock).minus(PANEL_WINDOW), pageable).map(PrintJobResponse::from));
+    }
+
+    @Transactional(readOnly = true)
+    public PrintJobResponse get(UUID storeId, UUID id) {
+        return PrintJobResponse.from(jobRepository.findByIdAndStoreId(id, storeId)
+                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND)));
     }
 
     /** Imprimir de novo o que falhou, ficou incerto ou expirou, na mesma impressora ou em outra. */

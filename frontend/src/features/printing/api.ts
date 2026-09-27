@@ -102,10 +102,10 @@ export function usePrintAlerts(enabled: boolean) {
   });
 }
 
-export function useRecentPrintJobs() {
+export function useRecentPrintJobs(page: number) {
   return useQuery({
-    queryKey: jobKeys.recent,
-    queryFn: () => unwrap(api.GET('/api/print-jobs')),
+    queryKey: [...jobKeys.recent, page],
+    queryFn: () => unwrap(api.GET('/api/print-jobs', { params: { query: { page, size: 20 } } })),
     refetchInterval: 10_000,
   });
 }
