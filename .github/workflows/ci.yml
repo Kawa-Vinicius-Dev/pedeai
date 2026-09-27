@@ -74,6 +74,37 @@ jobs:
           cache: maven
       - run: ./mvnw -B verify
 
+  # Instalador do agente para o computador da loja. O runner Windows já tem o WiX, que o jpackage usa para o MSI.
+  # O .msi fica nos artefatos da execução do CI.
+  agent-installer:
+    name: Instalador do agente (Windows)
+    needs: agent
+    runs-on: windows-2022
+    defaults:
+      run:
+        working-directory: agent
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - run: .\mvnw.cmd -B package -DskipTests
+      - run: |
+          New-Item -ItemType Directory -Force staging | Out-Null
+          Copy-Item target\pedeai-agent.jar staging\
+          jpackage --type msi --name PedeAiAgente --app-version 0.2.0 --vendor PedeAi `
+            --description "Agente de impressao do PedeAi" `
+            --input staging --main-jar pedeai-agent.jar `
+            --add-modules java.base,java.desktop,java.net.http,jdk.charsets `
+            --win-console --win-per-user-install --win-menu --win-menu-group PedeAi --win-shortcut `
+            --win-upgrade-uuid b5c6b089-9c5e-477c-834a-e9b414bfdb43 --dest dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PedeAiAgente-msi
+          path: agent/dist/*.msi
+
   frontend:
     name: Frontend
     runs-on: ubuntu-latest

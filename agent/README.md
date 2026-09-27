@@ -7,21 +7,29 @@ fonte dupla e o corte.
 
 Java puro, sem Spring. Só o Jackson (para o JSON da API), embutido no jar.
 
-## Ligar à loja e imprimir
+## Instalar e ligar à loja
 
-1. Na tela **Configurações › Impressão**, clique em **Adicionar computador** e anote o código de 6 dígitos.
-2. No computador da loja:
+1. Baixe o instalador `PedeAiAgente-msi` nos artefatos da última execução do CI (GitHub › Actions) e instale no
+   computador da loja. Não precisa de Java nem de administrador: instala na pasta do usuário e cria o atalho
+   **PedeAi Agente** no menu Iniciar e na área de trabalho.
+2. Na tela **Configurações › Impressão**, clique em **Adicionar computador**. A tela mostra o endereço e um
+   código de 6 dígitos.
+3. Abra o **PedeAi Agente** e digite o endereço e o código. Pronto: ele começa a imprimir e passa a abrir
+   sozinho com o Windows.
+4. Cadastre as impressoras na mesma tela (com o resultado da página de teste) e escolha a impressora de cada
+   setor.
 
-   ```bash
-   java -jar pedeai-agent.jar parear https://endereco-da-api 123456 --nome "Caixa"
-   ```
+Pela linha de comando dá para fazer o mesmo:
 
-3. Cadastre as impressoras na mesma tela (com o resultado da página de teste) e escolha a impressora de cada setor.
-4. Deixe rodando enquanto a loja funciona:
+```bash
+java -jar pedeai-agent.jar parear https://endereco-do-pedeai 123456 --nome "Caixa"
+```
 
-   ```bash
-   java -jar pedeai-agent.jar rodar
-   ```
+```bash
+java -jar pedeai-agent.jar rodar
+```
+
+Para o agente não abrir mais com o Windows: `nao-iniciar-com-windows`.
 
 O pareamento fica em `%APPDATA%\PedeAi\agente.properties` e o diário das impressões em
 `%APPDATA%\PedeAi\diario.log` (últimos 7 dias). O diário anota "recebido" antes de mandar para a impressora e
@@ -37,14 +45,19 @@ internet, ele espera e tenta de novo.
 cd agent && ./mvnw verify          # testes + target/pedeai-agent.jar
 ```
 
-Para levar a um computador **sem Java**, gere uma pasta com o runtime embutido (cerca de 75 MB; rodar
-num Windows com JDK 21 ou mais novo):
+O CI gera o instalador MSI (job "Instalador do agente"). Para gerar uma pasta com o runtime embutido na sua
+máquina (cerca de 75 MB; num Windows com JDK 21 ou mais novo), passe só o jar para o `jpackage`:
 
 ```bash
-jpackage --type app-image --name PedeAiAgente --input target --main-jar pedeai-agent.jar --add-modules java.base,java.desktop,jdk.charsets --win-console
+mkdir staging && copy target\pedeai-agent.jar staging\
 ```
 
-`jdk.charsets` é obrigatório: é nele que estão as tabelas PC437, PC850 e PC860. Sem ele o programa nem abre.
+```bash
+jpackage --type app-image --name PedeAiAgente --input staging --main-jar pedeai-agent.jar --add-modules java.base,java.desktop,java.net.http,jdk.charsets --win-console
+```
+
+`jdk.charsets` tem as tabelas PC437, PC850 e PC860, e `java.net.http` é o cliente da API: sem eles o agente não
+abre.
 
 Copie a pasta `PedeAiAgente` para o computador do restaurante e use `PedeAiAgente\PedeAiAgente.exe`
 no lugar de `java -jar pedeai-agent.jar`.

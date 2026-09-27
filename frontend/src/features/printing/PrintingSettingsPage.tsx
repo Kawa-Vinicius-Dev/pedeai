@@ -127,7 +127,10 @@ function AgentsCard() {
       >
         {pairing && (
           <Stack>
-            <Text>No computador da loja, abra o agente e digite o código:</Text>
+            <Text>No computador da loja, abra o agente de impressão e digite:</Text>
+            <Text size="sm">
+              Endereço: <Code>{window.location.origin}</Code>
+            </Text>
             <Code block fz={36} ta="center" fw={800} aria-label="Código de pareamento">
               {pairing.code}
             </Code>
