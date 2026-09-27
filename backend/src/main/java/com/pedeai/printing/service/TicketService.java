@@ -27,6 +27,7 @@ import java.util.UUID;
 @Service
 public class TicketService {
     static final String SECTOR_REQUIRED = "Escolha o setor do ticket de produção.";
+    static final String NOT_CANCELLED = "O pedido não está cancelado.";
     static final String KITCHEN_PRODUCTION_ONLY = "A cozinha só imprime tickets de produção.";
 
     private final OrderService orderService;
@@ -46,26 +47,48 @@ public class TicketService {
 
     @Transactional(readOnly = true)
     public TicketResponse render(CurrentUser user, UUID orderId, DocumentType type, UUID sectorId, int columns) {
-        OrderResponse order = orderService.get(user.storeId(), orderId);
-        StoreResponse store = storeService.get(user.storeId());
+        requireAllowed(user, type);
+        return build(user.storeId(), orderId, type, sectorId, columns);
+    }
+
+    /** A cozinha só mexe com tickets de setor: via completa tem valores e dados do cliente. */
+    static void requireAllowed(CurrentUser user, DocumentType type) {
+        if (type == DocumentType.ORDER_TICKET && user.role() == Role.KITCHEN) {
+            throw new ForbiddenOperationException(KITCHEN_PRODUCTION_ONLY);
+        }
+    }
+
+    /** O documento de um pedido na largura pedida, sem conferir quem pede (a impressão automática usa também). */
+    @Transactional(readOnly = true)
+    public TicketResponse build(UUID storeId, UUID orderId, DocumentType type, UUID sectorId, int columns) {
+        OrderResponse order = orderService.get(storeId, orderId);
+        StoreResponse store = storeService.get(storeId);
         ZoneId zone = ZoneId.of(store.timezone());
         if (type == DocumentType.ORDER_TICKET) {
-            if (user.role() == Role.KITCHEN) {
-                throw new ForbiddenOperationException(KITCHEN_PRODUCTION_ONLY);
-            }
-            return TicketLayout.orderTicket(order, store.name(), paymentService.list(user.storeId(), orderId),
-                    columns, zone);
+            return TicketLayout.orderTicket(order, store.name(), paymentService.list(storeId, orderId), columns, zone);
         }
         if (sectorId == null) {
             throw new BusinessRuleException(SECTOR_REQUIRED);
         }
-        String sectorName = sectorService.get(user.storeId(), sectorId).name();
+        String sectorName = sectorService.get(storeId, sectorId).name();
         List<OrderItemResponse> items = order.items().stream()
                 .filter(item -> item.status() == ItemStatus.ACTIVE && sectorId.equals(item.sectorId()))
                 .toList();
         if (items.isEmpty()) {
             throw new BusinessRuleException("O pedido " + order.number() + " não tem itens para " + sectorName + ".");
         }
+        if (type == DocumentType.CANCELLATION_TICKET) {
+            if (order.cancelledAt() == null) {
+                throw new BusinessRuleException(NOT_CANCELLED);
+            }
+            return TicketLayout.cancellation(order, sectorName, items, columns, zone, order.cancelledAt());
+        }
         return TicketLayout.production(order, sectorName, items, columns, zone, Instant.now(clock));
+    }
+
+    /** Faixa de reimpressão no topo, com o horário original, para a cozinha não preparar de novo achando que é novo. */
+    @Transactional(readOnly = true)
+    public TicketResponse markReprint(UUID storeId, TicketResponse ticket, Instant original) {
+        return TicketLayout.reprint(ticket, original, ZoneId.of(storeService.get(storeId).timezone()));
     }
 }

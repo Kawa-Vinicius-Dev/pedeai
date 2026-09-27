@@ -51,3 +51,5 @@ export type Printer = Schemas['PrinterResponse'];
 export type PrinterRequest = Schemas['PrinterRequest'];
 export type SectorPrinter = Schemas['SectorPrinterResponse'];
 export type SectorPrinterRequest = Schemas['SectorPrinterRequest'];
+export type PrintJob = Schemas['PrintJobResponse'];
+export type PrintAlert = Schemas['PrintAlertResponse'];

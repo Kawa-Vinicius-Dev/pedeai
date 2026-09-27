@@ -1021,6 +1021,46 @@
         }
       }
     },
+    "/api/print-jobs/{id}/retry": {
+      "post": {
+        "tags": [
+          "print-job-controller"
+        ],
+        "operationId": "retry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "printerId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintJobResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/print-agents/pairing-codes": {
       "post": {
         "tags": [
@@ -1205,6 +1245,87 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{orderId}/print-jobs": {
+      "get": {
+        "tags": [
+          "ticket-controller"
+        ],
+        "operationId": "printJobs",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrintJobResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "print-job-controller"
+        ],
+        "operationId": "reprint",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintJobResponse"
                 }
               }
             }
@@ -1968,6 +2089,105 @@
         }
       }
     },
+    "/api/print-jobs": {
+      "get": {
+        "tags": [
+          "print-job-controller"
+        ],
+        "operationId": "recent",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponsePrintJobResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/print-jobs/{id}": {
+      "get": {
+        "tags": [
+          "print-job-controller"
+        ],
+        "operationId": "get_7",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintJobResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/print-alerts": {
+      "get": {
+        "tags": [
+          "print-job-controller"
+        ],
+        "operationId": "alerts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrintAlertResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/print-agents": {
       "get": {
         "tags": [
@@ -1996,7 +2216,7 @@
         "tags": [
           "ticket-controller"
         ],
-        "operationId": "get_7",
+        "operationId": "get_8",
         "parameters": [
           {
             "name": "orderId",
@@ -2015,7 +2235,8 @@
               "type": "string",
               "enum": [
                 "PRODUCTION_TICKET",
-                "ORDER_TICKET"
+                "ORDER_TICKET",
+                "CANCELLATION_TICKET"
               ]
             }
           },
@@ -2055,46 +2276,12 @@
         }
       }
     },
-    "/api/orders/{orderId}/print-jobs": {
-      "get": {
-        "tags": [
-          "ticket-controller"
-        ],
-        "operationId": "printJobs",
-        "parameters": [
-          {
-            "name": "orderId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PrintJobResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/orders/{id}": {
       "get": {
         "tags": [
           "order-controller"
         ],
-        "operationId": "get_8",
+        "operationId": "get_9",
         "parameters": [
           {
             "name": "id",
@@ -3614,6 +3801,104 @@
           "unitPriceCents"
         ]
       },
+      "PrintJobResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "PRODUCTION_TICKET",
+              "ORDER_TICKET",
+              "CANCELLATION_TICKET"
+            ]
+          },
+          "sectorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "AUTO",
+              "MANUAL",
+              "REPRINT",
+              "TEST"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "SENT",
+              "PRINTED",
+              "FAILED",
+              "UNCERTAIN",
+              "EXPIRED",
+              "CANCELLED"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "preview": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "printedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "attempts",
+          "createdAt",
+          "documentType",
+          "id",
+          "lastError",
+          "orderId",
+          "preview",
+          "printedAt",
+          "printerId",
+          "reason",
+          "sectorId",
+          "status",
+          "title"
+        ]
+      },
       "PairingCodeResponse": {
         "type": "object",
         "properties": {
@@ -4136,6 +4421,31 @@
           "version"
         ]
       },
+      "ReprintRequest": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "PRODUCTION_TICKET",
+              "ORDER_TICKET",
+              "CANCELLATION_TICKET"
+            ]
+          },
+          "sectorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "printerId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "documentType",
+          "printerId"
+        ]
+      },
       "PaymentRequest": {
         "type": "object",
         "properties": {
@@ -4511,6 +4821,64 @@
           "status"
         ]
       },
+      "PageResponsePrintJobResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrintJobResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "content",
+          "page",
+          "size",
+          "totalElements",
+          "totalPages"
+        ]
+      },
+      "PrintAlertResponse": {
+        "type": "object",
+        "properties": {
+          "printerId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "message": {
+            "type": "string"
+          },
+          "waitingJobs": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "message",
+          "printerId",
+          "waitingJobs"
+        ]
+      },
       "PrintAgentResponse": {
         "type": "object",
         "properties": {
@@ -4722,7 +5090,8 @@
             "type": "string",
             "enum": [
               "PRODUCTION_TICKET",
-              "ORDER_TICKET"
+              "ORDER_TICKET",
+              "CANCELLATION_TICKET"
             ]
           },
           "columns": {
@@ -4740,91 +5109,6 @@
           "columns",
           "documentType",
           "lines"
-        ]
-      },
-      "PrintJobResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "printerId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "documentType": {
-            "type": "string",
-            "enum": [
-              "PRODUCTION_TICKET",
-              "ORDER_TICKET"
-            ]
-          },
-          "sectorId": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid"
-          },
-          "reason": {
-            "type": "string",
-            "enum": [
-              "AUTO",
-              "MANUAL",
-              "REPRINT",
-              "TEST"
-            ]
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "PENDING",
-              "SENT",
-              "PRINTED",
-              "FAILED",
-              "UNCERTAIN",
-              "EXPIRED",
-              "CANCELLED"
-            ]
-          },
-          "attempts": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "lastError": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "preview": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "printedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "attempts",
-          "createdAt",
-          "documentType",
-          "id",
-          "lastError",
-          "preview",
-          "printedAt",
-          "printerId",
-          "reason",
-          "sectorId",
-          "status"
         ]
       },
       "OrderStatusHistoryResponse": {
@@ -4958,7 +5242,8 @@
             "type": "string",
             "enum": [
               "PRODUCTION_TICKET",
-              "ORDER_TICKET"
+              "ORDER_TICKET",
+              "CANCELLATION_TICKET"
             ]
           },
           "payload": {

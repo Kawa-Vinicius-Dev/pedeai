@@ -265,3 +265,15 @@ aponta para a antiga, sem apagar a antiga.
 - **Consequências:** o layout existe num lugar só, testado com golden files de
   texto, e o ESC/POS vai consumir as mesmas linhas. A tela não decide nada do
   conteúdo.
+
+## D24 · Agente consulta a fila a cada 2 s, sem aviso em tempo real
+
+- **Contexto:** o plano previa um SSE `jobs-available` do servidor para o agente,
+  com consulta a cada 30 s como reserva.
+- **Decisão:** o agente consulta `GET /api/agent/jobs` a cada 2 s. Ponta a ponta,
+  o pedido confirmado chegou ao papel em 0,8 a 2,3 s, dentro dos 3 s do critério
+  da Etapa 3.
+- **Alternativas:** SSE com reconexão no agente (mais código no programa que roda
+  no restaurante, sem ganho visível no piloto).
+- **Consequências:** cerca de 30 chamadas por minuto por computador de impressão.
+  Quando o número de lojas pesar na API, entra o SSE com o mesmo endpoint de fila.

@@ -10,6 +10,8 @@ import java.util.UUID;
 /** Situação de uma impressão, para a equipe. {@code preview}: o texto do ticket. */
 public record PrintJobResponse(
         UUID id,
+        @Schema(types = {"string", "null"}) UUID orderId,
+        String title,
         UUID printerId,
         DocumentType documentType,
         @Schema(types = {"string", "null"}) UUID sectorId,
@@ -22,7 +24,7 @@ public record PrintJobResponse(
         @Schema(types = {"string", "null"}) Instant printedAt
 ) {
     public static PrintJobResponse from(PrintJob job) {
-        return new PrintJobResponse(job.getId(), job.getPrinterId(), job.getDocumentType(), job.getSectorId(),
+        return new PrintJobResponse(job.getId(), job.getOrderId(), job.getTitle(), job.getPrinterId(), job.getDocumentType(), job.getSectorId(),
                 job.getReason(), job.getStatus(), job.getAttempts(), job.getLastError(), job.getPreview(),
                 job.getCreatedAt(), job.getPrintedAt());
     }

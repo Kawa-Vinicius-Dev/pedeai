@@ -47,6 +47,7 @@ public class PrintJob {
     @Enumerated(EnumType.STRING)
     private Reason reason;
     private String idempotencyKey;
+    private String title;
     private String deliveryKey;
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -67,7 +68,7 @@ public class PrintJob {
     }
 
     public PrintJob(UUID storeId, UUID printerId, UUID agentId, DocumentType documentType, UUID orderId,
-                    UUID sectorId, Reason reason, String idempotencyKey, byte[] payload, String preview,
+                    UUID sectorId, Reason reason, String idempotencyKey, String title, byte[] payload, String preview,
                     Duration maxAge, Instant now) {
         this.id = UuidV7.generate();
         this.storeId = storeId;
@@ -78,6 +79,7 @@ public class PrintJob {
         this.sectorId = sectorId;
         this.reason = reason;
         this.idempotencyKey = idempotencyKey;
+        this.title = title;
         // Chave de entrega própria: o diário do agente nunca imprime a mesma chave duas vezes.
         this.deliveryKey = UuidV7.generate().toString();
         this.status = Status.PENDING;
@@ -140,6 +142,28 @@ public class PrintJob {
         return true;
     }
 
+    /**
+     * Uma pessoa mandou imprimir de novo (falhou, incerto ou expirado), talvez em outra impressora. Chave de entrega
+     * nova: o diário do agente não pode achar que já imprimiu.
+     */
+    public boolean requeue(UUID printerId, UUID agentId, byte[] payload, String preview, Duration maxAge, Instant now) {
+        if (status != Status.FAILED && status != Status.UNCERTAIN && status != Status.EXPIRED) {
+            return false;
+        }
+        this.printerId = printerId;
+        this.agentId = agentId;
+        this.payload = payload;
+        this.preview = preview;
+        this.deliveryKey = UuidV7.generate().toString();
+        this.status = Status.PENDING;
+        this.attempts = 0;
+        this.lastError = null;
+        this.leaseUntil = null;
+        this.nextAttemptAt = now;
+        this.expiresAt = now.plus(maxAge);
+        return true;
+    }
+
     public boolean cancelIfPending() {
         if (status != Status.PENDING) {
             return false;
@@ -195,6 +219,10 @@ public class PrintJob {
 
     public Reason getReason() {
         return reason;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public String getDeliveryKey() {

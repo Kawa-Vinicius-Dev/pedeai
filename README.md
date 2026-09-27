@@ -57,6 +57,13 @@ contínuo. Quando a API estiver no ar, o `vercel.json` ganha uma regra que repas
 `/api/*` para ela. Assim o navegador fala só com o domínio do app, e o cookie de
 sessão continua funcionando.
 
+### Antes de publicar a API
+
+- O limite de tentativas de pareamento do agente usa o IP de quem chama. Atrás de
+  um proxy (o repasse de `/api/*` pela Vercel), todos chegam com o IP do proxy:
+  configure `server.forward-headers-strategy` confiando só no proxy, ou tentativas
+  erradas de uma pessoa bloqueiam o pareamento de todas as lojas por 10 minutos.
+
 ## Prioridades
 
 1. Receber pedidos

@@ -377,8 +377,8 @@ imprime uma régua para conferir.
 | Tema | Decisão |
 | --- | --- |
 | Linguagem | Java 21 puro, sem Spring, com poucas dependências. É a mesma linguagem do backend. |
-| Entrega | Instalador MSI gerado por `jpackage`, com o runtime Java embutido (cerca de 50 MB). **Não precisa instalar Java.** |
-| Execução | Inicia com o Windows, com ícone na bandeja: verde (ok), amarelo (impressora com problema) e vermelho (sem conexão). Opção de rodar como serviço do Windows para computador sem usuário logado. |
+| Entrega | Instalador MSI gerado por `jpackage` no CI (runner Windows com WiX), com o runtime Java embutido. Instala na pasta do usuário, sem administrador. **Não precisa instalar Java.** |
+| Execução | Na primeira abertura, pede o endereço e o código e já começa a imprimir. Depois de pareado, abre sozinho com o Windows (atalho na pasta Inicializar), numa janela minimizada. Ícone na bandeja e serviço do Windows (computador sem usuário logado) ficam para depois. |
 | Primeira execução | Pede a URL, que já vem preenchida, e o código de pareamento. Pronto. |
 | Credencial | Token de dispositivo, que só serve para imprimir e pode ser revogado na tela. |
 | Impressoras | Rede: socket TCP (porta 9100). USB: envio RAW pelo spooler do Windows, pelo nome da impressora (driver do fabricante ou "Generic / Text Only"). |

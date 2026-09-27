@@ -99,6 +99,26 @@ class TicketLayoutTest {
     }
 
     @Test
+    void cancellationNoticeIn58mm() {
+        OrderResponse order = delivery();
+        List<OrderItemResponse> kitchenItems = order.items().stream()
+                .filter(item -> KITCHEN.equals(item.sectorId())).toList();
+        String printed = paper(TicketLayout.cancellation(order, "Cozinha", kitchenItems, 32, SAO_PAULO,
+                CREATED.plusSeconds(16 * 60)));
+
+        assertThat(printed).isEqualTo("""
+                  |  ################################
+                2x|     CANCELADO
+                  | *      *** NÃO PREPARAR ***
+                  |  ################################
+                  |  PEDIDO 42 - COZINHA        19:58
+                  |  --------------------------------
+                  | *1x PIZZA GRANDE
+                  |  ################################
+                """);
+    }
+
+    @Test
     void formatsBrazilianPhones() {
         assertThat(TicketLayout.phone("+5511999990000")).isEqualTo("(11) 99999-0000");
         assertThat(TicketLayout.phone("+551133334444")).isEqualTo("(11) 3333-4444");

@@ -2,7 +2,7 @@ import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../shared/api/client';
 import { errorMessage, unwrap } from '../../shared/api/errors';
-import type { Printer, SectorPrinterRequest } from '../../shared/api/types';
+import type { PrintJob, Printer, SectorPrinterRequest } from '../../shared/api/types';
 
 /** Tudo de impressão fica sob ['printing']. O status muda com o heartbeat do agente, então recarrega sozinho. */
 export const printingKeys = {
@@ -84,3 +84,87 @@ export const CUT_OPTIONS: { value: Printer['cutMode']; label: string }[] = [
   { value: 'FULL', label: 'Corte total' },
   { value: 'NONE', label: 'Sem corte' },
 ];
+
+export const jobKeys = {
+  all: ['printing', 'jobs'] as const,
+  alerts: ['printing', 'jobs', 'alerts'] as const,
+  recent: ['printing', 'jobs', 'recent'] as const,
+  order: (orderId: string) => ['printing', 'jobs', 'order', orderId] as const,
+};
+
+/** A faixa de alerta de todas as telas. O agente manda status a cada 20 s, então consultar mais que isso não ajuda. */
+export function usePrintAlerts(enabled: boolean) {
+  return useQuery({
+    queryKey: jobKeys.alerts,
+    queryFn: () => unwrap(api.GET('/api/print-alerts')),
+    refetchInterval: STATUS_REFRESH_MS,
+    enabled,
+  });
+}
+
+export function useRecentPrintJobs(page: number) {
+  return useQuery({
+    queryKey: [...jobKeys.recent, page],
+    queryFn: () => unwrap(api.GET('/api/print-jobs', { params: { query: { page, size: 20 } } })),
+    refetchInterval: 10_000,
+  });
+}
+
+export function useOrderPrintJobs(orderId: string) {
+  return useQuery({
+    queryKey: jobKeys.order(orderId),
+    queryFn: () => unwrap(api.GET('/api/orders/{orderId}/print-jobs', { params: { path: { orderId } } })),
+    refetchInterval: 5_000,
+  });
+}
+
+/** Imprimir de novo o que falhou, ficou incerto ou expirou. Sem impressora, vai para a mesma. */
+export function useRetryPrintJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, printerId }: { id: string; printerId?: string }) =>
+      unwrap(api.POST('/api/print-jobs/{id}/retry', { params: { path: { id }, query: { printerId } } })),
+    onSuccess: (job) => notifications.show({ color: 'green', message: `${job.title}: mandado de novo.` }),
+    onError: (error) => notifications.show({ color: 'red', message: errorMessage(error) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: jobKeys.all }),
+  });
+}
+
+/** Reimpressão com a faixa REIMPRESSÃO. A chave por clique evita imprimir duas vezes no duplo clique. */
+export function useReprint(orderId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { documentType: PrintJob['documentType']; sectorId?: string; printerId: string }) =>
+      unwrap(
+        api.POST('/api/orders/{orderId}/print-jobs', {
+          params: { path: { orderId }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+          body,
+        }),
+      ),
+    onSuccess: (job) => notifications.show({ color: 'green', message: `${job.title} enviada.` }),
+    onError: (error) => notifications.show({ color: 'red', message: errorMessage(error) }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: jobKeys.all }),
+  });
+}
+
+export const JOB_STATUS_LABELS: Record<PrintJob['status'], string> = {
+  PENDING: 'Na fila',
+  SENT: 'Imprimindo',
+  PRINTED: 'Impresso',
+  FAILED: 'Falhou',
+  UNCERTAIN: 'Incerto',
+  EXPIRED: 'Expirou',
+  CANCELLED: 'Cancelado',
+};
+
+export const JOB_STATUS_COLORS: Record<PrintJob['status'], string> = {
+  PENDING: 'blue',
+  SENT: 'blue',
+  PRINTED: 'green',
+  FAILED: 'red',
+  UNCERTAIN: 'orange',
+  EXPIRED: 'gray',
+  CANCELLED: 'gray',
+};
+
+export const NEEDS_ATTENTION: PrintJob['status'][] = ['FAILED', 'UNCERTAIN', 'EXPIRED'];

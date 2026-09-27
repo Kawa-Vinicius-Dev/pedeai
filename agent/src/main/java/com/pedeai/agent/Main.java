@@ -32,7 +32,9 @@ public final class Main {
               java -jar pedeai-agent.jar parear https://api.pedeai.com.br 123456 [--nome "Caixa"]
                   Liga este computador à loja com o código da tela Configurações > Impressão.
               java -jar pedeai-agent.jar rodar
-                  Busca os pedidos e imprime. Deixe aberto enquanto a loja funciona.
+                  Busca os pedidos e imprime. Depois de pareado, abrir o agente sem nada também roda.
+              java -jar pedeai-agent.jar nao-iniciar-com-windows
+                  O pareamento faz o agente abrir junto com o Windows; isto desliga.
               java -jar pedeai-agent.jar listar
                   Mostra as impressoras instaladas no Windows.
               java -jar pedeai-agent.jar testar --rede 192.168.0.50[:9100] [--colunas 48]
@@ -46,9 +48,33 @@ public final class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        if (args.length == 0 || !List.of("listar", "testar", "parear", "rodar").contains(args[0])) {
+        if (args.length == 0 && Settings.load() != null) {
+            run();
+            return;
+        }
+        if (args.length == 0 && System.console() != null) {
+            // Primeira vez, aberto com dois cliques: pergunta o que a tela de impressão mostra e já começa a imprimir.
+            System.out.println("PedeAí: primeira vez neste computador.");
+            System.out.println("Na tela Configurações > Impressão, clique em Adicionar computador.");
+            String url = System.console().readLine("Endereço do PedeAí: ").trim();
+            String code = System.console().readLine("Código de 6 dígitos: ").trim();
+            if (!tryPair(new String[]{"parear", url, code})) {
+                // Aberto com dois cliques, a janela fecharia antes de dar para ler o erro.
+                System.console().readLine("Aperte Enter para fechar e tente de novo.");
+                System.exit(1);
+            }
+            run();
+            return;
+        }
+        if (args.length == 0
+                || !List.of("listar", "testar", "parear", "rodar", "nao-iniciar-com-windows").contains(args[0])) {
             System.out.print(USAGE);
             System.exit(args.length == 0 ? 0 : 2);
+        }
+        if (args[0].equals("nao-iniciar-com-windows")) {
+            System.out.println(Startup.disable() ? "O agente não abre mais com o Windows."
+                    : "O agente já não abria com o Windows.");
+            return;
         }
         if (args[0].equals("parear")) {
             pair(args);
@@ -99,21 +125,29 @@ public final class Main {
             System.out.print(USAGE);
             System.exit(2);
         }
+        if (!tryPair(args)) {
+            System.exit(1);
+        }
+    }
+
+    /** Pareia e liga a inicialização com o Windows. Falhou: explica o motivo e devolve falso. */
+    private static boolean tryPair(String[] args) {
         String name = option(args, "--nome");
         try {
             ApiClient.Pairing pairing = ApiClient.pair(args[1], args[2].trim(),
                     name == null ? hostName() : name, System.getProperty("os.name"));
             Settings.save(new Settings(args[1], pairing.token(), pairing.agentName()));
             System.out.println("Pareado com " + pairing.storeName() + " como \"" + pairing.agentName() + "\".");
-            System.out.println("Agora cadastre as impressoras na tela e rode: java -jar pedeai-agent.jar rodar");
+            Startup.enable().ifPresent(file -> System.out.println("O agente vai abrir sozinho com o Windows."));
+            System.out.println("Agora cadastre as impressoras na tela Configurações > Impressão e deixe o agente rodando.");
+            return true;
         } catch (ApiClient.ApiException e) {
             System.err.println(e.status == 401 ? "Código inválido ou vencido. Gere outro na tela de impressão."
                     : "Não deu para parear: " + e.getMessage());
-            System.exit(1);
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException | IllegalArgumentException e) {
             System.err.println("Sem conexão com " + args[1] + ": " + e.getMessage());
-            System.exit(1);
         }
+        return false;
     }
 
     private static void run() throws IOException {
