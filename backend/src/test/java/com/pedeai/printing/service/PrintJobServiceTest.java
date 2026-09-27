@@ -137,6 +137,17 @@ class PrintJobServiceTest {
     }
 
     @Test
+    void cancellationNoticeIsReprintedForItsSector() {
+        when(jobs.findByStoreIdAndIdempotencyKey(any(), anyString())).thenReturn(Optional.empty());
+
+        PrintJobResponse reprinted = service.reprint(user(Role.KITCHEN), ORDER_ID,
+                new ReprintRequest(DocumentType.CANCELLATION_TICKET, KITCHEN, kitchen.getId()), null);
+
+        verify(tickets).build(STORE_ID, ORDER_ID, DocumentType.CANCELLATION_TICKET, KITCHEN, 48);
+        assertThat(reprinted.sectorId()).isEqualTo(KITCHEN);
+    }
+
+    @Test
     void kitchenDoesNotReprintTheFullTicketAndHugeKeysAreRefused() {
         assertThatThrownBy(() -> service.reprint(user(Role.KITCHEN), ORDER_ID,
                 new ReprintRequest(DocumentType.ORDER_TICKET, null, cashier.getId()), null))

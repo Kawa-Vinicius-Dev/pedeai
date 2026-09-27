@@ -113,7 +113,8 @@ public class PrintJobService {
         if (existing.isPresent()) {
             return PrintJobResponse.from(existing.get());
         }
-        UUID sectorId = request.documentType() == DocumentType.PRODUCTION_TICKET ? request.sectorId() : null;
+        // Só a via completa não é de setor: produção e aviso de cancelamento precisam dele.
+        UUID sectorId = request.documentType() == DocumentType.ORDER_TICKET ? null : request.sectorId();
         TicketResponse original = ticketService.build(user.storeId(), orderId, request.documentType(), sectorId,
                 printer.getColumns());
         OrderResponse order = orderService.get(user.storeId(), orderId);

@@ -99,7 +99,9 @@ final class AgentRunner {
             if (printer.network()) {
                 probe(printer);
             } else if (installed.stream().anyMatch(name -> name.equalsIgnoreCase(printer.systemName()))) {
-                statuses.putIfAbsent(printer.id(), new PrinterStatus(printer.id(), "ONLINE", null));
+                // Instalada no Windows: volta a ONLINE. Uma falha de envio vale só até o próximo heartbeat; senão, com
+                // reserva configurada, a principal nunca mais recebe trabalho para mostrar que voltou.
+                report(printer, "ONLINE", null);
             } else {
                 report(printer, "ERROR", "Impressora \"" + printer.systemName() + "\" não encontrada no Windows.");
             }
