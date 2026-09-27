@@ -37,6 +37,7 @@ Abra http://localhost:5173/cadastro e crie a sua loja. No Windows, use
 | --- | --- |
 | Testes do backend (H2) | `cd backend && ./mvnw verify` |
 | Testes do backend contra o PostgreSQL local | `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/pedeai SPRING_DATASOURCE_USERNAME=... SPRING_DATASOURCE_PASSWORD=... ./mvnw test` |
+| Testes do agente de impressão | `cd agent && ./mvnw verify` (ver [agent/README.md](agent/README.md)) |
 | Testes, lint e tipos do frontend | `cd frontend && npm test && npm run lint && npm run typecheck` |
 | Documentação da API | http://localhost:8080/swagger-ui.html |
 | Atualizar os tipos da API no frontend (com a API rodando) | `cd frontend && npm run api:spec && npm run api:types` |
