@@ -66,6 +66,25 @@ final class TicketLayout {
         return out.document(DocumentType.PRODUCTION_TICKET);
     }
 
+    /** Aviso de cancelamento para o setor: bem visível, com o motivo e o que não preparar. */
+    static TicketResponse cancellation(OrderResponse order, String sectorName, List<OrderItemResponse> items,
+                                       int columns, ZoneId zone, Instant cancelledAt) {
+        Lines out = new Lines(columns);
+        out.rule('#');
+        out.big("CANCELADO", Align.CENTER);
+        out.boldCenter("*** NÃO PREPARAR ***");
+        out.rule('#');
+        out.pair("PEDIDO " + order.number() + " - " + sectorName.toUpperCase(BRAZIL),
+                CLOCK.format(cancelledAt.atZone(zone)).substring(0, 5));
+        if (order.cancelReason() != null) {
+            out.text("Motivo: " + order.cancelReason());
+        }
+        out.rule('-');
+        items.forEach(item -> out.bold(item.quantity() + "x " + item.name().toUpperCase(BRAZIL)));
+        out.rule('#');
+        return out.document(DocumentType.CANCELLATION_TICKET);
+    }
+
     /** Via completa: itens com valores, totais, cliente, endereço e pagamento. */
     static TicketResponse orderTicket(OrderResponse order, String storeName, List<PaymentResponse> payments,
                                       int columns, ZoneId zone) {
@@ -188,6 +207,10 @@ final class TicketLayout {
 
         void center(String text) {
             wrap(text, columns).forEach(line -> add(line, Align.CENTER, false, false));
+        }
+
+        void bold(String text) {
+            wrap(text, columns).forEach(line -> add(line, Align.LEFT, true, false));
         }
 
         void boldCenter(String text) {

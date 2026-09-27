@@ -1219,7 +1219,7 @@ export interface components {
             /** Format: uuid */
             printerId: string;
             /** @enum {string} */
-            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET";
             /** Format: uuid */
             sectorId: string | null;
             /** @enum {string} */
@@ -1369,7 +1369,7 @@ export interface components {
         };
         ReprintRequest: {
             /** @enum {string} */
-            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET";
             /** Format: uuid */
             sectorId?: string;
             /** Format: uuid */
@@ -1551,7 +1551,7 @@ export interface components {
         };
         TicketResponse: {
             /** @enum {string} */
-            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET";
             /** Format: int32 */
             columns: number;
             lines: components["schemas"]["TicketLineResponse"][];
@@ -1590,7 +1590,7 @@ export interface components {
             printerId: string;
             deliveryKey: string;
             /** @enum {string} */
-            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET";
             /** Format: byte */
             payload: string;
             /** Format: date-time */
@@ -3163,7 +3163,7 @@ export interface operations {
             header?: never;
             path: {
                 orderId: string;
-                documentType: "PRODUCTION_TICKET" | "ORDER_TICKET";
+                documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET";
             };
             cookie?: never;
         };

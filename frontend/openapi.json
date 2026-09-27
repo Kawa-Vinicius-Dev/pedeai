@@ -2235,7 +2235,8 @@
               "type": "string",
               "enum": [
                 "PRODUCTION_TICKET",
-                "ORDER_TICKET"
+                "ORDER_TICKET",
+                "CANCELLATION_TICKET"
               ]
             }
           },
@@ -3825,7 +3826,8 @@
             "type": "string",
             "enum": [
               "PRODUCTION_TICKET",
-              "ORDER_TICKET"
+              "ORDER_TICKET",
+              "CANCELLATION_TICKET"
             ]
           },
           "sectorId": {
@@ -4426,7 +4428,8 @@
             "type": "string",
             "enum": [
               "PRODUCTION_TICKET",
-              "ORDER_TICKET"
+              "ORDER_TICKET",
+              "CANCELLATION_TICKET"
             ]
           },
           "sectorId": {
@@ -5087,7 +5090,8 @@
             "type": "string",
             "enum": [
               "PRODUCTION_TICKET",
-              "ORDER_TICKET"
+              "ORDER_TICKET",
+              "CANCELLATION_TICKET"
             ]
           },
           "columns": {
@@ -5238,7 +5242,8 @@
             "type": "string",
             "enum": [
               "PRODUCTION_TICKET",
-              "ORDER_TICKET"
+              "ORDER_TICKET",
+              "CANCELLATION_TICKET"
             ]
           },
           "payload": {

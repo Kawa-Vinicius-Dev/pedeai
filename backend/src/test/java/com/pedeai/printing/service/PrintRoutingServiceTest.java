@@ -63,6 +63,8 @@ class PrintRoutingServiceTest {
     private SectorPrinterRepository sectorPrinters;
     @Mock
     private PrintJobRepository jobs;
+    @Mock
+    private TicketService tickets;
 
     private PrintRoutingService service;
     private Printer kitchenPrinter;
@@ -71,7 +73,7 @@ class PrintRoutingServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PrintRoutingService(orders, stores, sectors, agents, printers, sectorPrinters, jobs, CLOCK);
+        service = new PrintRoutingService(orders, stores, sectors, agents, printers, sectorPrinters, jobs, tickets, CLOCK);
         kitchenPrinter = printer("Cozinha");
         backupPrinter = printer("Caixa");
         kitchenConfig = new SectorPrinter(KITCHEN, STORE_ID);
@@ -139,6 +141,32 @@ class PrintRoutingServiceTest {
         service.onOrderCreated(created(OrderStatus.CONFIRMED));
 
         verify(jobs, never()).save(any());
+    }
+
+    @Test
+    void sectorThatAlreadyPrintedGetsTheCancellationNoticeOnTheSamePrinter() {
+        PrintJob printedInKitchen = job(kitchenPrinter, PrintJob.Status.PRINTED);
+        PrintJob waitingInBar = new PrintJob(STORE_ID, backupPrinter.getId(), AGENT_ID,
+                com.pedeai.printing.domain.DocumentType.PRODUCTION_TICKET, ORDER_ID, BAR, PrintJob.Reason.AUTO,
+                "bar", "Pedido 42 · Bar", new byte[]{1}, "texto", java.time.Duration.ofMinutes(20), NOW);
+        when(jobs.findAllByOrderIdAndStatus(ORDER_ID, PrintJob.Status.PENDING)).thenReturn(List.of(waitingInBar));
+        when(jobs.findAllByOrderIdOrderByCreatedAtAsc(ORDER_ID)).thenReturn(List.of(printedInKitchen, waitingInBar));
+        when(tickets.build(eq(STORE_ID), eq(ORDER_ID), eq(com.pedeai.printing.domain.DocumentType.CANCELLATION_TICKET),
+                eq(KITCHEN), eq(48))).thenReturn(new com.pedeai.printing.dto.TicketResponse(
+                com.pedeai.printing.domain.DocumentType.CANCELLATION_TICKET, 48, List.of(
+                new com.pedeai.printing.dto.TicketLineResponse("CANCELADO",
+                        com.pedeai.printing.dto.TicketLineResponse.Align.CENTER, false, true))));
+
+        service.onStatusChanged(new OrderStatusChanged(STORE_ID, ORDER_ID, 42, OrderStatus.CONFIRMED,
+                OrderStatus.CANCELLED, 2));
+
+        assertThat(waitingInBar.getStatus()).isEqualTo(PrintJob.Status.CANCELLED);
+        ArgumentCaptor<PrintJob> saved = ArgumentCaptor.forClass(PrintJob.class);
+        verify(jobs).save(saved.capture());
+        assertThat(saved.getValue().getDocumentType())
+                .isEqualTo(com.pedeai.printing.domain.DocumentType.CANCELLATION_TICKET);
+        assertThat(saved.getValue().getPrinterId()).isEqualTo(kitchenPrinter.getId());
+        assertThat(saved.getValue().getTitle()).isEqualTo("Pedido 42 · Cancelamento Cozinha");
     }
 
     @Test

@@ -134,7 +134,7 @@ export function useRetryPrintJob() {
 export function useReprint(orderId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: { documentType: 'PRODUCTION_TICKET' | 'ORDER_TICKET'; sectorId?: string; printerId: string }) =>
+    mutationFn: (body: { documentType: PrintJob['documentType']; sectorId?: string; printerId: string }) =>
       unwrap(
         api.POST('/api/orders/{orderId}/print-jobs', {
           params: { path: { orderId }, header: { 'Idempotency-Key': crypto.randomUUID() } },

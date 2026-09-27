@@ -27,6 +27,7 @@ import java.util.UUID;
 @Service
 public class TicketService {
     static final String SECTOR_REQUIRED = "Escolha o setor do ticket de produção.";
+    static final String NOT_CANCELLED = "O pedido não está cancelado.";
     static final String KITCHEN_PRODUCTION_ONLY = "A cozinha só imprime tickets de produção.";
 
     private final OrderService orderService;
@@ -50,7 +51,7 @@ public class TicketService {
         return build(user.storeId(), orderId, type, sectorId, columns);
     }
 
-    /** A cozinha só mexe com ticket de produção: via completa tem valores e dados do cliente. */
+    /** A cozinha só mexe com tickets de setor: via completa tem valores e dados do cliente. */
     static void requireAllowed(CurrentUser user, DocumentType type) {
         if (type == DocumentType.ORDER_TICKET && user.role() == Role.KITCHEN) {
             throw new ForbiddenOperationException(KITCHEN_PRODUCTION_ONLY);
@@ -75,6 +76,12 @@ public class TicketService {
                 .toList();
         if (items.isEmpty()) {
             throw new BusinessRuleException("O pedido " + order.number() + " não tem itens para " + sectorName + ".");
+        }
+        if (type == DocumentType.CANCELLATION_TICKET) {
+            if (order.cancelledAt() == null) {
+                throw new BusinessRuleException(NOT_CANCELLED);
+            }
+            return TicketLayout.cancellation(order, sectorName, items, columns, zone, order.cancelledAt());
         }
         return TicketLayout.production(order, sectorName, items, columns, zone, Instant.now(clock));
     }

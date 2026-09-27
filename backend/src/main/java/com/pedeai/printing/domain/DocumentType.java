@@ -5,5 +5,7 @@ public enum DocumentType {
     /** Só os itens de um setor, sem preço: vai para a cozinha ou o bar. */
     PRODUCTION_TICKET,
     /** O pedido inteiro, com valores e pagamento: caixa, expedição e entregador. */
-    ORDER_TICKET
+    ORDER_TICKET,
+    /** "CANCELADO - NÃO PREPARAR": só para os setores que já imprimiram o pedido. */
+    CANCELLATION_TICKET
 }

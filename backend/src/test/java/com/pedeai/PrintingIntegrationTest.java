@@ -177,6 +177,15 @@ class PrintingIntegrationTest {
         send(owner, get("/api/orders/" + orderId + "/print-jobs"), "")
                 .andExpect(jsonPath("$[0].status").value("PRINTED"));
 
+        // Cancelado depois de impresso: a cozinha recebe o aviso na mesma impressora; o Bar (sem ticket), não.
+        send(owner, patch("/api/orders/" + orderId + "/status"), """
+                {"status":"CANCELLED","reason":"Cliente desistiu"}""").andExpect(status().isOk());
+        send(owner, get("/api/orders/" + orderId + "/print-jobs"), "")
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[1].documentType").value("CANCELLATION_TICKET"))
+                .andExpect(jsonPath("$[1].printerId").value(kitchenPrinter))
+                .andExpect(jsonPath("$[1].preview").value(containsString("Motivo: Cliente desistiu")));
+
         // Principal com problema e reserva ok: o próximo pedido vai para a reserva.
         send(agent, put("/api/agent/status"), """
                 {"printers":[{"printerId":"%s","status":"OFFLINE"},{"printerId":"%s","status":"ONLINE"}]}"""
