@@ -52,6 +52,9 @@ O frontend é um site estático e fica na Vercel. No projeto da Vercel, **Root
 Directory = `frontend`**. O [`frontend/vercel.json`](frontend/vercel.json) faz
 qualquer rota (`/cardapio`, `/login`...) abrir o app, menos `/api/*`.
 
+O passo a passo da API, com servidor próprio (Docker, HTTPS e backup) ou Railway, está em
+[07 · Deploy](docs/07-deploy.md).
+
 A API (Java) e o PostgreSQL ficam fora da Vercel, num servidor sempre ligado: a
 impressão, o quadro de pedidos em tempo real e o iFood dependem de um processo
 contínuo. Quando a API estiver no ar, o `vercel.json` ganha uma regra que repassa

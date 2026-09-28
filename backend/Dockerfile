@@ -12,4 +12,5 @@ WORKDIR /app
 COPY --from=build /workspace/target/pedeai-api-*.jar app.jar
 USER pedeai
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Usa até 75% da memória do contêiner: em plano pequeno (512 MB a 1 GB) o padrão da JVM desperdiça ou estoura.
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-XX:+ExitOnOutOfMemoryError", "-jar", "app.jar"]

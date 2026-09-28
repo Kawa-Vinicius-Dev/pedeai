@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!deploy/.env.prod.example
 application-local.properties
 application-local.yml
 
@@ -23,3 +24,6 @@ test-results/
 *.iml
 .DS_Store
 Thumbs.db
+
+# Backups do banco em produção (deploy/compose.prod.yaml)
+deploy/backups/
