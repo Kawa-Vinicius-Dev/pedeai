@@ -4,6 +4,9 @@ import com.pedeai.integration.domain.InboundEvent;
 import com.pedeai.order.domain.OrderSource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -18,4 +21,9 @@ public interface InboundEventRepository extends JpaRepository<InboundEvent, UUID
             InboundEvent.Status status, Instant now, Pageable page);
 
     long countByExternalMerchantIdInAndStatus(Collection<String> merchantIds, InboundEvent.Status status);
+
+    /** O payload cru fica para suporte e auditoria por um tempo; o evento ainda pendente fica. */
+    @Modifying
+    @Query("delete from InboundEvent e where e.receivedAt < :cutoff and e.status <> :pending")
+    int deleteHandledBefore(@Param("cutoff") Instant cutoff, @Param("pending") InboundEvent.Status pending);
 }

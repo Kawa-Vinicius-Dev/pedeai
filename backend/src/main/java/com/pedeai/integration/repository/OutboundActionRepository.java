@@ -3,6 +3,9 @@ package com.pedeai.integration.repository;
 import com.pedeai.integration.domain.OutboundAction;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 
 import java.time.Instant;
 import java.util.List;
@@ -22,4 +25,8 @@ public interface OutboundActionRepository extends JpaRepository<OutboundAction, 
     Optional<OutboundAction> findByIdAndStoreId(UUID id, UUID storeId);
 
     long countByStoreIdAndStatus(UUID storeId, OutboundAction.Status status);
+
+    @Modifying
+    @Query("delete from OutboundAction a where a.createdAt < :cutoff and a.status <> :pending")
+    int deleteHandledBefore(@Param("cutoff") Instant cutoff, @Param("pending") OutboundAction.Status pending);
 }

@@ -128,6 +128,19 @@ num pedido de R$ 50, a loja vendeu R$ 50.
 | `inbound_event` | `provider`, `external_event_id`, `external_merchant_id`, `external_order_id`, `event_code`, `payload` (TEXT), `store_id`, `status` (`PENDING`, `PROCESSED`, `IGNORED`, `FAILED`), `attempts`, `next_attempt_at`, `last_error`, `received_at`, `processed_at` | `UNIQUE(provider, external_event_id)`: o mesmo evento chegando duas vezes (webhook e polling, ou reenvio) é gravado uma vez. `store_id` fica nulo até achar o vínculo. |
 | `outbound_action` | `store_id`, `provider`, `order_id`, `action` (`CONFIRM`, `START_PREPARATION`, `READY`, `DISPATCH`, `REQUEST_CANCELLATION`), `payload` (TEXT), `status` (`PENDING`, `DONE`, `FAILED`, `SKIPPED`), `attempts`, `next_attempt_at`, `last_error`, `created_at`, `done_at` | As ações de um mesmo pedido saem em ordem. |
 
+## Limpeza diária
+
+Todo dia de madrugada (4h30 a 4h40, horário de Brasília), cada módulo apaga o que
+é velho e já foi resolvido. O que ainda está pendente nunca é apagado.
+
+| Tabela | Apagado quando |
+| --- | --- |
+| `refresh_token` | venceu há mais de 1 dia |
+| `agent_pairing_code` | venceu há mais de 1 dia |
+| `print_job` | criado há mais de 30 dias e fora da fila (nem `PENDING` nem `SENT`) |
+| `inbound_event` | recebido há mais de 30 dias e já processado, ignorado ou com falha |
+| `outbound_action` | criado há mais de 90 dias e fora da fila |
+
 ## O que fica de fora agora (e como entra depois)
 
 - **Venda por peso (kg):** hoje `quantity` é inteiro. Vira `NUMERIC(10,3)`, com
