@@ -1,6 +1,7 @@
 package com.pedeai.store.service;
 
 import com.pedeai.shared.exception.InvalidCredentialsException;
+import com.pedeai.shared.exception.TooManyRequestsException;
 import com.pedeai.shared.security.AccessTokenService;
 import com.pedeai.shared.security.AccessTokenService.IssuedAccessToken;
 import com.pedeai.shared.security.Role;
@@ -21,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.Duration;
 import java.util.Optional;
 
+import static com.pedeai.support.TestSecurity.CLOCK;
 import static com.pedeai.support.TestSecurity.NOW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,7 +50,7 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         service = new AuthService(userRepository, storeRepository, passwordEncoder, accessTokenService,
-                refreshTokenService);
+                refreshTokenService, CLOCK);
         store = new Store("Pizzaria Bella", NOW);
         owner = new AppUser(store.getId(), "Ana", "ana@example.com", passwordEncoder.encode("senha-forte-1"),
                 Role.OWNER, NOW);
@@ -60,7 +62,7 @@ class AuthServiceTest {
         when(storeRepository.findById(store.getId())).thenReturn(Optional.of(store));
         stubTokens();
 
-        AuthResult result = service.login(new LoginRequest("  Ana@Example.COM ", "senha-forte-1"), "Chrome");
+        AuthResult result = service.login(new LoginRequest("  Ana@Example.COM ", "senha-forte-1"), "Chrome", "10.0.0.1");
 
         assertThat(result.response().accessToken()).isEqualTo("jwt");
         assertThat(result.response().tokenType()).isEqualTo("Bearer");
@@ -74,7 +76,7 @@ class AuthServiceTest {
     void loginRejectsWrongPassword() {
         when(userRepository.findByEmail("ana@example.com")).thenReturn(Optional.of(owner));
 
-        assertThatThrownBy(() -> service.login(new LoginRequest("ana@example.com", "errada-123"), null))
+        assertThatThrownBy(() -> service.login(new LoginRequest("ana@example.com", "errada-123"), null, "10.0.0.1"))
                 .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage(AuthService.INVALID_LOGIN);
         verify(refreshTokenService, never()).issue(any(), any());
@@ -84,9 +86,46 @@ class AuthServiceTest {
     void loginRejectsUnknownEmailWithTheSameMessage() {
         when(userRepository.findByEmail("ninguem@example.com")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.login(new LoginRequest("ninguem@example.com", "qualquer-1"), null))
+        assertThatThrownBy(() -> service.login(new LoginRequest("ninguem@example.com", "qualquer-1"), null, "10.0.0.1"))
                 .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage(AuthService.INVALID_LOGIN);
+    }
+
+    @Test
+    void blocksAnAccountAfterFiveWrongPasswordsAndAnAddressAfterTwenty() {
+        when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("ana@example.com")).thenReturn(Optional.of(owner));
+        for (int attempt = 0; attempt < AuthService.MAX_FAILURES_PER_EMAIL; attempt++) {
+            assertThatThrownBy(() -> service.login(new LoginRequest("ana@example.com", "errada-123"), null, "10.0.0.1"))
+                    .isInstanceOf(InvalidCredentialsException.class);
+        }
+        // Até a senha certa é barrada: quem testa senhas não descobre que acertou.
+        assertThatThrownBy(() -> service.login(new LoginRequest("ana@example.com", "senha-forte-1"), null, "10.0.0.9"))
+                .isInstanceOf(TooManyRequestsException.class)
+                .hasMessage(AuthService.TOO_MANY_ATTEMPTS);
+
+        for (int attempt = 0; attempt < AuthService.MAX_FAILURES_PER_IP; attempt++) {
+            String email = "conta" + attempt + "@example.com";
+            assertThatThrownBy(() -> service.login(new LoginRequest(email, "x-123"), null, "10.0.0.2"))
+                    .isInstanceOf(InvalidCredentialsException.class);
+        }
+        assertThatThrownBy(() -> service.login(new LoginRequest("outra@example.com", "x-123"), null, "10.0.0.2"))
+                .isInstanceOf(TooManyRequestsException.class);
+    }
+
+    @Test
+    void rightPasswordClearsTheWrongAttempts() {
+        when(userRepository.findByEmail("ana@example.com")).thenReturn(Optional.of(owner));
+        when(storeRepository.findById(store.getId())).thenReturn(Optional.of(store));
+        stubTokens();
+        for (int attempt = 0; attempt < AuthService.MAX_FAILURES_PER_EMAIL - 1; attempt++) {
+            assertThatThrownBy(() -> service.login(new LoginRequest("ana@example.com", "errada-123"), null, "10.0.0.3"))
+                    .isInstanceOf(InvalidCredentialsException.class);
+        }
+        service.login(new LoginRequest("ana@example.com", "senha-forte-1"), null, "10.0.0.3");
+
+        assertThatThrownBy(() -> service.login(new LoginRequest("ana@example.com", "errada-123"), null, "10.0.0.3"))
+                .isInstanceOf(InvalidCredentialsException.class);
     }
 
     @Test
@@ -94,7 +133,7 @@ class AuthServiceTest {
         owner.changeActive(false, NOW);
         when(userRepository.findByEmail("ana@example.com")).thenReturn(Optional.of(owner));
 
-        assertThatThrownBy(() -> service.login(new LoginRequest("ana@example.com", "senha-forte-1"), null))
+        assertThatThrownBy(() -> service.login(new LoginRequest("ana@example.com", "senha-forte-1"), null, "10.0.0.1"))
                 .isInstanceOf(InvalidCredentialsException.class);
     }
 

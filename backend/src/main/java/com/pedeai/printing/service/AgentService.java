@@ -14,7 +14,8 @@ import com.pedeai.printing.dto.PrintAgentResponse;
 import com.pedeai.printing.repository.AgentPairingCodeRepository;
 import com.pedeai.printing.repository.PrintAgentRepository;
 import com.pedeai.printing.repository.PrinterRepository;
-import com.pedeai.shared.exception.BusinessRuleException;
+import com.pedeai.shared.exception.TooManyRequestsException;
+import com.pedeai.shared.security.AttemptLimiter;
 import com.pedeai.shared.exception.InvalidCredentialsException;
 import com.pedeai.shared.exception.ResourceNotFoundException;
 import com.pedeai.shared.security.SecretTokens;
@@ -25,13 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -52,8 +50,7 @@ public class AgentService {
     private final PrinterRepository printerRepository;
     private final StoreService storeService;
     private final Clock clock;
-    // ponytail: limite em memória por IP; com mais de uma instância da API, mover para o banco ou para o proxy.
-    private final Map<String, Deque<Instant>> failedPairings = new ConcurrentHashMap<>();
+    private final AttemptLimiter failedPairings;
 
     public AgentService(PrintAgentRepository agentRepository, AgentPairingCodeRepository codeRepository,
                         PrinterRepository printerRepository, StoreService storeService, Clock clock) {
@@ -62,6 +59,7 @@ public class AgentService {
         this.printerRepository = printerRepository;
         this.storeService = storeService;
         this.clock = clock;
+        this.failedPairings = new AttemptLimiter(MAX_FAILED_PAIRINGS, FAILED_PAIRING_WINDOW, clock);
     }
 
     @Transactional
@@ -81,27 +79,21 @@ public class AgentService {
     @Transactional
     public AgentPairingResponse pair(AgentPairingRequest request, String clientKey) {
         Instant now = Instant.now(clock);
-        Deque<Instant> failures = failedPairings.computeIfAbsent(clientKey, key -> new ArrayDeque<>());
-        synchronized (failures) {
-            while (!failures.isEmpty() && failures.peekFirst().plus(FAILED_PAIRING_WINDOW).isBefore(now)) {
-                failures.pollFirst();
-            }
-            if (failures.size() >= MAX_FAILED_PAIRINGS) {
-                throw new BusinessRuleException(TOO_MANY_ATTEMPTS);
-            }
-            Optional<AgentPairingCode> found = usableCode(SecretTokens.sha256(request.code()), now);
-            if (found.isEmpty()) {
-                failures.addLast(now);
-                throw new InvalidCredentialsException(INVALID_CODE);
-            }
-            AgentPairingCode code = found.get();
-            code.use(now);
-            String token = SecretTokens.newValue();
-            PrintAgent agent = agentRepository.save(new PrintAgent(code.getStoreId(), request.name().trim(),
-                    SecretTokens.sha256(token), request.os(), request.agentVersion(), now));
-            String storeName = storeService.get(code.getStoreId()).name();
-            return new AgentPairingResponse(agent.getId(), agent.getName(), storeName, token);
+        if (failedPairings.blocked(clientKey)) {
+            throw new TooManyRequestsException(TOO_MANY_ATTEMPTS);
         }
+        Optional<AgentPairingCode> found = usableCode(SecretTokens.sha256(request.code()), now);
+        if (found.isEmpty()) {
+            failedPairings.failed(clientKey);
+            throw new InvalidCredentialsException(INVALID_CODE);
+        }
+        AgentPairingCode code = found.get();
+        code.use(now);
+        String token = SecretTokens.newValue();
+        PrintAgent agent = agentRepository.save(new PrintAgent(code.getStoreId(), request.name().trim(),
+                SecretTokens.sha256(token), request.os(), request.agentVersion(), now));
+        String storeName = storeService.get(code.getStoreId()).name();
+        return new AgentPairingResponse(agent.getId(), agent.getName(), storeName, token);
     }
 
     /** Usado a cada chamada do agente. Token revogado não autentica. */

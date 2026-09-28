@@ -28,8 +28,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
                                               @RequestHeader(value = HttpHeaders.USER_AGENT, required = false)
-                                              String userAgent) {
-        AuthResult result = authService.login(request, userAgent);
+                                              String userAgent, HttpServletRequest http) {
+        AuthResult result = authService.login(request, userAgent, http.getRemoteAddr());
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookies.create(result.refreshToken()))
                 .body(result.response());

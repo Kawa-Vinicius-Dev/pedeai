@@ -4,7 +4,6 @@ import com.pedeai.printing.dto.AgentPairingRequest;
 import com.pedeai.printing.repository.AgentPairingCodeRepository;
 import com.pedeai.printing.repository.PrintAgentRepository;
 import com.pedeai.printing.repository.PrinterRepository;
-import com.pedeai.shared.exception.BusinessRuleException;
 import com.pedeai.shared.exception.InvalidCredentialsException;
 import com.pedeai.store.service.StoreService;
 import org.junit.jupiter.api.Test;
@@ -34,7 +33,7 @@ class AgentServiceTest {
             assertThatThrownBy(() -> service.pair(WRONG, "10.0.0.1")).isInstanceOf(InvalidCredentialsException.class);
         }
         assertThatThrownBy(() -> service.pair(WRONG, "10.0.0.1"))
-                .isInstanceOf(BusinessRuleException.class)
+                .isInstanceOf(com.pedeai.shared.exception.TooManyRequestsException.class)
                 .hasMessage(AgentService.TOO_MANY_ATTEMPTS);
         // Outro endereço não é afetado, e o bloqueio acaba com o tempo.
         assertThatThrownBy(() -> service.pair(WRONG, "10.0.0.2")).isInstanceOf(InvalidCredentialsException.class);

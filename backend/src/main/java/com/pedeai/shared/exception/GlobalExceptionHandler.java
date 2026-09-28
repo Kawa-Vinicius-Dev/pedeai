@@ -90,6 +90,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage(), request, Map.of());
     }
 
+    @ExceptionHandler(TooManyRequestsException.class)
+    ResponseEntity<ApiError> handleTooManyRequests(TooManyRequestsException exception, HttpServletRequest request) {
+        return build(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage(), request, Map.of());
+    }
+
     @ExceptionHandler(InvalidCredentialsException.class)
     ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException exception, HttpServletRequest request) {
         return build(HttpStatus.UNAUTHORIZED, exception.getMessage(), request, Map.of());
