@@ -74,6 +74,15 @@ jobs:
           cache: maven
       - run: ./mvnw -B verify
 
+  # A imagem de produção da API (deploy/compose.prod.yaml e Railway) precisa continuar montando.
+  api-image:
+    name: Imagem da API (Docker)
+    needs: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker build --tag pedeai-api:ci backend
+
   # Instalador do agente para o computador da loja. O runner Windows já tem o WiX, que o jpackage usa para o MSI.
   # O .msi fica nos artefatos da execução do CI.
   agent-installer:
