@@ -9,6 +9,7 @@ import com.pedeai.printing.dto.AgentPrincipal;
 import com.pedeai.printing.dto.AgentStatusRequest;
 import com.pedeai.printing.service.AgentService;
 import com.pedeai.printing.service.PrintQueueService;
+import com.pedeai.shared.web.ClientAddress;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -42,7 +43,7 @@ public class AgentApiController {
     @PostMapping("/pairings")
     @ResponseStatus(HttpStatus.CREATED)
     public AgentPairingResponse pair(@Valid @RequestBody AgentPairingRequest request, HttpServletRequest http) {
-        return agentService.pair(request, http.getRemoteAddr());
+        return agentService.pair(request, ClientAddress.of(http));
     }
 
     @GetMapping("/config")

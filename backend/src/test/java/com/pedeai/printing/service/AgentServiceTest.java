@@ -41,6 +41,22 @@ class AgentServiceTest {
         assertThatThrownBy(() -> service.pair(WRONG, "10.0.0.1")).isInstanceOf(InvalidCredentialsException.class);
     }
 
+    @Test
+    void forgedAddressesStillHitTheGlobalCap() {
+        MutableClock clock = new MutableClock(Instant.parse("2026-09-26T12:00:00Z"));
+        AgentPairingCodeRepository codes = mock(AgentPairingCodeRepository.class);
+        when(codes.findAllByCodeHash(anyString())).thenReturn(List.of());
+        AgentService service = new AgentService(mock(PrintAgentRepository.class), codes,
+                mock(PrinterRepository.class), mock(StoreService.class), clock);
+
+        for (int attempt = 0; attempt < AgentService.MAX_FAILED_PAIRINGS_GLOBAL; attempt++) {
+            String forged = "10.1." + (attempt / 250) + "." + (attempt % 250);
+            assertThatThrownBy(() -> service.pair(WRONG, forged)).isInstanceOf(InvalidCredentialsException.class);
+        }
+        assertThatThrownBy(() -> service.pair(WRONG, "10.9.9.9"))
+                .isInstanceOf(com.pedeai.shared.exception.TooManyRequestsException.class);
+    }
+
     private static final class MutableClock extends Clock {
         private Instant now;
 

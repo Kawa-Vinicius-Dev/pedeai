@@ -67,13 +67,6 @@ Crie um projeto em [sentry.io](https://sentry.io) (tem plano grátis) e configur
 - Frontend (variável da Vercel, precisa de novo deploy): `VITE_SENTRY_DSN`. Sem ela,
   o código do Sentry nem entra no pacote do app.
 
-### Antes de publicar a API
-
-- O limite de tentativas de pareamento do agente usa o IP de quem chama. Atrás de
-  um proxy (o repasse de `/api/*` pela Vercel), todos chegam com o IP do proxy:
-  configure `server.forward-headers-strategy` confiando só no proxy, ou tentativas
-  erradas de uma pessoa bloqueiam o pareamento de todas as lojas por 10 minutos.
-
 ## Prioridades
 
 1. Receber pedidos

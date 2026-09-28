@@ -44,6 +44,12 @@ public class AgentService {
     /** O código tem só 6 dígitos: sem limite, dava para tentar todos. */
     static final int MAX_FAILED_PAIRINGS = 10;
     static final Duration FAILED_PAIRING_WINDOW = Duration.ofMinutes(10);
+    /**
+     * Teto somando todos os IPs: o IP vem de um cabeçalho que dá para forjar. Com ele, testar o milhão de códigos
+     * possíveis levaria décadas, qualquer que seja o IP informado.
+     */
+    static final int MAX_FAILED_PAIRINGS_GLOBAL = 200;
+    private static final String GLOBAL = "*";
 
     private final PrintAgentRepository agentRepository;
     private final AgentPairingCodeRepository codeRepository;
@@ -51,6 +57,7 @@ public class AgentService {
     private final StoreService storeService;
     private final Clock clock;
     private final AttemptLimiter failedPairings;
+    private final AttemptLimiter allFailedPairings;
 
     public AgentService(PrintAgentRepository agentRepository, AgentPairingCodeRepository codeRepository,
                         PrinterRepository printerRepository, StoreService storeService, Clock clock) {
@@ -60,6 +67,7 @@ public class AgentService {
         this.storeService = storeService;
         this.clock = clock;
         this.failedPairings = new AttemptLimiter(MAX_FAILED_PAIRINGS, FAILED_PAIRING_WINDOW, clock);
+        this.allFailedPairings = new AttemptLimiter(MAX_FAILED_PAIRINGS_GLOBAL, FAILED_PAIRING_WINDOW, clock);
     }
 
     @Transactional
@@ -79,12 +87,13 @@ public class AgentService {
     @Transactional
     public AgentPairingResponse pair(AgentPairingRequest request, String clientKey) {
         Instant now = Instant.now(clock);
-        if (failedPairings.blocked(clientKey)) {
+        if (failedPairings.blocked(clientKey) || allFailedPairings.blocked(GLOBAL)) {
             throw new TooManyRequestsException(TOO_MANY_ATTEMPTS);
         }
         Optional<AgentPairingCode> found = usableCode(SecretTokens.sha256(request.code()), now);
         if (found.isEmpty()) {
             failedPairings.failed(clientKey);
+            allFailedPairings.failed(GLOBAL);
             throw new InvalidCredentialsException(INVALID_CODE);
         }
         AgentPairingCode code = found.get();
