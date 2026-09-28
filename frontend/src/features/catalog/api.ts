@@ -1,5 +1,6 @@
 import { notifications } from '@mantine/notifications';
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { api } from '../../shared/api/client';
 import { errorMessage, unwrap } from '../../shared/api/errors';
 import type { Category, OptionChoice, OptionGroup, Product, Sector } from '../../shared/api/types';
@@ -48,10 +49,14 @@ export function useCatalog(): { data: CatalogData | undefined; error: Error | nu
   const optionGroups = useOptionGroups();
   const products = useProducts();
   const error = sectors.error ?? categories.error ?? optionGroups.error ?? products.error;
-  const data =
-    sectors.data && categories.data && optionGroups.data && products.data
-      ? { sectors: sectors.data, categories: categories.data, optionGroups: optionGroups.data, products: products.data }
-      : undefined;
+  // Mesmo objeto enquanto as listas não mudam: a grade do PDV não precisa renderizar de novo a cada tecla.
+  const data = useMemo(
+    () =>
+      sectors.data && categories.data && optionGroups.data && products.data
+        ? { sectors: sectors.data, categories: categories.data, optionGroups: optionGroups.data, products: products.data }
+        : undefined,
+    [sectors.data, categories.data, optionGroups.data, products.data],
+  );
   return { data, error };
 }
 
