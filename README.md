@@ -58,6 +58,15 @@ contínuo. Quando a API estiver no ar, o `vercel.json` ganha uma regra que repas
 `/api/*` para ela. Assim o navegador fala só com o domínio do app, e o cookie de
 sessão continua funcionando.
 
+### Alertas de erro (Sentry)
+
+Crie um projeto em [sentry.io](https://sentry.io) (tem plano grátis) e configure:
+
+- API: `SENTRY_DSN` (e, se quiser, `SENTRY_ENVIRONMENT`). Todo log de erro e toda
+  exceção inesperada viram alerta, inclusive dos jobs do iFood e da impressão.
+- Frontend (variável da Vercel, precisa de novo deploy): `VITE_SENTRY_DSN`. Sem ela,
+  o código do Sentry nem entra no pacote do app.
+
 ### Antes de publicar a API
 
 - O limite de tentativas de pareamento do agente usa o IP de quem chama. Atrás de

@@ -28,6 +28,15 @@ server:
     include-stacktrace: never
     include-message: never
 
+# Sem SENTRY_DSN o Sentry fica desligado. Só erros (sem traces) e sem dados pessoais.
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${SENTRY_ENVIRONMENT:production}
+  send-default-pii: false
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info
+
 management:
   endpoints:
     web:
