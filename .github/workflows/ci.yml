@@ -109,6 +109,23 @@ jobs:
             --add-modules java.base,java.desktop,java.net.http,jdk.charsets `
             --win-console --win-per-user-install --win-menu --win-menu-group PedeAi --win-shortcut `
             --win-upgrade-uuid b5c6b089-9c5e-477c-834a-e9b414bfdb43 --dest dist
+      # Assina o MSI quando houver certificado (segredos WINDOWS_CERT_PFX em base64 e WINDOWS_CERT_PASSWORD). Sem
+      # eles, o instalador sai sem assinatura e o Windows mostra o aviso do SmartScreen.
+      - name: Assinar o instalador
+        env:
+          CERT_PFX: ${{ secrets.WINDOWS_CERT_PFX }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          if (-not $env:CERT_PFX) { Write-Output "Sem certificado: MSI sem assinatura."; exit 0 }
+          $pfx = Join-Path $env:RUNNER_TEMP cert.pfx
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERT_PFX))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          & $signtool.FullName sign /f $pfx /p $env:CERT_PASSWORD /fd SHA256 `
+            /tr http://timestamp.digicert.com /td SHA256 (Get-ChildItem dist\*.msi).FullName
+          $code = $LASTEXITCODE
+          Remove-Item $pfx
+          exit $code
       - uses: actions/upload-artifact@v4
         with:
           name: PedeAiAgente-msi

@@ -5416,6 +5416,9 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "outdated": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -5425,7 +5428,8 @@
           "lastSeenAt",
           "name",
           "online",
-          "os"
+          "os",
+          "outdated"
         ]
       },
       "OrderSummaryResponse": {
@@ -5841,11 +5845,22 @@
             "items": {
               "$ref": "#/components/schemas/AgentPrinterResponse"
             }
+          },
+          "latestVersion": {
+            "type": "string"
+          },
+          "downloadUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
           "agentId",
           "agentName",
+          "downloadUrl",
+          "latestVersion",
           "printers"
         ]
       },

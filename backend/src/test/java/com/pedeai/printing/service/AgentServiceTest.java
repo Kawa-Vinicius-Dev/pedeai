@@ -27,7 +27,8 @@ class AgentServiceTest {
         AgentPairingCodeRepository codes = mock(AgentPairingCodeRepository.class);
         when(codes.findAllByCodeHash(anyString())).thenReturn(List.of());
         AgentService service = new AgentService(mock(PrintAgentRepository.class), codes,
-                mock(PrinterRepository.class), mock(StoreService.class), clock);
+                mock(PrinterRepository.class), mock(StoreService.class),
+                new com.pedeai.printing.config.AgentProperties("0.2.0", null), clock);
 
         for (int attempt = 0; attempt < AgentService.MAX_FAILED_PAIRINGS; attempt++) {
             assertThatThrownBy(() -> service.pair(WRONG, "10.0.0.1")).isInstanceOf(InvalidCredentialsException.class);
@@ -47,7 +48,8 @@ class AgentServiceTest {
         AgentPairingCodeRepository codes = mock(AgentPairingCodeRepository.class);
         when(codes.findAllByCodeHash(anyString())).thenReturn(List.of());
         AgentService service = new AgentService(mock(PrintAgentRepository.class), codes,
-                mock(PrinterRepository.class), mock(StoreService.class), clock);
+                mock(PrinterRepository.class), mock(StoreService.class),
+                new com.pedeai.printing.config.AgentProperties("0.2.0", null), clock);
 
         for (int attempt = 0; attempt < AgentService.MAX_FAILED_PAIRINGS_GLOBAL; attempt++) {
             String forged = "10.1." + (attempt / 250) + "." + (attempt % 250);

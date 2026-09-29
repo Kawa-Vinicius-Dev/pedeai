@@ -1,5 +1,6 @@
 package com.pedeai.printing.service;
 
+import com.pedeai.printing.config.AgentProperties;
 import com.pedeai.printing.domain.AgentPairingCode;
 import com.pedeai.printing.domain.PrintAgent;
 import com.pedeai.printing.domain.Printer;
@@ -55,16 +56,19 @@ public class AgentService {
     private final AgentPairingCodeRepository codeRepository;
     private final PrinterRepository printerRepository;
     private final StoreService storeService;
+    private final AgentProperties agentProperties;
     private final Clock clock;
     private final AttemptLimiter failedPairings;
     private final AttemptLimiter allFailedPairings;
 
     public AgentService(PrintAgentRepository agentRepository, AgentPairingCodeRepository codeRepository,
-                        PrinterRepository printerRepository, StoreService storeService, Clock clock) {
+                        PrinterRepository printerRepository, StoreService storeService,
+                        AgentProperties agentProperties, Clock clock) {
         this.agentRepository = agentRepository;
         this.codeRepository = codeRepository;
         this.printerRepository = printerRepository;
         this.storeService = storeService;
+        this.agentProperties = agentProperties;
         this.clock = clock;
         this.failedPairings = new AttemptLimiter(MAX_FAILED_PAIRINGS, FAILED_PAIRING_WINDOW, clock);
         this.allFailedPairings = new AttemptLimiter(MAX_FAILED_PAIRINGS_GLOBAL, FAILED_PAIRING_WINDOW, clock);
@@ -116,7 +120,7 @@ public class AgentService {
     public List<PrintAgentResponse> list(UUID storeId) {
         Instant now = Instant.now(clock);
         return agentRepository.findAllByStoreIdAndRevokedAtIsNullOrderByCreatedAtAsc(storeId).stream()
-                .map(agent -> PrintAgentResponse.from(agent, now))
+                .map(agent -> PrintAgentResponse.from(agent, now, agentProperties.isOutdated(agent.getAgentVersion())))
                 .toList();
     }
 
@@ -132,7 +136,7 @@ public class AgentService {
         return new AgentConfigResponse(agent.getId(), agent.getName(),
                 printerRepository.findAllByAgentIdAndActiveTrueOrderByNameAsc(agent.getId()).stream()
                         .map(AgentPrinterResponse::from)
-                        .toList());
+                        .toList(), agentProperties.latestVersion(), agentProperties.downloadUrl());
     }
 
     /** Heartbeat. Status de impressora que não é deste agente é ignorado. */

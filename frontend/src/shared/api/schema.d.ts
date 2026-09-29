@@ -1693,6 +1693,7 @@ export interface components {
             lastSeenAt: string | null;
             /** Format: date-time */
             createdAt: string;
+            outdated: boolean;
         };
         OrderSummaryResponse: {
             /** Format: uuid */
@@ -1806,6 +1807,8 @@ export interface components {
             agentId: string;
             agentName: string;
             printers: components["schemas"]["AgentPrinterResponse"][];
+            latestVersion: string;
+            downloadUrl: string | null;
         };
         AgentPrinterResponse: {
             /** Format: uuid */

@@ -52,6 +52,7 @@ class AgentRunnerTest {
                 {"agentId":"01a0d567-0000-7000-8000-0000000000d0","agentName":"Caixa","printers":[
                   {"id":"%s","name":"Cozinha","connectionType":"NETWORK","host":"127.0.0.1","port":%d}]}"""
                 .formatted(PRINTER_ID, printer.port())));
+        api.createContext("/api/agent/status", exchange -> respond(exchange, 204, ""));
         api.createContext("/api/agent/jobs", exchange -> {
             if (exchange.getRequestMethod().equals("GET")) {
                 respond(exchange, 200, jobsJson);
@@ -128,6 +129,29 @@ class AgentRunnerTest {
         assertEquals(0, runner.processJobs());
         assertEquals(List.of("SENT"), patches);
         assertEquals(0, printer.connections());
+    }
+
+    @Test
+    void trayTurnsYellowWhenAPrinterStopsAnsweringAndRedWithoutConnection() throws Exception {
+        AgentRunner runner = runner(new Journal(folder.resolve("diario.log"), CLOCK.instant()));
+        runner.refreshConfig();
+        runner.heartbeat();
+        assertEquals(StatusTray.Status.OK, runner.status(true));
+
+        printer.close();
+        runner.heartbeat();
+        runner.heartbeat(); // duas falhas seguidas marcam offline
+        assertEquals(StatusTray.Status.PRINTER_PROBLEM, runner.status(true));
+        assertEquals(StatusTray.Status.OFFLINE, runner.status(false));
+    }
+
+    @Test
+    void newerVersionIsComparedByNumber() {
+        assertTrue(AgentRunner.isNewer("0.2.10", "0.2.9"));
+        assertTrue(AgentRunner.isNewer("1.0", "0.9.9"));
+        assertEquals(false, AgentRunner.isNewer("0.2.0", "0.2.0"));
+        assertEquals(false, AgentRunner.isNewer(null, "0.2.0"));
+        assertEquals(false, AgentRunner.isNewer("dev", "0.2.0"));
     }
 
     @Test

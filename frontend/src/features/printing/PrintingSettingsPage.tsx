@@ -95,6 +95,11 @@ function AgentsCard() {
               </Text>
             </Stack>
             <Group gap="xs" wrap="nowrap">
+              {agent.outdated && (
+                <Badge color="orange" variant="outline" title="Instale a versão nova do agente neste computador.">
+                  Desatualizado
+                </Badge>
+              )}
               <Badge color={agent.online ? 'green' : 'red'} variant="light">
                 {agent.online
                   ? 'Online'

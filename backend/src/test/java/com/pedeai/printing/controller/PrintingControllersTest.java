@@ -122,7 +122,7 @@ class PrintingControllersTest {
     void agentApiNeedsTheDeviceToken() throws Exception {
         when(agentService.authenticate("token-bom")).thenReturn(Optional.of(new AgentPrincipal(AGENT_ID, STORE_ID)));
         when(agentService.authenticate("token-ruim")).thenReturn(Optional.empty());
-        when(agentService.config(any())).thenReturn(new AgentConfigResponse(AGENT_ID, "Caixa", List.of()));
+        when(agentService.config(any())).thenReturn(new AgentConfigResponse(AGENT_ID, "Caixa", List.of(), "0.2.0", null));
 
         mockMvc.perform(get("/api/agent/config")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/agent/config").header(HttpHeaders.AUTHORIZATION, "Bearer token-ruim"))
