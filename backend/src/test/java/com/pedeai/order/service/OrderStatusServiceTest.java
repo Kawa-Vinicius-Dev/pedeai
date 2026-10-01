@@ -72,7 +72,7 @@ class OrderStatusServiceTest {
         assertThat(history.getValue().getActorName()).isEqualTo("Ana");
         verify(orderRepository).flush();
         verify(events).publishEvent(new OrderStatusChanged(STORE_ID, order.getId(), 7, OrderStatus.CONFIRMED,
-                OrderStatus.READY, 0L));
+                OrderStatus.READY, 0L, com.pedeai.order.domain.ActorType.USER));
     }
 
     @Test
@@ -162,6 +162,47 @@ class OrderStatusServiceTest {
         assertThatThrownBy(() -> service().change(user(Role.OWNER), id,
                 new ChangeOrderStatusRequest(OrderStatus.READY, null, null)))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void platformStatusIsAppliedOnceAndNeverGoesBackward() {
+        Order order = stored(OrderStatus.CONFIRMED);
+        OrderStatusService service = service();
+
+        assertThat(service.applyFromMarketplace(STORE_ID, order.getId(), OrderStatus.READY, null)).isTrue();
+        assertThat(service.applyFromMarketplace(STORE_ID, order.getId(), OrderStatus.READY, null)).isFalse();
+        assertThat(service.applyFromMarketplace(STORE_ID, order.getId(), OrderStatus.CONFIRMED, null)).isFalse();
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.READY);
+        verify(events).publishEvent(new OrderStatusChanged(STORE_ID, order.getId(), 7, OrderStatus.CONFIRMED,
+                OrderStatus.READY, 0L, com.pedeai.order.domain.ActorType.MARKETPLACE));
+    }
+
+    @Test
+    void platformCancellationKeepsTheReasonAndIsFinal() {
+        Order order = stored(OrderStatus.IN_PREPARATION);
+        OrderStatusService service = service();
+
+        assertThat(service.applyFromMarketplace(STORE_ID, order.getId(), OrderStatus.CANCELLED,
+                "Cliente desistiu")).isTrue();
+        assertThat(service.applyFromMarketplace(STORE_ID, order.getId(), OrderStatus.READY, null)).isFalse();
+
+        assertThat(order.getCancelReason()).isEqualTo("Cliente desistiu");
+    }
+
+    @Test
+    void marketplaceOrderIsNotCancelledDirectly() {
+        Instant now = Instant.parse("2026-09-24T11:00:00Z");
+        Order order = Order.placeMarketplace(STORE_ID, LocalDate.of(2026, 9, 24), 8,
+                com.pedeai.order.domain.OrderSource.IFOOD, "ifood-1", "7391", OrderType.DELIVERY, null, "Rita", null,
+                null, null, List.of(new OrderItem(STORE_ID, null, "10", "X", null, 1, 1000, 0, null, List.of(), 0)),
+                0, 0, 0, 0, now);
+        when(orderRepository.findByIdAndStoreId(order.getId(), STORE_ID)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> service().change(user(Role.OWNER), order.getId(),
+                new ChangeOrderStatusRequest(OrderStatus.CANCELLED, "Sem entregador", null)))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage(OrderStatusService.MARKETPLACE_CANCEL_BY_REQUEST);
     }
 
     private Order stored(OrderStatus status) {

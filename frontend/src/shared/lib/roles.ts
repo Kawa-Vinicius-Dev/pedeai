@@ -27,3 +27,9 @@ export const ORDER_VIEWERS: Role[] = ['OWNER', 'MANAGER', 'CASHIER', 'KITCHEN'];
 
 /** Formas de pagamento e taxas de entrega. */
 export const SETTINGS_MANAGERS: Role[] = ['OWNER', 'MANAGER'];
+
+/** Abrir e fechar o caixa, sangria e suprimento. */
+export const CASH_OPERATORS: Role[] = ['OWNER', 'MANAGER', 'CASHIER'];
+
+/** Faturamento e painel do dia. */
+export const REPORT_VIEWERS: Role[] = ['OWNER', 'MANAGER'];

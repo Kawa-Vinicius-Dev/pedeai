@@ -21,4 +21,9 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
             where t.userId = :userId and t.revokedAt is null""")
     int revokeAllActiveByUserId(@Param("userId") UUID userId, @Param("now") Instant now,
                                 @Param("reason") RevokeReason reason);
+
+    /** Vencido não serve mais nem para detectar reuso: o token só valia até {@code expiresAt}. */
+    @Modifying
+    @Query("delete from RefreshToken t where t.expiresAt < :cutoff")
+    int deleteExpiredBefore(@Param("cutoff") Instant cutoff);
 }

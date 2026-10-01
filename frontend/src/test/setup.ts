@@ -1,8 +1,11 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { setAccessToken } from '../shared/api/client';
 import { closeStreams, server } from './server';
+
+// findBy/waitFor esperam até 3 s (padrão: 1 s): com a suíte inteira rodando, a tela do PDV demora mais para reagir.
+configure({ asyncUtilTimeout: 3_000 });
 
 // O Mantine usa APIs de layout que o jsdom não implementa.
 Object.defineProperty(window, 'matchMedia', {

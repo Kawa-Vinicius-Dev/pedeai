@@ -53,3 +53,17 @@ export type SectorPrinter = Schemas['SectorPrinterResponse'];
 export type SectorPrinterRequest = Schemas['SectorPrinterRequest'];
 export type PrintJob = Schemas['PrintJobResponse'];
 export type PrintAlert = Schemas['PrintAlertResponse'];
+export type MarketplaceConnection = Schemas['ConnectionResponse'];
+export type IfoodSetup = Schemas['IfoodSetupResponse'];
+export type Merchant = Schemas['MerchantResponse'];
+export type CancellationReason = Schemas['CancellationReasonResponse'];
+export type MarketplaceAction = Schemas['OutboundActionResponse'];
+
+export type CashSession = Schemas['CashSessionResponse'];
+export type CashLine = Schemas['CashLineResponse'];
+export type CashMovement = Schemas['CashMovementResponse'];
+export type CashSessionSummary = Schemas['CashSessionSummaryResponse'];
+export type Dashboard = Schemas['DashboardResponse'];
+export type Revenue = Schemas['RevenueResponse'];
+export type RevenueSummary = Schemas['RevenueSummaryResponse'];
+export type RevenueGroup = Schemas['RevenueGroupResponse'];

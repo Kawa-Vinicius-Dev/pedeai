@@ -17,6 +17,7 @@ const agent: PrintAgent = {
   online: true,
   lastSeenAt: '2026-09-27T12:00:00Z',
   createdAt: '2026-09-27T11:00:00Z',
+  outdated: true,
 };
 
 const kitchenPrinter: Printer = {
@@ -69,7 +70,9 @@ describe('configurações de impressão', () => {
     serve({ printers: [kitchenPrinter], sectorPrinters: [] });
     const { user } = renderApp('/configuracoes/impressao');
 
-    expect(await within(await screen.findByLabelText('Computador Caixa')).findByText('Online')).toBeInTheDocument();
+    const computer = await screen.findByLabelText('Computador Caixa');
+    expect(await within(computer).findByText('Online')).toBeInTheDocument();
+    expect(within(computer).getByText('Desatualizado')).toBeInTheDocument();
     expect(await screen.findByText('Com problema')).toBeInTheDocument();
     expect(screen.getByText('Sem papel')).toBeInTheDocument();
     expect(screen.getByText('Rede 192.168.0.50:9100')).toBeInTheDocument();

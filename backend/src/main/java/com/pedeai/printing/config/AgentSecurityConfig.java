@@ -30,6 +30,7 @@ import java.util.List;
  * serve em nenhuma outra rota (a cadeia principal só aceita o JWT de pessoa).
  */
 @Configuration
+@org.springframework.boot.context.properties.EnableConfigurationProperties(AgentProperties.class)
 public class AgentSecurityConfig {
     private static final String BEARER = "Bearer ";
 

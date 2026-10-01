@@ -187,6 +187,24 @@ sequenceDiagram
 - Se o cliente ou a plataforma cancelar, chega um evento. O pedido vira
   **Cancelado**, aparece um alerta e os setores recebem o aviso de cancelamento.
 
+## Caixa
+
+Um caixa aberto por loja. Quem está no caixa, o gerente e o dono operam a tela
+**Caixa**.
+
+1. **Abertura** com o troco que está na gaveta.
+2. Durante o turno, **sangria** (tira dinheiro da gaveta, com motivo) e
+   **suprimento** (coloca). A sangria não passa do dinheiro esperado na gaveta.
+3. O **esperado** de cada forma de pagamento são os pagamentos recebidos na
+   loja entre a abertura e agora. No dinheiro, soma o troco inicial e os
+   suprimentos e desconta as sangrias. Pago online no marketplace não passa
+   pelo caixa e fica fora. Pagamento estornado (cancelado) também fica fora.
+4. **Fechamento**: a pessoa digita o que contou em cada forma e o sistema
+   mostra a diferença (sobra ou falta). O esperado e o contado ficam gravados
+   como estavam na hora, então o relatório não muda depois.
+5. O **relatório** (parcial ou de fechamento) sai na impressora térmica
+   escolhida, pelo agente.
+
 ## Situações de exceção
 
 | Situação | Comportamento esperado |

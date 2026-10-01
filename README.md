@@ -37,6 +37,7 @@ Abra http://localhost:5173/cadastro e crie a sua loja. No Windows, use
 | --- | --- |
 | Testes do backend (H2) | `cd backend && ./mvnw verify` |
 | Testes do backend contra o PostgreSQL local | `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/pedeai SPRING_DATASOURCE_USERNAME=... SPRING_DATASOURCE_PASSWORD=... ./mvnw test` |
+| API com o simulador do iFood (pedidos de teste sem credenciais) | `IFOOD_SIMULATOR=true ./mvnw spring-boot:run` e, na tela, Configurações › Integrações |
 | Testes do agente de impressão | `cd agent && ./mvnw verify` (ver [agent/README.md](agent/README.md)) |
 | Testes, lint e tipos do frontend | `cd frontend && npm test && npm run lint && npm run typecheck` |
 | Documentação da API | http://localhost:8080/swagger-ui.html |
@@ -51,18 +52,23 @@ O frontend é um site estático e fica na Vercel. No projeto da Vercel, **Root
 Directory = `frontend`**. O [`frontend/vercel.json`](frontend/vercel.json) faz
 qualquer rota (`/cardapio`, `/login`...) abrir o app, menos `/api/*`.
 
+O passo a passo da API, com servidor próprio (Docker, HTTPS e backup) ou Railway, está em
+[07 · Deploy](docs/07-deploy.md).
+
 A API (Java) e o PostgreSQL ficam fora da Vercel, num servidor sempre ligado: a
 impressão, o quadro de pedidos em tempo real e o iFood dependem de um processo
 contínuo. Quando a API estiver no ar, o `vercel.json` ganha uma regra que repassa
 `/api/*` para ela. Assim o navegador fala só com o domínio do app, e o cookie de
 sessão continua funcionando.
 
-### Antes de publicar a API
+### Alertas de erro (Sentry)
 
-- O limite de tentativas de pareamento do agente usa o IP de quem chama. Atrás de
-  um proxy (o repasse de `/api/*` pela Vercel), todos chegam com o IP do proxy:
-  configure `server.forward-headers-strategy` confiando só no proxy, ou tentativas
-  erradas de uma pessoa bloqueiam o pareamento de todas as lojas por 10 minutos.
+Crie um projeto em [sentry.io](https://sentry.io) (tem plano grátis) e configure:
+
+- API: `SENTRY_DSN` (e, se quiser, `SENTRY_ENVIRONMENT`). Todo log de erro e toda
+  exceção inesperada viram alerta, inclusive dos jobs do iFood e da impressão.
+- Frontend (variável da Vercel, precisa de novo deploy): `VITE_SENTRY_DSN`. Sem ela,
+  o código do Sentry nem entra no pacote do app.
 
 ## Prioridades
 

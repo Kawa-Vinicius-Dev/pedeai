@@ -277,3 +277,34 @@ aponta para a antiga, sem apagar a antiga.
   no restaurante, sem ganho visível no piloto).
 - **Consequências:** cerca de 30 chamadas por minuto por computador de impressão.
   Quando o número de lojas pesar na API, entra o SSE com o mesmo endpoint de fila.
+
+## D25 · Sem salão: o piloto só faz delivery
+
+- **Contexto:** o roadmap previa a Etapa 4 (mesas, comandas, rodadas, pré-conta e
+  tela do garçom). O restaurante-piloto só faz delivery, e os pedidos de balcão
+  entram pela tela de novo pedido (retirada).
+- **Decisão:** a Etapa 4 sai do escopo. Depois da impressão vem o iFood.
+- **Alternativas:** construir o salão mesmo assim (semanas de trabalho sem uso no
+  piloto).
+- **Consequências:** `DINE_IN` continua existindo no modelo, e pedido de
+  marketplace desse tipo entra sem comanda. Se aparecer um cliente com salão, a
+  etapa volta com o desenho que está em [01 · Fluxos](01-fluxos.md).
+
+## D26 · Integração com o iFood sem credenciais: simulador e caminhos configuráveis
+
+- **Contexto:** ainda não há cadastro no iFood Developer. A documentação mostra
+  versões diferentes dos endpoints de polling e de ack (`events:polling` e
+  `events/acknowledgment` em um lugar, `orders:polling` e `orders:acknowledgment`
+  com `acknowledgedEventIds` em outro).
+- **Decisão:** a integração foi construída pela documentação, com os caminhos de
+  polling e ack configuráveis (padrão: a versão atual, `orders:polling`). Um
+  simulador (`IFOOD_SIMULATOR=true`) injeta pedidos pelo mesmo inbox do pedido
+  real e faz o papel do iFood nas respostas, incluindo o cancelamento aceito.
+  Não há interface `MarketplaceConnector` por enquanto: com uma implementação só,
+  ela entra junto com a 99Food.
+- **Alternativas:** esperar as credenciais (bloquearia a etapa); WireMock no
+  lugar do simulador (serve só aos testes, não à demonstração na tela).
+- **Consequências:** na homologação é preciso conferir caminhos, o formato do
+  ack, o corpo do `requestCancellation` e os códigos de evento. As credenciais
+  entram só por variável de ambiente (`IFOOD_ENABLED`, `IFOOD_CLIENT_ID`,
+  `IFOOD_CLIENT_SECRET`).

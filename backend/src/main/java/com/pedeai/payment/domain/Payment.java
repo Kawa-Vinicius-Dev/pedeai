@@ -69,6 +69,11 @@ public class Payment {
         }
     }
 
+    /** Pago online no iFood ou na 99Food: o dinheiro entra pelo repasse da plataforma, não pelo caixa. */
+    public void settledByMarketplace() {
+        this.origin = PaymentOrigin.MARKETPLACE;
+    }
+
     public void markPaid(UUID userId, Instant now) {
         if (status == PaymentStatus.CANCELLED) {
             throw new BusinessRuleException(ALREADY_CANCELLED);

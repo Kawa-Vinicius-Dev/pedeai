@@ -1,6 +1,6 @@
 import { Badge, Chip, Group, Paper, ScrollArea, SimpleGrid, Stack, Text, TextInput, UnstyledButton } from '@mantine/core';
 import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import type { Product } from '../../shared/api/types';
 import { formatCents } from '../../shared/lib/numbers';
 import { normalizeSearch } from '../../shared/lib/text';
@@ -8,8 +8,17 @@ import type { CatalogData } from '../catalog/api';
 
 const ALL = 'all';
 
-/** Grade de produtos do PDV: busca por nome ou código PDV e filtro por categoria. */
-export function ProductPicker({ catalog, onPick }: { catalog: CatalogData; onPick: (product: Product) => void }) {
+/**
+ * Grade de produtos do PDV: busca por nome ou código PDV e filtro por categoria. Memorizada: o formulário do pedido
+ * muda a cada tecla (telefone, bairro, troco), e a grade inteira não precisa desenhar de novo por isso.
+ */
+export const ProductPicker = memo(function ProductPicker({
+  catalog,
+  onPick,
+}: {
+  catalog: CatalogData;
+  onPick: (product: Product) => void;
+}) {
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState<string>(ALL);
   const categories = catalog.categories.filter((category) => category.active);
@@ -81,4 +90,4 @@ export function ProductPicker({ catalog, onPick }: { catalog: CatalogData; onPic
       </SimpleGrid>
     </Stack>
   );
-}
+});

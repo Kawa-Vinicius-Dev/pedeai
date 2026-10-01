@@ -9,7 +9,10 @@ import java.util.List;
 import java.util.UUID;
 
 /** O que o agente precisa para imprimir: as impressoras ativas dele, com a tabela de caracteres já resolvida. */
-public record AgentConfigResponse(UUID agentId, String agentName, List<AgentPrinterResponse> printers) {
+/** {@code latestVersion} e {@code downloadUrl}: o agente avisa na bandeja quando há versão nova. */
+public record AgentConfigResponse(UUID agentId, String agentName, List<AgentPrinterResponse> printers,
+                                  String latestVersion,
+                                  @Schema(types = {"string", "null"}) String downloadUrl) {
 
     /** {@code escPosCodepage}: o n do ESC t. {@code charset}: a tabela Java que codifica o texto. */
     public record AgentPrinterResponse(

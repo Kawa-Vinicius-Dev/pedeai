@@ -1,7 +1,6 @@
-import { AppShell, Badge, Burger, Button, Group, NavLink, Stack, Text } from '@mantine/core';
+import { AppShell, Burger, Button, Group, NavLink, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
-  Armchair,
   Bike,
   BookOpen,
   ChartColumn,
@@ -10,22 +9,26 @@ import {
   CreditCard,
   House,
   LogOut,
+  Plug,
   Printer,
   type LucideIcon,
   Store,
+  TrendingUp,
   Users,
+  Wallet,
 } from 'lucide-react';
 import { NavLink as RouterNavLink, Outlet, useMatch } from 'react-router';
 import { useAuth, useSession } from '../features/auth/auth-context';
 import { useOrderStream } from '../features/orders/realtime';
 import { PrintAlertsBar } from '../features/printing/PrintAlertsBar';
-import { AVAILABILITY_TOGGLERS, ORDER_VIEWERS, ROLE_LABELS, SETTINGS_MANAGERS } from '../shared/lib/roles';
-
-/** Áreas que chegam nas próximas etapas do roadmap (docs/06-roadmap.md). */
-const UPCOMING: { label: string; icon: LucideIcon }[] = [
-  { label: 'Salão', icon: Armchair },
-  { label: 'Relatórios', icon: ChartColumn },
-];
+import {
+  AVAILABILITY_TOGGLERS,
+  CASH_OPERATORS,
+  ORDER_VIEWERS,
+  REPORT_VIEWERS,
+  ROLE_LABELS,
+  SETTINGS_MANAGERS,
+} from '../shared/lib/roles';
 
 export function AppLayout() {
   const [opened, { toggle, close }] = useDisclosure();
@@ -76,19 +79,13 @@ export function AppLayout() {
         {AVAILABILITY_TOGGLERS.includes(user.role) && (
           <NavItem to="/cardapio" label="Cardápio" icon={BookOpen} onNavigate={close} />
         )}
-        {UPCOMING.map(({ label, icon: Icon }) => (
-          <NavLink
-            key={label}
-            label={label}
-            leftSection={<Icon size={18} />}
-            rightSection={
-              <Badge size="xs" variant="light" color="gray">
-                em breve
-              </Badge>
-            }
-            disabled
-          />
-        ))}
+        {CASH_OPERATORS.includes(user.role) && <NavItem to="/caixa" label="Caixa" icon={Wallet} onNavigate={close} />}
+        {REPORT_VIEWERS.includes(user.role) && (
+          <>
+            <NavItem to="/relatorios" label="Painel do dia" icon={ChartColumn} onNavigate={close} end />
+            <NavItem to="/relatorios/faturamento" label="Faturamento" icon={TrendingUp} onNavigate={close} />
+          </>
+        )}
         {SETTINGS_MANAGERS.includes(user.role) && (
           <>
             <Text size="xs" c="dimmed" tt="uppercase" fw={700} mt="md" mb={4} px="sm">
@@ -103,6 +100,7 @@ export function AppLayout() {
             <NavItem to="/configuracoes/pagamentos" label="Pagamentos" icon={CreditCard} onNavigate={close} />
             <NavItem to="/configuracoes/taxas" label="Taxas de entrega" icon={Bike} onNavigate={close} />
             <NavItem to="/configuracoes/impressao" label="Impressão" icon={Printer} onNavigate={close} />
+            <NavItem to="/configuracoes/integracoes" label="Integrações" icon={Plug} onNavigate={close} />
           </>
         )}
       </AppShell.Navbar>

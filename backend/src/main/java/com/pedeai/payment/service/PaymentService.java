@@ -1,5 +1,6 @@
 package com.pedeai.payment.service;
 
+import com.pedeai.order.domain.OrderSource;
 import com.pedeai.order.domain.OrderStatus;
 import com.pedeai.order.dto.OrderPaymentRequest;
 import com.pedeai.order.dto.OrderResponse;
@@ -61,8 +62,12 @@ public class PaymentService {
         for (OrderPaymentRequest request : event.payments()) {
             PaymentMethod method = activeMethod(event.storeId(), request.paymentMethodId());
             checkFits(request.amountCents(), remaining);
-            paymentRepository.save(new Payment(event.storeId(), event.orderId(), method, request.amountCents(),
-                    request.changeForCents(), request.paid(), event.createdBy(), now));
+            Payment payment = new Payment(event.storeId(), event.orderId(), method, request.amountCents(),
+                    request.changeForCents(), request.paid(), event.createdBy(), now);
+            if (event.source() != OrderSource.PEDEAI && request.paid()) {
+                payment.settledByMarketplace();
+            }
+            paymentRepository.save(payment);
             remaining -= request.amountCents();
         }
     }

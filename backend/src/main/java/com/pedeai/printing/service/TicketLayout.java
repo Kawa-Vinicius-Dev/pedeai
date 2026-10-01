@@ -7,7 +7,12 @@ import com.pedeai.order.dto.DeliveryAddressResponse;
 import com.pedeai.order.dto.OrderItemOptionResponse;
 import com.pedeai.order.dto.OrderItemResponse;
 import com.pedeai.order.dto.OrderResponse;
+import com.pedeai.payment.domain.CashMovement;
+import com.pedeai.payment.domain.CashSession;
 import com.pedeai.payment.domain.PaymentStatus;
+import com.pedeai.payment.dto.CashLineResponse;
+import com.pedeai.payment.dto.CashMovementResponse;
+import com.pedeai.payment.dto.CashSessionResponse;
 import com.pedeai.payment.dto.PaymentResponse;
 import com.pedeai.printing.domain.DocumentType;
 import com.pedeai.printing.dto.TicketResponse;
@@ -30,6 +35,7 @@ final class TicketLayout {
     private static final Locale BRAZIL = Locale.of("pt", "BR");
     private static final DateTimeFormatter SHORT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
     private static final DateTimeFormatter FULL = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final DateTimeFormatter CLOCK_SHORT = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter CLOCK = DateTimeFormatter.ofPattern("HH:mm:ss");
     private static final Map<OrderType, String> TYPES = Map.of(
             OrderType.DELIVERY, "DELIVERY", OrderType.TAKEOUT, "RETIRADA", OrderType.DINE_IN, "MESA");
@@ -92,7 +98,7 @@ final class TicketLayout {
         out.big(storeName, Align.CENTER);
         out.center("Não é documento fiscal");
         out.rule('=');
-        out.pair("PEDIDO " + order.number(), SOURCES.get(order.source()));
+        out.pair("PEDIDO " + order.number(), sourceLabel(order));
         out.text(TYPES.get(order.type()));
         out.text(FULL.format(order.createdAt().atZone(zone)));
         customer(out, order);
@@ -138,6 +144,60 @@ final class TicketLayout {
         return out.document(DocumentType.ORDER_TICKET);
     }
 
+    /** Relatório do caixa: abertura, movimentos e a conferência por forma de pagamento. */
+    static TicketResponse cashReport(CashSessionResponse session, String storeName, int columns, ZoneId zone,
+                                     Instant now) {
+        boolean closed = session.status() == CashSession.Status.CLOSED;
+        Lines out = new Lines(columns);
+        out.big(storeName, Align.CENTER);
+        out.boldCenter(closed ? "FECHAMENTO DE CAIXA" : "PARCIAL DO CAIXA (ABERTO)");
+        out.rule('=');
+        out.text("Abertura: " + FULL.format(session.openedAt().atZone(zone))
+                + (session.openedByName() == null ? "" : " - " + session.openedByName()));
+        if (closed) {
+            out.text("Fechamento: " + FULL.format(session.closedAt().atZone(zone))
+                    + (session.closedByName() == null ? "" : " - " + session.closedByName()));
+        }
+        out.pair("Troco inicial", Money.plain(session.openingAmountCents()));
+        if (!session.movements().isEmpty()) {
+            out.rule('-');
+            for (CashMovementResponse movement : session.movements()) {
+                boolean withdrawal = movement.type() == CashMovement.Type.WITHDRAWAL;
+                out.pair((withdrawal ? "Sangria " : "Suprimento ") + CLOCK_SHORT.format(movement.createdAt()
+                        .atZone(zone)), (withdrawal ? "-" : "") + Money.plain(movement.amountCents()));
+                out.hanging("  ", movement.reason());
+            }
+        }
+        out.rule('-');
+        for (CashLineResponse line : session.lines()) {
+            out.bold(line.name().toUpperCase(BRAZIL) + " (" + line.payments() + ")");
+            out.pair("  Recebido", Money.plain(line.paymentsCents()));
+            out.pair("  Esperado", Money.plain(line.expectedCents()));
+            if (closed) {
+                out.pair("  Contado", Money.plain(line.countedCents()));
+                out.pair("  Diferença", signed(line.differenceCents()));
+            }
+        }
+        out.rule('-');
+        out.boldPair("TOTAL ESPERADO", Money.plain(session.expectedCents()));
+        if (closed) {
+            out.boldPair("TOTAL CONTADO", Money.plain(session.countedCents()));
+            out.boldPair("DIFERENÇA", signed(session.differenceCents()));
+        }
+        if (session.notes() != null) {
+            out.rule('-');
+            out.text("OBS: " + session.notes());
+        }
+        out.rule('=');
+        out.text("Impresso " + FULL.format(now.atZone(zone)));
+        return out.document(DocumentType.CASH_REPORT);
+    }
+
+    /** Sobra com "+", falta com "-". */
+    private static String signed(long cents) {
+        return (cents > 0 ? "+" : "") + Money.plain(cents);
+    }
+
     /** O mesmo documento com a faixa "REIMPRESSÃO" e o horário em que saiu a primeira vez. */
     static TicketResponse reprint(TicketResponse ticket, Instant original, ZoneId zone) {
         Lines out = new Lines(ticket.columns());
@@ -174,8 +234,14 @@ final class TicketLayout {
     }
 
     private static String typeAndSource(OrderResponse order) {
-        String source = SOURCES.get(order.source());
+        String source = sourceLabel(order);
         return source.isEmpty() ? TYPES.get(order.type()) : TYPES.get(order.type()) + " - " + source;
+    }
+
+    /** "iFood 7391": o número que o entregador e o cliente veem no aplicativo. Pedido próprio: vazio. */
+    private static String sourceLabel(OrderResponse order) {
+        String source = SOURCES.get(order.source());
+        return source.isEmpty() || order.externalDisplayId() == null ? source : source + " " + order.externalDisplayId();
     }
 
     private static String option(OrderItemOptionResponse option) {

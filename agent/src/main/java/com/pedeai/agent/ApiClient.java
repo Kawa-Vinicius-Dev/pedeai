@@ -29,7 +29,9 @@ final class ApiClient {
         }
     }
 
-    record Config(UUID agentId, String agentName, List<PrinterConfig> printers) {
+    /** {@code latestVersion}: a versão mais nova do agente, para avisar quando este computador está atrás. */
+    record Config(UUID agentId, String agentName, List<PrinterConfig> printers, String latestVersion,
+                  String downloadUrl) {
     }
 
     record Job(UUID id, UUID printerId, String deliveryKey, String documentType, byte[] payload) {

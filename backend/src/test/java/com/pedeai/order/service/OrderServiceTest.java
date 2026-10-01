@@ -7,6 +7,10 @@ import com.pedeai.customer.dto.AddressRequest;
 import com.pedeai.customer.dto.CustomerLink;
 import com.pedeai.customer.service.CustomerService;
 import com.pedeai.order.domain.Order;
+import com.pedeai.order.domain.OrderItem;
+import com.pedeai.order.domain.OrderSource;
+import com.pedeai.order.dto.DeliveryAddressResponse;
+import com.pedeai.order.dto.MarketplaceOrderRequest;
 import com.pedeai.order.domain.OrderStatus;
 import com.pedeai.order.domain.OrderStatusHistory;
 import com.pedeai.order.domain.OrderType;
@@ -37,9 +41,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.pedeai.support.TestSecurity.CLOCK;
+import static com.pedeai.support.TestSecurity.NOW;
 import static com.pedeai.support.TestSecurity.STORE_ID;
 import static com.pedeai.support.TestSecurity.USER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -245,6 +251,66 @@ class OrderServiceTest {
                 List.of(soda()), null, 0L, 0L, List.of())))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage(OrderService.DINE_IN_BY_TAB);
+    }
+
+    @Test
+    void marketplaceOrderKeepsThePlatformPricesAndSplitsTheDiscountByWhoPays() {
+        OrderService service = service();
+
+        OrderResponse order = service.importFromMarketplace(STORE_ID, ifoodOrder(false));
+
+        // 2x (R$ 29,90 + R$ 3,00 de bacon) = R$ 65,80; desconto da loja R$ 5,00; entrega R$ 7,00; taxa R$ 0,99.
+        // O cupom do iFood (R$ 10,00) não sai do total: a loja recebe no repasse.
+        assertThat(order.subtotalCents()).isEqualTo(6580);
+        assertThat(order.discountCents()).isEqualTo(500);
+        assertThat(order.platformSubsidyCents()).isEqualTo(1000);
+        assertThat(order.totalCents()).isEqualTo(6580 - 500 + 700 + 99);
+        assertThat(order.source()).isEqualTo(OrderSource.IFOOD);
+        assertThat(order.externalDisplayId()).isEqualTo("7391");
+        assertThat(order.status()).isEqualTo(OrderStatus.RECEIVED);
+        assertThat(order.customerId()).isNull();
+        assertThat(order.items().getFirst().options().getFirst().name()).isEqualTo("Bacon");
+        verify(customerService, never()).recordFromOrder(any(), any(), any(), any());
+        assertThat(savedTimeline()).singleElement()
+                .satisfies(entry -> assertThat(entry.getActorName()).isEqualTo("iFood"));
+        ArgumentCaptor<OrderCreated> event = ArgumentCaptor.forClass(OrderCreated.class);
+        verify(events).publishEvent(event.capture());
+        assertThat(event.getValue().source()).isEqualTo(OrderSource.IFOOD);
+        assertThat(event.getValue().createdBy()).isNull();
+    }
+
+    @Test
+    void marketplaceOrderWithAutoConfirmIsBornConfirmed() {
+        OrderResponse order = service().importFromMarketplace(STORE_ID, ifoodOrder(true));
+
+        assertThat(order.status()).isEqualTo(OrderStatus.CONFIRMED);
+        assertThat(savedTimeline()).hasSize(2);
+    }
+
+    @Test
+    void theSameMarketplaceOrderIsImportedOnlyOnce() {
+        OrderService service = service();
+        Order existing = Order.placeMarketplace(STORE_ID, LocalDate.of(2026, 9, 24), 3, OrderSource.IFOOD, "ifood-1",
+                "7391", OrderType.DELIVERY, null, "Rita", null, null, null,
+                List.of(new OrderItem(STORE_ID, null, "10", "X-Burger", KITCHEN, 1, 2990, 0, null, List.of(), 0)),
+                0, 0, 0, 0, NOW);
+        when(orderRepository.findByStoreIdAndSourceAndExternalId(STORE_ID, OrderSource.IFOOD, "ifood-1"))
+                .thenReturn(Optional.of(existing));
+
+        OrderResponse order = service.importFromMarketplace(STORE_ID, ifoodOrder(false));
+
+        assertThat(order.id()).isEqualTo(existing.getId());
+        verify(orderRepository, never()).save(any());
+        verify(events, never()).publishEvent(any());
+    }
+
+    private static MarketplaceOrderRequest ifoodOrder(boolean autoConfirm) {
+        return new MarketplaceOrderRequest(OrderSource.IFOOD, "ifood-1", "7391", OrderType.DELIVERY, null, "Rita",
+                "0800 000 0000", new DeliveryAddressResponse("Rua das Flores", "123", null, "Centro", "São Paulo",
+                "SP", null, null), null,
+                List.of(new MarketplaceOrderRequest.Item(null, "10", "X-Burger", KITCHEN, 2, 2990, 300, "sem cebola",
+                        List.of(new MarketplaceOrderRequest.Option("Adicionais", "Bacon", "B1", 1, 300)))),
+                500, 1000, 700, 99, List.of(), autoConfirm);
     }
 
     @SuppressWarnings("unchecked")

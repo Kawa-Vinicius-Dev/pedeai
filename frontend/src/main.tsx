@@ -4,6 +4,14 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
 
+// Alerta de erro em produção: só com VITE_SENTRY_DSN, e o SDK só é baixado nesse caso.
+const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+if (sentryDsn) {
+  void import('@sentry/react').then((Sentry) =>
+    Sentry.init({ dsn: sentryDsn, environment: import.meta.env.MODE }),
+  );
+}
+
 const root = document.getElementById('root');
 if (!root) {
   throw new Error('Elemento #root não encontrado.');

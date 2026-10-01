@@ -253,12 +253,12 @@ Convenções:
 | Pedidos | `GET /api/orders` (filtros e paginação), `POST /api/orders`, `GET /api/orders/{id}`, `PATCH /api/orders/{id}/status`, `PATCH /api/orders/{id}/items/{itemId}` (cancelar item), `GET /api/orders/{id}/history`, `POST /api/orders/{id}/payments`, `POST /api/orders/{id}/print-jobs` |
 | Cozinha | `GET /api/kitchen/orders?sectorId=` |
 | Salão | `/api/tables`, `GET/POST /api/tabs`, `POST /api/tabs/{id}/orders` (nova rodada), `POST /api/tabs/{id}/payments`, `POST /api/tabs/{id}/print-jobs` (pré-conta), `PATCH /api/tabs/{id}/status` |
-| Pagamentos e caixa | `/api/payment-methods`, `GET /api/cash-sessions/current`, `POST /api/cash-sessions`, `PATCH /api/cash-sessions/{id}`, `POST /api/cash-sessions/{id}/movements` |
+| Pagamentos e caixa | `/api/payment-methods`, `GET /api/cash-sessions/current`, `POST /api/cash-sessions`, `GET /api/cash-sessions`, `GET /api/cash-sessions/{id}`, `PATCH /api/cash-sessions/{id}` (fechar), `POST /api/cash-sessions/{id}/movements`, `POST /api/cash-sessions/{id}/print-jobs` (relatório na térmica) |
 | Impressão (gestão) | `/api/printers`, `POST /api/printers/{id}/print-jobs` (teste), `PUT /api/sectors/{id}/printer`, `/api/print-rules`, `GET /api/print-jobs?status=`, `PATCH /api/print-jobs/{id}`, `/api/print-agents`, `POST /api/print-agents/pairing-codes` |
 | Agente (token de dispositivo) | `POST /api/agent/pairings`, `GET /api/agent/stream`, `GET /api/agent/config`, `GET /api/agent/jobs?status=PENDING`, `PATCH /api/agent/jobs/{id}`, `PUT /api/agent/status`, `PUT /api/agent/discovered-printers` |
 | Integrações | `GET/POST /api/integrations`, `PATCH /api/integrations/{id}`, `GET /api/integrations/{id}/events` |
 | Webhooks (públicos, assinados) | `POST /api/webhooks/ifood`, `POST /api/webhooks/opendelivery/{provider}` |
-| Relatórios | `GET /api/reports/dashboard?date=`, `GET /api/reports/revenue?from=&to=&groupBy=` |
+| Relatórios | `GET /api/reports/dashboard?date=`, `GET /api/reports/revenue?from=&to=` (devolve por dia, canal, tipo e forma de pagamento de uma vez) |
 | Tempo real | `GET /api/stream` |
 
 ## Frontend

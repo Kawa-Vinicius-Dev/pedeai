@@ -1,5 +1,6 @@
 package com.pedeai.printing.service;
 
+import com.pedeai.printing.config.AgentProperties;
 import com.pedeai.printing.domain.AgentPairingCode;
 import com.pedeai.printing.domain.PrintAgent;
 import com.pedeai.printing.domain.Printer;
@@ -14,7 +15,8 @@ import com.pedeai.printing.dto.PrintAgentResponse;
 import com.pedeai.printing.repository.AgentPairingCodeRepository;
 import com.pedeai.printing.repository.PrintAgentRepository;
 import com.pedeai.printing.repository.PrinterRepository;
-import com.pedeai.shared.exception.BusinessRuleException;
+import com.pedeai.shared.exception.TooManyRequestsException;
+import com.pedeai.shared.security.AttemptLimiter;
 import com.pedeai.shared.exception.InvalidCredentialsException;
 import com.pedeai.shared.exception.ResourceNotFoundException;
 import com.pedeai.shared.security.SecretTokens;
@@ -25,13 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -46,22 +45,33 @@ public class AgentService {
     /** O código tem só 6 dígitos: sem limite, dava para tentar todos. */
     static final int MAX_FAILED_PAIRINGS = 10;
     static final Duration FAILED_PAIRING_WINDOW = Duration.ofMinutes(10);
+    /**
+     * Teto somando todos os IPs: o IP vem de um cabeçalho que dá para forjar. Com ele, testar o milhão de códigos
+     * possíveis levaria décadas, qualquer que seja o IP informado.
+     */
+    static final int MAX_FAILED_PAIRINGS_GLOBAL = 200;
+    private static final String GLOBAL = "*";
 
     private final PrintAgentRepository agentRepository;
     private final AgentPairingCodeRepository codeRepository;
     private final PrinterRepository printerRepository;
     private final StoreService storeService;
+    private final AgentProperties agentProperties;
     private final Clock clock;
-    // ponytail: limite em memória por IP; com mais de uma instância da API, mover para o banco ou para o proxy.
-    private final Map<String, Deque<Instant>> failedPairings = new ConcurrentHashMap<>();
+    private final AttemptLimiter failedPairings;
+    private final AttemptLimiter allFailedPairings;
 
     public AgentService(PrintAgentRepository agentRepository, AgentPairingCodeRepository codeRepository,
-                        PrinterRepository printerRepository, StoreService storeService, Clock clock) {
+                        PrinterRepository printerRepository, StoreService storeService,
+                        AgentProperties agentProperties, Clock clock) {
         this.agentRepository = agentRepository;
         this.codeRepository = codeRepository;
         this.printerRepository = printerRepository;
         this.storeService = storeService;
+        this.agentProperties = agentProperties;
         this.clock = clock;
+        this.failedPairings = new AttemptLimiter(MAX_FAILED_PAIRINGS, FAILED_PAIRING_WINDOW, clock);
+        this.allFailedPairings = new AttemptLimiter(MAX_FAILED_PAIRINGS_GLOBAL, FAILED_PAIRING_WINDOW, clock);
     }
 
     @Transactional
@@ -81,27 +91,22 @@ public class AgentService {
     @Transactional
     public AgentPairingResponse pair(AgentPairingRequest request, String clientKey) {
         Instant now = Instant.now(clock);
-        Deque<Instant> failures = failedPairings.computeIfAbsent(clientKey, key -> new ArrayDeque<>());
-        synchronized (failures) {
-            while (!failures.isEmpty() && failures.peekFirst().plus(FAILED_PAIRING_WINDOW).isBefore(now)) {
-                failures.pollFirst();
-            }
-            if (failures.size() >= MAX_FAILED_PAIRINGS) {
-                throw new BusinessRuleException(TOO_MANY_ATTEMPTS);
-            }
-            Optional<AgentPairingCode> found = usableCode(SecretTokens.sha256(request.code()), now);
-            if (found.isEmpty()) {
-                failures.addLast(now);
-                throw new InvalidCredentialsException(INVALID_CODE);
-            }
-            AgentPairingCode code = found.get();
-            code.use(now);
-            String token = SecretTokens.newValue();
-            PrintAgent agent = agentRepository.save(new PrintAgent(code.getStoreId(), request.name().trim(),
-                    SecretTokens.sha256(token), request.os(), request.agentVersion(), now));
-            String storeName = storeService.get(code.getStoreId()).name();
-            return new AgentPairingResponse(agent.getId(), agent.getName(), storeName, token);
+        if (failedPairings.blocked(clientKey) || allFailedPairings.blocked(GLOBAL)) {
+            throw new TooManyRequestsException(TOO_MANY_ATTEMPTS);
         }
+        Optional<AgentPairingCode> found = usableCode(SecretTokens.sha256(request.code()), now);
+        if (found.isEmpty()) {
+            failedPairings.failed(clientKey);
+            allFailedPairings.failed(GLOBAL);
+            throw new InvalidCredentialsException(INVALID_CODE);
+        }
+        AgentPairingCode code = found.get();
+        code.use(now);
+        String token = SecretTokens.newValue();
+        PrintAgent agent = agentRepository.save(new PrintAgent(code.getStoreId(), request.name().trim(),
+                SecretTokens.sha256(token), request.os(), request.agentVersion(), now));
+        String storeName = storeService.get(code.getStoreId()).name();
+        return new AgentPairingResponse(agent.getId(), agent.getName(), storeName, token);
     }
 
     /** Usado a cada chamada do agente. Token revogado não autentica. */
@@ -115,7 +120,7 @@ public class AgentService {
     public List<PrintAgentResponse> list(UUID storeId) {
         Instant now = Instant.now(clock);
         return agentRepository.findAllByStoreIdAndRevokedAtIsNullOrderByCreatedAtAsc(storeId).stream()
-                .map(agent -> PrintAgentResponse.from(agent, now))
+                .map(agent -> PrintAgentResponse.from(agent, now, agentProperties.isOutdated(agent.getAgentVersion())))
                 .toList();
     }
 
@@ -131,7 +136,7 @@ public class AgentService {
         return new AgentConfigResponse(agent.getId(), agent.getName(),
                 printerRepository.findAllByAgentIdAndActiveTrueOrderByNameAsc(agent.getId()).stream()
                         .map(AgentPrinterResponse::from)
-                        .toList());
+                        .toList(), agentProperties.latestVersion(), agentProperties.downloadUrl());
     }
 
     /** Heartbeat. Status de impressora que não é deste agente é ignorado. */

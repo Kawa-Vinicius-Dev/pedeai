@@ -34,19 +34,78 @@ final class AgentRunner {
     private final ApiClient api;
     private final Journal journal;
     private final Clock clock;
+    private final StatusTray tray;
+    private boolean updateNotified;
     private final Map<UUID, PrinterConfig> printers = new HashMap<>();
     private final Map<UUID, PrinterStatus> statuses = new HashMap<>();
     private final Map<UUID, Integer> probeFailures = new HashMap<>();
 
     AgentRunner(ApiClient api, Journal journal, Clock clock) {
+        this(api, journal, clock, StatusTray.none());
+    }
+
+    AgentRunner(ApiClient api, Journal journal, Clock clock, StatusTray tray) {
         this.api = api;
         this.journal = journal;
         this.clock = clock;
+        this.tray = tray;
     }
 
     void refreshConfig() throws IOException, InterruptedException {
+        ApiClient.Config config = api.config();
         printers.clear();
-        api.config().printers().forEach(printer -> printers.put(printer.id(), printer));
+        config.printers().forEach(printer -> printers.put(printer.id(), printer));
+        if (!updateNotified && isNewer(config.latestVersion(), ApiClient.VERSION)) {
+            updateNotified = true;
+            String where = config.downloadUrl() == null ? "Peça o instalador novo a quem cuida do sistema."
+                    : "Baixe em " + config.downloadUrl();
+            log("Versão nova do agente disponível: " + config.latestVersion() + ". " + where);
+            tray.notify("PedeAí: agente desatualizado", "Versão " + config.latestVersion() + " disponível. " + where);
+        }
+    }
+
+    /** Estado para a bandeja: sem conexão, impressora com problema, ou tudo certo. */
+    StatusTray.Status status(boolean connected) {
+        if (!connected) {
+            return StatusTray.Status.OFFLINE;
+        }
+        return statuses.values().stream().anyMatch(status -> printers.containsKey(status.printerId())
+                && !"ONLINE".equals(status.status())) ? StatusTray.Status.PRINTER_PROBLEM : StatusTray.Status.OK;
+    }
+
+    private void showStatus(boolean connected) {
+        StatusTray.Status status = status(connected);
+        String tooltip = switch (status) {
+            case OFFLINE -> "PedeAí: sem conexão. Os pedidos esperam na fila.";
+            case PRINTER_PROBLEM -> "PedeAí: impressora com problema: " + statuses.values().stream()
+                    .filter(printerStatus -> !"ONLINE".equals(printerStatus.status()))
+                    .map(printerStatus -> printers.containsKey(printerStatus.printerId())
+                            ? printers.get(printerStatus.printerId()).name() : "?")
+                    .reduce((a, b) -> a + ", " + b).orElse("");
+            case OK -> "PedeAí: imprimindo (" + printers.size() + (printers.size() == 1 ? " impressora)" : " impressoras)");
+        };
+        tray.show(status, tooltip);
+    }
+
+    /** "0.2.10" é mais nova que "0.2.9". Sem versão informada, não avisa. */
+    static boolean isNewer(String candidate, String current) {
+        if (candidate == null || candidate.isBlank()) {
+            return false;
+        }
+        String[] a = candidate.trim().split("[.]");
+        String[] b = current.trim().split("[.]");
+        try {
+            for (int i = 0; i < Math.max(a.length, b.length); i++) {
+                int left = i < a.length ? Integer.parseInt(a[i]) : 0;
+                int right = i < b.length ? Integer.parseInt(b[i]) : 0;
+                if (left != right) {
+                    return left > right;
+                }
+            }
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return false;
     }
 
     /** Uma passada pela fila. Devolve quantos trabalhos saíram no papel. */
@@ -129,6 +188,7 @@ final class AgentRunner {
                     heartbeat();
                     nextHeartbeat = now.plus(HEARTBEAT);
                 }
+                showStatus(true);
             } catch (ApiClient.ApiException e) {
                 if (e.status == 401) {
                     log("Este computador foi removido na tela de impressão. Pareie de novo para voltar a imprimir.");
@@ -137,6 +197,7 @@ final class AgentRunner {
                 log("Erro na API: " + e.getMessage());
             } catch (IOException e) {
                 log("Sem conexão com o PedeAí (" + e.getMessage() + "). Tentando de novo.");
+                showStatus(false);
             }
             Thread.sleep(POLL.toMillis());
         }

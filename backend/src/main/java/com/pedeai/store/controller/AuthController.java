@@ -1,5 +1,6 @@
 package com.pedeai.store.controller;
 
+import com.pedeai.shared.web.ClientAddress;
 import com.pedeai.store.dto.AuthResponse;
 import com.pedeai.store.dto.LoginRequest;
 import com.pedeai.store.service.AuthResult;
@@ -28,8 +29,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
                                               @RequestHeader(value = HttpHeaders.USER_AGENT, required = false)
-                                              String userAgent) {
-        AuthResult result = authService.login(request, userAgent);
+                                              String userAgent, HttpServletRequest http) {
+        AuthResult result = authService.login(request, userAgent, ClientAddress.of(http));
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookies.create(result.refreshToken()))
                 .body(result.response());

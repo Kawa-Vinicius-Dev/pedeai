@@ -159,7 +159,8 @@ public final class Main {
         System.out.println("PedeAí agente " + ApiClient.VERSION + ": " + settings.name() + " imprimindo. Ctrl+C para parar.");
         Journal journal = new Journal(Settings.folder().resolve("diario.log"), java.time.Instant.now());
         try {
-            new AgentRunner(new ApiClient(settings.url(), settings.token()), journal, java.time.Clock.systemUTC()).run();
+            new AgentRunner(new ApiClient(settings.url(), settings.token()), journal, java.time.Clock.systemUTC(),
+                    StatusTray.create(settings.name())).run();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

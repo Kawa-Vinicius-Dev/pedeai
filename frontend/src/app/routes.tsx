@@ -1,21 +1,28 @@
+import type { ComponentType } from 'react';
 import { Navigate, type RouteObject } from 'react-router';
 import { GuestOnly, RequireAuth, RequireRole } from '../features/auth/guards';
 import { LoginPage } from '../features/auth/LoginPage';
 import { SignupPage } from '../features/auth/SignupPage';
-import { CatalogPage } from '../features/catalog/CatalogPage';
 import { HomePage } from '../features/home/HomePage';
-import { KitchenPage } from '../features/kitchen/KitchenPage';
 import { NewOrderPage } from '../features/orders/NewOrderPage';
 import { OrdersBoardPage } from '../features/orders/OrdersBoardPage';
-import { OrdersHistoryPage } from '../features/orders/OrdersHistoryPage';
-import { PrintJobsPage } from '../features/printing/PrintJobsPage';
-import { PrintingSettingsPage } from '../features/printing/PrintingSettingsPage';
-import { DeliveryZonesPage } from '../features/settings/DeliveryZonesPage';
-import { PaymentMethodsPage } from '../features/settings/PaymentMethodsPage';
-import { StoreSettingsPage } from '../features/settings/StoreSettingsPage';
-import { UsersPage } from '../features/settings/UsersPage';
-import { AVAILABILITY_TOGGLERS, ORDER_TAKERS, ORDER_VIEWERS, SETTINGS_MANAGERS } from '../shared/lib/roles';
+import {
+  AVAILABILITY_TOGGLERS,
+  CASH_OPERATORS,
+  ORDER_TAKERS,
+  ORDER_VIEWERS,
+  REPORT_VIEWERS,
+  SETTINGS_MANAGERS,
+} from '../shared/lib/roles';
 import { AppLayout } from './AppLayout';
+
+/**
+ * Telas fora do fluxo de pico (cardápio, histórico, caixa, relatórios, configurações, impressão, integrações) baixam só quando alguém
+ * abre: o login, o quadro e o PDV carregam mais rápido no computador do caixa.
+ */
+function page<M extends Record<string, unknown>>(load: () => Promise<M>, name: keyof M & string) {
+  return async () => ({ Component: (await load())[name] as ComponentType });
+}
 
 export const routes: RouteObject[] = [
   {
@@ -36,16 +43,16 @@ export const routes: RouteObject[] = [
             element: <RequireRole roles={AVAILABILITY_TOGGLERS} />,
             children: [
               { path: '/cardapio', element: <Navigate to="/cardapio/produtos" replace /> },
-              { path: '/cardapio/:tab', element: <CatalogPage /> },
+              { path: '/cardapio/:tab', lazy: page(() => import('../features/catalog/CatalogPage'), 'CatalogPage') },
             ],
           },
           {
             element: <RequireRole roles={ORDER_VIEWERS} />,
             children: [
               { path: '/pedidos', element: <OrdersBoardPage /> },
-              { path: '/pedidos/historico', element: <OrdersHistoryPage /> },
-              { path: '/cozinha', element: <KitchenPage /> },
-              { path: '/impressoes', element: <PrintJobsPage /> },
+              { path: '/pedidos/historico', lazy: page(() => import('../features/orders/OrdersHistoryPage'), 'OrdersHistoryPage') },
+              { path: '/cozinha', lazy: page(() => import('../features/kitchen/KitchenPage'), 'KitchenPage') },
+              { path: '/impressoes', lazy: page(() => import('../features/printing/PrintJobsPage'), 'PrintJobsPage') },
             ],
           },
           {
@@ -53,18 +60,30 @@ export const routes: RouteObject[] = [
             children: [{ path: '/pedidos/novo', element: <NewOrderPage /> }],
           },
           {
+            element: <RequireRole roles={CASH_OPERATORS} />,
+            children: [{ path: '/caixa', lazy: page(() => import('../features/cash/CashPage'), 'CashPage') }],
+          },
+          {
+            element: <RequireRole roles={REPORT_VIEWERS} />,
+            children: [
+              { path: '/relatorios', lazy: page(() => import('../features/reports/ReportsPages'), 'DashboardPage') },
+              { path: '/relatorios/faturamento', lazy: page(() => import('../features/reports/ReportsPages'), 'RevenuePage') },
+            ],
+          },
+          {
             element: <RequireRole roles={SETTINGS_MANAGERS} />,
             children: [
-              { path: '/configuracoes/pagamentos', element: <PaymentMethodsPage /> },
-              { path: '/configuracoes/taxas', element: <DeliveryZonesPage /> },
-              { path: '/configuracoes/impressao', element: <PrintingSettingsPage /> },
+              { path: '/configuracoes/pagamentos', lazy: page(() => import('../features/settings/PaymentMethodsPage'), 'PaymentMethodsPage') },
+              { path: '/configuracoes/taxas', lazy: page(() => import('../features/settings/DeliveryZonesPage'), 'DeliveryZonesPage') },
+              { path: '/configuracoes/impressao', lazy: page(() => import('../features/printing/PrintingSettingsPage'), 'PrintingSettingsPage') },
+              { path: '/configuracoes/integracoes', lazy: page(() => import('../features/integrations/IntegrationsPage'), 'IntegrationsPage') },
             ],
           },
           {
             element: <RequireRole roles={['OWNER']} />,
             children: [
-              { path: '/configuracoes/loja', element: <StoreSettingsPage /> },
-              { path: '/configuracoes/equipe', element: <UsersPage /> },
+              { path: '/configuracoes/loja', lazy: page(() => import('../features/settings/StoreSettingsPage'), 'StoreSettingsPage') },
+              { path: '/configuracoes/equipe', lazy: page(() => import('../features/settings/UsersPage'), 'UsersPage') },
             ],
           },
         ],

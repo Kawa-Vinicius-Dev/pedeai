@@ -21,7 +21,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { CircleAlert, Search } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Link } from 'react-router';
 import { z } from 'zod';
@@ -232,7 +232,8 @@ export function NewOrderPage() {
     }
   }
 
-  function pick(product: Product) {
+  // Estável entre renders (só usa os setters do useState): mantém a grade de produtos memorizada.
+  const pick = useCallback((product: Product) => {
     if (product.optionGroupIds.length > 0) {
       setBuilding(product);
       return;
@@ -249,7 +250,7 @@ export function NewOrderPage() {
         notes: '',
       }),
     );
-  }
+  }, []);
 
   function submit(form: Checkout) {
     if (lines.length === 0) {

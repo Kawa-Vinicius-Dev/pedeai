@@ -1,5 +1,6 @@
 package com.pedeai.printing.controller;
 
+import com.pedeai.printing.dto.CashReportPrintRequest;
 import com.pedeai.printing.dto.PrintAlertResponse;
 import com.pedeai.printing.dto.PrintJobResponse;
 import com.pedeai.printing.dto.ReprintRequest;
@@ -67,6 +68,18 @@ public class PrintJobController {
                                                     @RequestHeader(name = "Idempotency-Key", required = false)
                                                     String idempotencyKey) {
         PrintJobResponse created = printJobService.reprint(user, orderId, request, idempotencyKey);
+        return ResponseEntity.created(URI.create("/api/print-jobs/" + created.id())).body(created);
+    }
+
+    /** Relatório do caixa (parcial ou de fechamento) na impressora térmica. */
+    @PostMapping("/api/cash-sessions/{sessionId}/print-jobs")
+    @PreAuthorize(Permissions.MANAGE_CASH)
+    public ResponseEntity<PrintJobResponse> printCashReport(CurrentUser user, @PathVariable UUID sessionId,
+                                                            @Valid @RequestBody CashReportPrintRequest request,
+                                                            @RequestHeader(name = "Idempotency-Key", required = false)
+                                                            String idempotencyKey) {
+        PrintJobResponse created = printJobService.printCashReport(user, sessionId, request.printerId(),
+                idempotencyKey);
         return ResponseEntity.created(URI.create("/api/print-jobs/" + created.id())).body(created);
     }
 }

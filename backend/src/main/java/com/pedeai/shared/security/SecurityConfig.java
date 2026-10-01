@@ -44,6 +44,7 @@ import java.util.List;
 public class SecurityConfig {
     private static final String STORES_PATH = "/api/stores";
     private static final String AUTH_PATH_PREFIX = "/api/auth/";
+    private static final String IFOOD_WEBHOOK_PATH = "/api/integrations/ifood/webhook";
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationConverter jwtAuthenticationConverter,
@@ -59,6 +60,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh", "/api/auth/logout")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, STORES_PATH).permitAll()
+                        // Webhook do iFood: sem login, a assinatura HMAC do corpo é conferida no controller.
+                        .requestMatchers(HttpMethod.POST, IFOOD_WEBHOOK_PATH).permitAll()
                         .requestMatchers("/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll()
                         .anyRequest().authenticated())

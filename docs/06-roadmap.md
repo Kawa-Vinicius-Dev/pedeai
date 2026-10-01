@@ -9,16 +9,16 @@ flowchart LR
     E0["0 · Fundação<br/>+ protótipo de impressão"] --> E1["1 · Cardápio"]
     E1 --> E2["2 · Pedidos"]
     E2 --> E3["3 · Cozinha e impressão"]
-    E3 --> E4["4 · Salão"]
-    E4 --> E5["5 · iFood"]
+    E3 --> E5["5 · iFood"]
     E5 --> E6["6 · 99Food"]
     E6 --> E7["7 · Caixa, faturamento e dashboard"]
     P["Em paralelo, desde já:<br/>cadastro no iFood Developer<br/>e contato com a 99Food"] -.-> E5
 ```
 
-> A ordem segue as prioridades do projeto. Se o restaurante-piloto vender mais
-> por delivery do que no salão, as Etapas 4 (Salão) e 5 (iFood) trocam de lugar.
-> A arquitetura não depende dessa ordem.
+> A ordem segue as prioridades do projeto. O restaurante-piloto só faz delivery,
+> e o balcão usa a tela de novo pedido. Por isso a Etapa 4 (Salão) saiu do escopo
+> ([D25](decisoes.md#d25--sem-salão-o-piloto-só-faz-delivery)) e a Etapa 5 (iFood)
+> vem logo depois da impressão.
 
 ## Etapa 0 · Fundação
 
@@ -154,15 +154,11 @@ batem nos testes.
 > impressoras reais do piloto (USB pelo Windows e rede) e medir o alerta de
 > impressora desligada. Ficam para depois: serviço do Windows e ícone na bandeja.
 
-## Etapa 4 · Salão
+## ~~Etapa 4 · Salão~~ (fora do escopo)
 
-- Mesas e comandas. Rodadas enviadas à produção. Pré-conta. Taxa de serviço
-  opcional.
-- Fechamento com várias formas de pagamento e valor por pessoa.
-- Cancelamento de item com aviso ao setor. Tela do garçom no celular.
-
-**Pronto quando:** uma mesa com 3 rodadas (bar e cozinha), pré-conta, duas formas
-de pagamento e fechamento funciona inteira pelo celular do garçom.
+Mesas, comandas, rodadas, pré-conta e tela do garçom não serão construídas: o
+piloto só faz delivery ([D25](decisoes.md#d25--sem-salão-o-piloto-só-faz-delivery)).
+O modelo continua com ponto de encaixe se um dia entrar um cliente com salão.
 
 ## Etapa 5 · iFood
 
@@ -177,6 +173,33 @@ de pagamento e fechamento funciona inteira pelo celular do garçom.
 **Pronto quando:** a homologação foi aprovada. Um pedido de teste percorre
 aceite, cozinha, impressão, pronto e conclusão, com o status refletido no iFood.
 Um cancelamento do cliente imprime o aviso na cozinha.
+
+> **Situação (set/2026):** a integração está pronta no software e testada pelo
+> simulador, sem credenciais. Tem vínculo da loja com o merchant, polling a cada
+> 30 s em lotes de 100 com ack depois de gravar, inbox deduplicado, importação do
+> pedido (itens pelo código PDV, desconto por quem paga, pagamento online ou na
+> entrega com troco) e outbox que manda aceite, preparo, pronto e despacho em
+> ordem, com nova tentativa. O cancelamento é pedido ao iFood com os motivos
+> dele, e o pedido só é cancelado aqui quando o iFood confirma. Há ainda o painel
+> de saúde, o aceite automático opcional e o selo "iFood 7391" no quadro e no
+> ticket. Com a API rodando no PostgreSQL e o simulador ligado, o pedido
+> apareceu no quadro em 1,7 s, já aceito, com o aceite devolvido ao "iFood" e o
+> ticket na fila da cozinha.
+>
+> Falta: credenciais do iFood Developer (aplicativo centralizado) para testar
+> contra o iFood de verdade, conferir os caminhos do polling e do ack na
+> homologação
+> ([D26](decisoes.md#d26--integração-com-o-ifood-sem-credenciais-simulador-e-caminhos-configuráveis)),
+> negociação (disputas) e a homologação.
+>
+> Webhook assinado: pronto em `POST /api/integrations/ifood/webhook`, sem login.
+> Confere o HMAC-SHA256 do corpo cru com o client secret
+> (`X-IFood-Signature`, comparação em tempo constante), grava no mesmo inbox do
+> polling e responde 202. Assinatura errada: 401 e nada gravado. O polling
+> continua ligado como contingência e o inbox deduplica o que chega pelos dois.
+> Reconciliação: o próprio polling a cada 30 s recupera eventos perdidos pelo
+> webhook; uma consulta periódica do status dos pedidos abertos fica para a
+> homologação, quando der para ver se os detalhes do pedido trazem o status.
 
 ## Etapa 6 · 99Food
 
@@ -197,6 +220,13 @@ status sincronizado.
 
 **Pronto quando:** nos testes, o fechamento de caixa bate com os pagamentos do
 dia, e os números do dashboard conferem com uma consulta manual.
+
+> **Situação (set/2026):** pronto. Telas **Caixa**, **Painel do dia** e
+> **Faturamento**; relatório de caixa na impressora térmica. O critério de pronto
+> é o `CashAndReportsIntegrationTest`: o esperado do fechamento bate com a soma
+> dos pagamentos no banco, e o painel e o faturamento batem com consultas diretas.
+> Fica para depois: contagem "às cegas" (hoje quem fecha vê o esperado) e
+> gráficos além das barras por hora.
 
 ## Depois do escopo atual
 

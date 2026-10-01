@@ -14,10 +14,11 @@ public record PrintAgentResponse(
         @Schema(types = {"string", "null"}) String agentVersion,
         boolean online,
         @Schema(types = {"string", "null"}) Instant lastSeenAt,
-        Instant createdAt
+        Instant createdAt,
+        boolean outdated
 ) {
-    public static PrintAgentResponse from(PrintAgent agent, Instant now) {
+    public static PrintAgentResponse from(PrintAgent agent, Instant now, boolean outdated) {
         return new PrintAgentResponse(agent.getId(), agent.getName(), agent.getOs(), agent.getAgentVersion(),
-                agent.isOnlineAt(now), agent.getLastSeenAt(), agent.getCreatedAt());
+                agent.isOnlineAt(now), agent.getLastSeenAt(), agent.getCreatedAt(), outdated);
     }
 }

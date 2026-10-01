@@ -180,6 +180,6 @@ class OrderControllersTest {
     private static OrderResponse order(OrderStatus status) {
         return new OrderResponse(ORDER_ID, 12, LocalDate.of(2026, 9, 24), OrderType.TAKEOUT, OrderSource.PEDEAI,
                 status, null, "João", null, null, null, List.of(), 700, 0, 0, 0, 0, 700, NOW, NOW, null, null, null,
-                null, null, null, 0);
+                null, null, null, 0, null, null, null);
     }
 }

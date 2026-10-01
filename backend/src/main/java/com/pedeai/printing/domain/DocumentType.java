@@ -7,5 +7,7 @@ public enum DocumentType {
     /** O pedido inteiro, com valores e pagamento: caixa, expedição e entregador. */
     ORDER_TICKET,
     /** "CANCELADO - NÃO PREPARAR": só para os setores que já imprimiram o pedido. */
-    CANCELLATION_TICKET
+    CANCELLATION_TICKET,
+    /** Fechamento do caixa: esperado, contado e diferença por forma de pagamento. Não é de pedido. */
+    CASH_REPORT
 }

@@ -12,6 +12,10 @@ public final class Permissions {
     public static final String MANAGE_PRINTING = "hasAnyRole('OWNER', 'MANAGER')";
     /** Lançar pedido de balcão, telefone e delivery, e receber pagamento. */
     public static final String TAKE_ORDERS = "hasAnyRole('OWNER', 'MANAGER', 'CASHIER')";
+    /** Abrir e fechar o caixa, sangria e suprimento. */
+    public static final String MANAGE_CASH = "hasAnyRole('OWNER', 'MANAGER', 'CASHIER')";
+    /** Faturamento e dashboard. */
+    public static final String VIEW_REPORTS = "hasAnyRole('OWNER', 'MANAGER')";
     /** Mudar o status do pedido. A cozinha só marca "em preparo" e "pronto" (regra no serviço). */
     public static final String ADVANCE_ORDERS = "hasAnyRole('OWNER', 'MANAGER', 'CASHIER', 'KITCHEN')";
 

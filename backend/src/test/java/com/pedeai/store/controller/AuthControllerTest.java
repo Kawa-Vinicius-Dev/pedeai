@@ -47,7 +47,7 @@ class AuthControllerTest {
 
     @Test
     void loginReturnsAccessTokenAndHttpOnlyRefreshCookie() throws Exception {
-        when(authService.login(eq(new LoginRequest("ana@example.com", "senha-forte-1")), eq("Chrome")))
+        when(authService.login(eq(new LoginRequest("ana@example.com", "senha-forte-1")), eq("Chrome"), any()))
                 .thenReturn(result());
 
         mockMvc.perform(post("/api/auth/login")
@@ -86,7 +86,7 @@ class AuthControllerTest {
 
     @Test
     void loginReturns401ForInvalidCredentials() throws Exception {
-        when(authService.login(any(), any())).thenThrow(new InvalidCredentialsException("E-mail ou senha inválidos."));
+        when(authService.login(any(), any(), any())).thenThrow(new InvalidCredentialsException("E-mail ou senha inválidos."));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

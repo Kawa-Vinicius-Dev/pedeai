@@ -1,10 +1,12 @@
 package com.pedeai.order.service;
 
 import com.pedeai.order.domain.Actor;
+import com.pedeai.order.domain.ActorType;
 import com.pedeai.order.domain.Order;
 import com.pedeai.order.domain.OrderSource;
 import com.pedeai.order.domain.OrderStatus;
 import com.pedeai.order.domain.OrderStatusHistory;
+import com.pedeai.order.domain.OrderType;
 import com.pedeai.order.dto.ChangeOrderStatusRequest;
 import com.pedeai.order.dto.OrderResponse;
 import com.pedeai.order.event.OrderStatusChanged;
@@ -39,6 +41,8 @@ public class OrderStatusService {
     static final String CANCEL_AFTER_PREPARATION = "Só gerente ou dono pode cancelar pedido que já começou a ser preparado.";
     static final String CANCEL_COMPLETED_OWN_ONLY = "Pedido de marketplace concluído não pode ser cancelado aqui.";
     static final String KITCHEN_CANNOT_CANCEL = "A cozinha não cancela pedidos. Peça ao caixa ou ao gerente.";
+    static final String MARKETPLACE_CANCEL_BY_REQUEST =
+            "Pedido de marketplace é cancelado pela plataforma: use \"Solicitar cancelamento\" e escolha o motivo.";
 
     private static final Set<OrderStatus> KITCHEN_TARGETS = EnumSet.of(OrderStatus.IN_PREPARATION, OrderStatus.READY);
 
@@ -57,6 +61,20 @@ public class OrderStatusService {
 
     @Transactional
     public OrderResponse change(CurrentUser user, UUID orderId, ChangeOrderStatusRequest request) {
+        return change(user, orderId, request, false);
+    }
+
+    /**
+     * Cancelamento local de pedido de marketplace quando não há plataforma para pedir (integração desligada no
+     * servidor). As outras regras de quem pode cancelar continuam valendo.
+     */
+    @Transactional
+    public OrderResponse cancelWithoutPlatform(CurrentUser user, UUID orderId, String reason) {
+        return change(user, orderId, new ChangeOrderStatusRequest(OrderStatus.CANCELLED, reason, null), true);
+    }
+
+    private OrderResponse change(CurrentUser user, UUID orderId, ChangeOrderStatusRequest request,
+                                 boolean withoutPlatform) {
         Order order = orderRepository.findByIdAndStoreId(orderId, user.storeId())
                 .orElseThrow(() -> new ResourceNotFoundException(OrderService.NOT_FOUND));
         OrderStatus target = request.status();
@@ -72,7 +90,7 @@ public class OrderStatusService {
         String reason = null;
         if (target == OrderStatus.CANCELLED) {
             reason = Texts.trimToNull(request.reason());
-            checkCanCancel(user, order, reason);
+            checkCanCancel(user, order, reason, withoutPlatform);
             order.cancel(reason, now);
         } else {
             if (user.role() == Role.KITCHEN && !KITCHEN_TARGETS.contains(target)) {
@@ -84,13 +102,47 @@ public class OrderStatusService {
                 reason, now));
         orderRepository.flush();
         events.publishEvent(new OrderStatusChanged(order.getStoreId(), order.getId(), order.getNumber(), from, target,
-                order.getVersion()));
+                order.getVersion(), ActorType.USER));
         return OrderResponse.from(order);
     }
 
-    private static void checkCanCancel(CurrentUser user, Order order, String reason) {
+    /**
+     * Status que veio da plataforma (evento do iFood). Idempotente: evento repetido, atrasado ou "para trás" não faz
+     * nada, porque os eventos chegam repetidos e fora de ordem.
+     *
+     * @return {@code true} se o pedido mudou
+     */
+    @Transactional
+    public boolean applyFromMarketplace(UUID storeId, UUID orderId, OrderStatus target, String reason) {
+        Order order = orderRepository.findByIdAndStoreId(orderId, storeId)
+                .orElseThrow(() -> new ResourceNotFoundException(OrderService.NOT_FOUND));
+        OrderStatus from = order.getStatus();
+        Instant now = Instant.now(clock);
+        boolean changed;
+        if (target == OrderStatus.CANCELLED) {
+            changed = order.cancel(reason == null ? "Cancelado pela plataforma" : reason, now);
+        } else {
+            boolean stale = from.isFinal() || target.ordinal() <= from.ordinal()
+                    || (target == OrderStatus.DISPATCHED && order.getType() != OrderType.DELIVERY);
+            changed = !stale && order.advanceTo(target, now);
+        }
+        if (!changed) {
+            return false;
+        }
+        historyRepository.save(new OrderStatusHistory(order, from, target, Actor.marketplace(order.getSource()),
+                target == OrderStatus.CANCELLED ? order.getCancelReason() : null, now));
+        orderRepository.flush();
+        events.publishEvent(new OrderStatusChanged(order.getStoreId(), order.getId(), order.getNumber(), from, target,
+                order.getVersion(), ActorType.MARKETPLACE));
+        return true;
+    }
+
+    private static void checkCanCancel(CurrentUser user, Order order, String reason, boolean withoutPlatform) {
         if (reason == null) {
             throw new BusinessRuleException(REASON_REQUIRED);
+        }
+        if (!withoutPlatform && order.getSource() != OrderSource.PEDEAI && order.getStatus() != OrderStatus.COMPLETED) {
+            throw new BusinessRuleException(MARKETPLACE_CANCEL_BY_REQUEST);
         }
         boolean manager = user.role() == Role.OWNER || user.role() == Role.MANAGER;
         if (user.role() == Role.KITCHEN) {

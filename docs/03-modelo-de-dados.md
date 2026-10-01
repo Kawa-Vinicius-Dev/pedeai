@@ -104,10 +104,10 @@ num pedido de R$ 50, a loja vendeu R$ 50.
 | Tabela | Colunas principais | Regras |
 | --- | --- | --- |
 | `payment_method` | `store_id`, `name`, `type` (`CASH`, `PIX`, `CREDIT`, `DEBIT`, `VOUCHER`, `ONLINE`, `OTHER`), `active`, `sort_order` | Criadas com a loja: Dinheiro, Pix, Crédito, Débito, Vale-refeição, Online iFood e Online 99Food. |
-| `payment` | `store_id`, `order_id` **ou** `tab_id`, `payment_method_id`, `amount_cents`, `change_for_cents`, `status` (`PENDING`, `PAID`, `CANCELLED`), `origin` (`LOCAL`, `MARKETPLACE`), `cash_session_id`, `paid_at`, `received_by` | `CHECK` de que exatamente um entre `order_id` e `tab_id` está preenchido. Delivery e retirada são pagos no pedido; salão é pago na comanda. Pagamento na entrega fica `PENDING` até o acerto. `CHECK(change_for_cents >= amount_cents)`: o troco é "para" um valor maior que o pago. Hoje (Etapa 2) só existe `order_id`, obrigatório; `tab_id` e `cash_session_id` entram com o salão e o caixa. |
-| `cash_session` | `store_id`, `status` (`OPEN`, `CLOSED`), `opened_by`, `opened_at`, `opening_amount_cents`, `closed_by`, `closed_at`, `notes`, `version` | Uma sessão aberta por loja no MVP (um caixa). |
+| `payment` | `store_id`, `order_id` **ou** `tab_id`, `payment_method_id`, `amount_cents`, `change_for_cents`, `status` (`PENDING`, `PAID`, `CANCELLED`), `origin` (`LOCAL`, `MARKETPLACE`), `cash_session_id`, `paid_at`, `received_by` | `CHECK` de que exatamente um entre `order_id` e `tab_id` está preenchido. Delivery e retirada são pagos no pedido; salão é pago na comanda. Pagamento na entrega fica `PENDING` até o acerto. `CHECK(change_for_cents >= amount_cents)`: o troco é "para" um valor maior que o pago. Hoje só existe `order_id`, obrigatório (o salão saiu do escopo). Não há `cash_session_id`: com um caixa por loja, o caixa de um pagamento é o que estava aberto em `paid_at`. |
+| `cash_session` | `store_id`, `status` (`OPEN`, `CLOSED`), `opened_by`, `opened_at`, `opening_amount_cents`, `closed_by`, `closed_at`, `notes`, `version` | Uma sessão aberta por loja no MVP (um caixa). `open_store_id` é igual a `store_id` só enquanto aberta: o `UNIQUE` barra dois caixas abertos até em cliques simultâneos (o H2 dos testes não tem índice parcial). |
 | `cash_movement` | `store_id`, `cash_session_id`, `type` (`WITHDRAWAL` = sangria, `DEPOSIT` = suprimento), `amount_cents`, `reason`, `created_by`, `created_at` | |
-| `cash_session_count` | `cash_session_id`, `payment_method_id`, `expected_cents`, `counted_cents` | Conferência no fechamento, com a diferença por forma de pagamento. |
+| `cash_session_count` | `cash_session_id`, `payment_method_id`, `expected_cents`, `counted_cents` | Conferência no fechamento, com a diferença por forma de pagamento. O esperado é gravado na hora do fechamento. |
 
 ## Impressão (`printing`)
 
@@ -127,6 +127,19 @@ num pedido de R$ 50, a loja vendeu R$ 50.
 | `marketplace_connection` | `store_id`, `provider` (`IFOOD`, `NINETY_NINE_FOOD`), `external_merchant_id`, `status` (`ACTIVE`, `PAUSED`, `ERROR`), `auto_confirm`, `credentials_encrypted`, `last_event_at`, `last_error` | `UNIQUE(provider, external_merchant_id)`: um merchant do iFood só pode estar ligado a uma loja. |
 | `inbound_event` | `provider`, `external_event_id`, `external_merchant_id`, `external_order_id`, `event_code`, `payload` (TEXT), `store_id`, `status` (`PENDING`, `PROCESSED`, `IGNORED`, `FAILED`), `attempts`, `next_attempt_at`, `last_error`, `received_at`, `processed_at` | `UNIQUE(provider, external_event_id)`: o mesmo evento chegando duas vezes (webhook e polling, ou reenvio) é gravado uma vez. `store_id` fica nulo até achar o vínculo. |
 | `outbound_action` | `store_id`, `provider`, `order_id`, `action` (`CONFIRM`, `START_PREPARATION`, `READY`, `DISPATCH`, `REQUEST_CANCELLATION`), `payload` (TEXT), `status` (`PENDING`, `DONE`, `FAILED`, `SKIPPED`), `attempts`, `next_attempt_at`, `last_error`, `created_at`, `done_at` | As ações de um mesmo pedido saem em ordem. |
+
+## Limpeza diária
+
+Todo dia de madrugada (4h30 a 4h40, horário de Brasília), cada módulo apaga o que
+é velho e já foi resolvido. O que ainda está pendente nunca é apagado.
+
+| Tabela | Apagado quando |
+| --- | --- |
+| `refresh_token` | venceu há mais de 1 dia |
+| `agent_pairing_code` | venceu há mais de 1 dia |
+| `print_job` | criado há mais de 30 dias e fora da fila (nem `PENDING` nem `SENT`) |
+| `inbound_event` | recebido há mais de 30 dias e já processado, ignorado ou com falha |
+| `outbound_action` | criado há mais de 90 dias e fora da fila |
 
 ## O que fica de fora agora (e como entra depois)
 
