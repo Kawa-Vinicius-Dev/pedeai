@@ -153,11 +153,11 @@ class StoreControllerTest {
                                 """))
                 .andExpect(status().isOk());
         verify(storeService).update(STORE_ID,
-                new UpdateStoreRequest(null, null, null, null, LocalTime.of(4, 30), null, false, null, null));
+                new UpdateStoreRequest(null, null, null, null, LocalTime.of(4, 30), null, false, null, null, null, null));
     }
 
     private static StoreResponse storeResponse() {
         return new StoreResponse(STORE_ID, "Pizzaria Bella", null, null, "America/Sao_Paulo",
-                LocalTime.of(5, 0), 1000, true, false, "pizzaria-bella", true);
+                LocalTime.of(5, 0), 1000, true, false, "pizzaria-bella", true, false, java.util.List.of());
     }
 }

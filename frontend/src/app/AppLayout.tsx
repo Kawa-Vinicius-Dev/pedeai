@@ -8,6 +8,7 @@ import {
   ClipboardList,
   CreditCard,
   House,
+  KeyRound,
   LogOut,
   Plug,
   Printer,
@@ -101,6 +102,7 @@ export function AppLayout() {
             <NavItem to="/configuracoes/taxas" label="Taxas de entrega" icon={Bike} onNavigate={close} />
             <NavItem to="/configuracoes/impressao" label="Impressão" icon={Printer} onNavigate={close} />
             <NavItem to="/configuracoes/integracoes" label="Integrações" icon={Plug} onNavigate={close} />
+            <NavItem to="/configuracoes/api-de-pedidos" label="API de pedidos" icon={KeyRound} onNavigate={close} />
           </>
         )}
       </AppShell.Navbar>

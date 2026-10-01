@@ -113,6 +113,10 @@ public class OutboundAction {
         return storeId;
     }
 
+    public OrderSource getProvider() {
+        return provider;
+    }
+
     public UUID getOrderId() {
         return orderId;
     }

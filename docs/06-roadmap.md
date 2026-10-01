@@ -209,6 +209,12 @@ Um cancelamento do cliente imprime o aviso na cozinha.
 **Pronto quando:** o pedido de teste da 99Food percorre o fluxo completo, com
 status sincronizado.
 
+> **Situação (out/2026):** o adaptador Open Delivery está pronto no software e
+> testado pelo simulador (`OpenDeliveryIntegrationTest`): pedido pelo inbox,
+> aceite e cancelamento pelo outbox, webhook assinado e polling com ack. Serve
+> para a 99Food e para outro app no padrão. Falta: credenciamento como
+> integradora na 99Food e o pedido de teste do painel dela.
+
 ## Etapa 7 · Caixa, faturamento e dashboard
 
 - Caixa: abertura, sangria, suprimento, fechamento com conferência por forma de
@@ -249,15 +255,23 @@ total calculado pela API, a loja aceita no quadro e o cliente acompanha até o
 cancelamento ou a conclusão.
 
 > **Situação (out/2026):** pronto e testado (`DigitalMenuIntegrationTest` e os
-> testes da página do cliente). Fica para depois: fotos dos produtos, horário
-> de funcionamento automático (hoje é a chave manual), aceite automático dos
-> pedidos do cardápio, pagamento online (Pix) e domínio próprio por loja.
+> testes da página do cliente), com horário de funcionamento (um período por
+> dia, pode passar da meia-noite) e aceite automático dos pedidos do cardápio.
+> Fica para depois: fotos dos produtos (precisa de armazenamento de arquivos),
+> pagamento online por Pix (precisa de um gateway com credenciais) e domínio
+> próprio por loja (DNS e Vercel).
 
-### Próximos passos depois do cardápio
+## Etapa 9 · Canais de pedido e importação de cardápio
 
-- API de pedidos com chave por loja, para cardápios de terceiros e automações.
-- Open Delivery (cardápios de terceiros e 99Food).
-- Importação de cardápio: do iFood (com as credenciais) e por planilha.
+- API de pedidos com chave por loja (`PartnerApiIntegrationTest`).
+- Open Delivery: 99Food e outro app compatível (ver Etapa 6).
+- Importação de cardápio por planilha (CSV do Excel ou do Google Planilhas) e
+  do iFood (`CatalogImportIntegrationTest`): pré-visualização, tudo ou nada, e
+  atualização pelo código PDV. Os caminhos da API de catálogo do iFood são
+  configuráveis e precisam ser conferidos na homologação.
+
+> **Situação (out/2026):** pronto e testado. Falta só o que depende das
+> credenciais: homologar a importação do iFood e o Open Delivery com os apps.
 
 ## Depois do escopo atual
 

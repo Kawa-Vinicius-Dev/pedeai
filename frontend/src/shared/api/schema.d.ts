@@ -228,6 +228,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["placeOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -301,7 +317,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["placeOrder"];
+        post: operations["placeOrder_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -532,6 +548,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/integrations/{id}/catalog-import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["importCatalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/delivery-zones": {
         parameters: {
             query?: never;
@@ -590,6 +622,22 @@ export interface paths {
         get: operations["list_9"];
         put?: never;
         post: operations["create_9"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalog/imports/spreadsheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["importSpreadsheet"];
         delete?: never;
         options?: never;
         head?: never;
@@ -686,6 +734,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_11"];
+        put?: never;
+        post: operations["create_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -820,6 +884,38 @@ export interface paths {
         patch: operations["updateJob"];
         trace?: never;
     };
+    "/api/v1/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["order"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/menu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["menu"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stream": {
         parameters: {
             query?: never;
@@ -892,7 +988,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["menu"];
+        get: operations["menu_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -972,7 +1068,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_11"];
+        get: operations["list_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1109,6 +1205,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/integrations/platforms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["platforms"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/integrations/ifood/setup": {
         parameters: {
             query?: never;
@@ -1205,12 +1317,36 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/api-keys/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revoke_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         MenuOpenRequest: {
             open: boolean;
+        };
+        OpeningHoursResponse: {
+            /** Format: int32 */
+            dayOfWeek: number;
+            /** Format: time-local */
+            opensAt: string;
+            /** Format: time-local */
+            closesAt: string;
         };
         StoreResponse: {
             /** Format: uuid */
@@ -1227,6 +1363,8 @@ export interface components {
             startPreparationOnConfirm: boolean;
             slug: string;
             menuOpen: boolean;
+            menuAutoConfirm: boolean;
+            openingHours: components["schemas"]["OpeningHoursResponse"][];
         };
         SectorPrinterRequest: {
             /** Format: uuid */
@@ -1483,6 +1621,53 @@ export interface components {
             status: "UNKNOWN" | "ONLINE" | "OFFLINE" | "ERROR";
             detail?: string;
         };
+        OptionChoice: {
+            /** Format: uuid */
+            optionId: string;
+            /** Format: int32 */
+            quantity: number;
+        };
+        OrderItemRequest: {
+            /** Format: uuid */
+            productId: string;
+            /** Format: int32 */
+            quantity: number;
+            options: components["schemas"]["OptionChoice"][];
+            notes?: string;
+        };
+        PartnerOrderRequest: {
+            externalId?: string | null;
+            /** @enum {string} */
+            type: "TAKEOUT" | "DELIVERY" | "DINE_IN";
+            customerName: string;
+            customerPhone: string;
+            deliveryAddress?: components["schemas"]["AddressRequest"];
+            items: components["schemas"]["OrderItemRequest"][];
+            notes?: string;
+            /** Format: uuid */
+            paymentMethodId: string;
+            /** Format: int64 */
+            changeForCents?: number;
+        };
+        PartnerOrderResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            number: number;
+            /** @enum {string} */
+            status: "RECEIVED" | "CONFIRMED" | "IN_PREPARATION" | "READY" | "DISPATCHED" | "COMPLETED" | "CANCELLED";
+            externalId: string | null;
+            trackingCode: string;
+            /** Format: int64 */
+            subtotalCents: number;
+            /** Format: int64 */
+            deliveryFeeCents: number;
+            /** Format: int64 */
+            totalCents: number;
+            /** Format: date-time */
+            createdAt: string;
+            cancelReason: string | null;
+        };
         CreateUserRequest: {
             name: string;
             /** Format: email */
@@ -1521,12 +1706,6 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
-        };
-        OptionChoice: {
-            /** Format: uuid */
-            optionId: string;
-            /** Format: int32 */
-            quantity: number;
         };
         PriceQuoteRequest: {
             /** Format: int32 */
@@ -1577,14 +1756,6 @@ export interface components {
             paymentMethodId: string;
             /** Format: int64 */
             changeForCents?: number;
-        };
-        OrderItemRequest: {
-            /** Format: uuid */
-            productId: string;
-            /** Format: int32 */
-            quantity: number;
-            options: components["schemas"]["OptionChoice"][];
-            notes?: string;
         };
         MenuOrderResponse: {
             /** Format: int32 */
@@ -1702,7 +1873,7 @@ export interface components {
             /** @enum {string} */
             type: "TAKEOUT" | "DELIVERY" | "DINE_IN";
             /** @enum {string} */
-            source: "PEDEAI" | "DIGITAL_MENU" | "IFOOD" | "NINETY_NINE_FOOD";
+            source: "PEDEAI" | "DIGITAL_MENU" | "API" | "IFOOD" | "NINETY_NINE_FOOD" | "OPEN_DELIVERY";
             /** @enum {string} */
             status: "RECEIVED" | "CONFIRMED" | "IN_PREPARATION" | "READY" | "DISPATCHED" | "COMPLETED" | "CANCELLED";
             /** Format: uuid */
@@ -1805,6 +1976,8 @@ export interface components {
             createdAt: string;
         };
         ConnectionRequest: {
+            /** @enum {string} */
+            provider?: "PEDEAI" | "DIGITAL_MENU" | "API" | "IFOOD" | "NINETY_NINE_FOOD" | "OPEN_DELIVERY";
             externalMerchantId: string;
             autoConfirm: boolean;
         };
@@ -1812,7 +1985,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            provider: "PEDEAI" | "DIGITAL_MENU" | "IFOOD" | "NINETY_NINE_FOOD";
+            provider: "PEDEAI" | "DIGITAL_MENU" | "API" | "IFOOD" | "NINETY_NINE_FOOD" | "OPEN_DELIVERY";
             externalMerchantId: string;
             merchantName: string | null;
             /** @enum {string} */
@@ -1823,6 +1996,29 @@ export interface components {
             lastError: string | null;
             /** Format: int64 */
             failedActions: number;
+        };
+        CatalogImportRequest: {
+            dryRun: boolean;
+        };
+        CatalogImportResponse: {
+            applied: boolean;
+            /** Format: int32 */
+            categoriesCreated: number;
+            /** Format: int32 */
+            productsCreated: number;
+            /** Format: int32 */
+            productsUpdated: number;
+            /** Format: int32 */
+            optionGroupsCreated: number;
+            errors: components["schemas"]["ImportIssueResponse"][];
+        };
+        ImportIssueResponse: {
+            origin: string;
+            message: string;
+        };
+        SpreadsheetImportRequest: {
+            content: string;
+            dryRun: boolean;
         };
         OpenCashSessionRequest: {
             /** Format: int64 */
@@ -1896,6 +2092,25 @@ export interface components {
             email: string;
             password: string;
         };
+        ApiKeyRequest: {
+            name: string;
+        };
+        ApiKeyResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            keyPrefix: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            lastUsedAt: string | null;
+            /** Format: date-time */
+            revokedAt: string | null;
+        };
+        CreatedApiKeyResponse: {
+            key: components["schemas"]["ApiKeyResponse"];
+            secret: string;
+        };
         AgentPairingRequest: {
             code: string;
             name: string;
@@ -1916,6 +2131,14 @@ export interface components {
             active?: boolean;
             password?: string;
         };
+        OpeningHoursRequest: {
+            /** Format: int32 */
+            dayOfWeek: number;
+            /** Format: time-local */
+            opensAt: string;
+            /** Format: time-local */
+            closesAt: string;
+        };
         UpdateStoreRequest: {
             name?: string;
             document?: string;
@@ -1928,6 +2151,8 @@ export interface components {
             autoConfirmOwnOrders?: boolean;
             startPreparationOnConfirm?: boolean;
             slug?: string;
+            menuAutoConfirm?: boolean;
+            openingHours?: components["schemas"]["OpeningHoursRequest"][];
         };
         PaymentStatusRequest: {
             /** @enum {string} */
@@ -1959,6 +2184,45 @@ export interface components {
             /** @enum {string} */
             status: "SENT" | "PRINTED" | "FAILED" | "UNCERTAIN";
             error?: string;
+        };
+        MenuCategoryResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            products: components["schemas"]["MenuProductResponse"][];
+        };
+        MenuDeliveryZoneResponse: {
+            neighborhood: string;
+            /** Format: int64 */
+            feeCents: number;
+        };
+        MenuPaymentMethodResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            type: "CASH" | "PIX" | "CREDIT" | "DEBIT" | "VOUCHER" | "ONLINE" | "OTHER";
+        };
+        MenuProductResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string | null;
+            /** Format: int64 */
+            priceCents: number;
+            optionGroupIds: string[];
+            available: boolean;
+        };
+        StorefrontResponse: {
+            name: string;
+            slug: string;
+            phone: string | null;
+            open: boolean;
+            openingHours: components["schemas"]["OpeningHoursResponse"][];
+            deliveryZones: components["schemas"]["MenuDeliveryZoneResponse"][];
+            paymentMethods: components["schemas"]["MenuPaymentMethodResponse"][];
+            categories: components["schemas"]["MenuCategoryResponse"][];
+            optionGroups: components["schemas"]["OptionGroupResponse"][];
         };
         PaymentMethodRevenueResponse: {
             /** Format: uuid */
@@ -2029,44 +2293,6 @@ export interface components {
             /** Format: int64 */
             totalCents: number;
         };
-        MenuCategoryResponse: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            products: components["schemas"]["MenuProductResponse"][];
-        };
-        MenuDeliveryZoneResponse: {
-            neighborhood: string;
-            /** Format: int64 */
-            feeCents: number;
-        };
-        MenuPaymentMethodResponse: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** @enum {string} */
-            type: "CASH" | "PIX" | "CREDIT" | "DEBIT" | "VOUCHER" | "ONLINE" | "OTHER";
-        };
-        MenuProductResponse: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            description: string | null;
-            /** Format: int64 */
-            priceCents: number;
-            optionGroupIds: string[];
-            available: boolean;
-        };
-        StorefrontResponse: {
-            name: string;
-            slug: string;
-            phone: string | null;
-            open: boolean;
-            deliveryZones: components["schemas"]["MenuDeliveryZoneResponse"][];
-            paymentMethods: components["schemas"]["MenuPaymentMethodResponse"][];
-            categories: components["schemas"]["MenuCategoryResponse"][];
-            optionGroups: components["schemas"]["OptionGroupResponse"][];
-        };
         OrderTrackingResponse: {
             /** Format: int32 */
             number: number;
@@ -2135,7 +2361,7 @@ export interface components {
             /** @enum {string} */
             type: "TAKEOUT" | "DELIVERY" | "DINE_IN";
             /** @enum {string} */
-            source: "PEDEAI" | "DIGITAL_MENU" | "IFOOD" | "NINETY_NINE_FOOD";
+            source: "PEDEAI" | "DIGITAL_MENU" | "API" | "IFOOD" | "NINETY_NINE_FOOD" | "OPEN_DELIVERY";
             /** @enum {string} */
             status: "RECEIVED" | "CONFIRMED" | "IN_PREPARATION" | "READY" | "DISPATCHED" | "COMPLETED" | "CANCELLED";
             customerName: string | null;
@@ -2199,6 +2425,13 @@ export interface components {
         MeResponse: {
             user: components["schemas"]["UserResponse"];
             store: components["schemas"]["StoreSummaryResponse"];
+        };
+        PlatformResponse: {
+            /** @enum {string} */
+            provider: "PEDEAI" | "DIGITAL_MENU" | "API" | "IFOOD" | "NINETY_NINE_FOOD" | "OPEN_DELIVERY";
+            name: string;
+            configured: boolean;
+            simulator: boolean;
         };
         IfoodSetupResponse: {
             configured: boolean;
@@ -2787,6 +3020,32 @@ export interface operations {
             };
         };
     };
+    placeOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Api-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartnerOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PartnerOrderResponse"];
+                };
+            };
+        };
+    };
     list: {
         parameters: {
             query?: never;
@@ -2928,7 +3187,7 @@ export interface operations {
             };
         };
     };
-    placeOrder: {
+    placeOrder_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3467,6 +3726,32 @@ export interface operations {
             };
         };
     };
+    importCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CatalogImportResponse"];
+                };
+            };
+        };
+    };
     list_8: {
         parameters: {
             query?: never;
@@ -3626,6 +3911,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CategoryResponse"];
+                };
+            };
+        };
+    };
+    importSpreadsheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpreadsheetImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CatalogImportResponse"];
                 };
             };
         };
@@ -3793,6 +4102,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AuthResponse"];
+                };
+            };
+        };
+    };
+    list_11: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiKeyResponse"][];
+                };
+            };
+        };
+    };
+    create_10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CreatedApiKeyResponse"];
                 };
             };
         };
@@ -4064,6 +4417,52 @@ export interface operations {
             };
         };
     };
+    order: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Api-Key"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PartnerOrderResponse"];
+                };
+            };
+        };
+    };
+    menu: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Api-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StorefrontResponse"];
+                };
+            };
+        };
+    };
     stream: {
         parameters: {
             query?: never;
@@ -4149,7 +4548,7 @@ export interface operations {
             };
         };
     };
-    menu: {
+    menu_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4258,7 +4657,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -4454,6 +4853,26 @@ export interface operations {
             };
         };
     };
+    platforms: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlatformResponse"][];
+                };
+            };
+        };
+    };
     setup: {
         parameters: {
             query?: never;
@@ -4567,6 +4986,26 @@ export interface operations {
         responses: {
             /** @description No Content */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revoke_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

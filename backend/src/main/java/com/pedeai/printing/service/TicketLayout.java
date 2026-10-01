@@ -40,8 +40,9 @@ final class TicketLayout {
     private static final Map<OrderType, String> TYPES = Map.of(
             OrderType.DELIVERY, "DELIVERY", OrderType.TAKEOUT, "RETIRADA", OrderType.DINE_IN, "MESA");
     private static final Map<OrderSource, String> SOURCES = Map.of(
-            OrderSource.PEDEAI, "", OrderSource.DIGITAL_MENU, "Cardápio", OrderSource.IFOOD, "iFood",
-            OrderSource.NINETY_NINE_FOOD, "99Food");
+            OrderSource.PEDEAI, "", OrderSource.DIGITAL_MENU, "Cardápio", OrderSource.API, "API",
+            OrderSource.IFOOD, "iFood",
+            OrderSource.NINETY_NINE_FOOD, "99Food", OrderSource.OPEN_DELIVERY, "Open Delivery");
 
     private TicketLayout() {
     }

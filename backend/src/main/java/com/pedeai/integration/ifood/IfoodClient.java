@@ -134,6 +134,29 @@ public class IfoodClient {
                 .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).toBodilessEntity());
     }
 
+    /**
+     * Categorias do cardápio da loja no iFood, com os itens. Usa o catálogo de contexto DEFAULT (ou o primeiro, se a
+     * loja só tiver outro).
+     */
+    public JsonNode catalogCategories(String merchantId) {
+        JsonNode catalogs = call(() -> http.get().uri(properties.catalogsPath(), merchantId).headers(this::auth)
+                .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).body(JsonNode.class));
+        if (catalogs == null || !catalogs.isArray() || catalogs.isEmpty()) {
+            throw new IfoodApiException(404, "A loja não tem cardápio no iFood.");
+        }
+        JsonNode chosen = catalogs.get(0);
+        for (JsonNode catalog : catalogs) {
+            for (JsonNode context : catalog.path("context")) {
+                if ("DEFAULT".equals(context.asString())) {
+                    chosen = catalog;
+                }
+            }
+        }
+        String catalogId = chosen.path("catalogId").asString(chosen.path("id").asString());
+        return call(() -> http.get().uri(properties.categoriesPath(), merchantId, catalogId).headers(this::auth)
+                .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).body(JsonNode.class));
+    }
+
     /** Um 401 com token em cache: o token pode ter sido revogado antes da hora. Renova e tenta uma vez mais. */
     private <T> T call(Supplier<T> request) {
         try {

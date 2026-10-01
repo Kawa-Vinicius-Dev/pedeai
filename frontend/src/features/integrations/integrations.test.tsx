@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
-import type { MarketplaceConnection } from '../../shared/api/types';
+import type { CatalogImport, MarketplaceConnection, Platform } from '../../shared/api/types';
 import { order, orderSummary } from '../../test/fixtures';
 import { loggedInAs, renderApp } from '../../test/render';
 import { server } from '../../test/server';
@@ -18,13 +18,32 @@ const CONNECTION: MarketplaceConnection = {
   failedActions: 0,
 };
 
+/** iFood só no simulador; 99Food e Open Delivery desligados, a menos que o teste diga outra coisa. */
+function platforms(overrides: Partial<Record<Platform['provider'], Partial<Platform>>> = {}): Platform[] {
+  const base: Platform[] = [
+    { provider: 'IFOOD', name: 'iFood', configured: false, simulator: true },
+    { provider: 'NINETY_NINE_FOOD', name: '99Food', configured: false, simulator: false },
+    { provider: 'OPEN_DELIVERY', name: 'Open Delivery', configured: false, simulator: false },
+  ];
+  return base.map((platform) => ({ ...platform, ...overrides[platform.provider] }));
+}
+
+const IMPORT_RESULT: CatalogImport = {
+  applied: false,
+  categoriesCreated: 2,
+  productsCreated: 3,
+  productsUpdated: 0,
+  optionGroupsCreated: 2,
+  errors: [],
+};
+
 describe('integração com o iFood', () => {
   it('no modo simulador, liga uma loja de teste e simula um pedido', async () => {
     loggedInAs('OWNER');
     let connections: MarketplaceConnection[] = [];
     const received: { connect?: unknown; simulated?: string } = {};
     server.use(
-      http.get('/api/integrations/ifood/setup', () => HttpResponse.json({ configured: false, simulator: true })),
+      http.get('/api/integrations/platforms', () => HttpResponse.json(platforms())),
       http.get('/api/integrations', () => HttpResponse.json(connections)),
       http.post('/api/integrations', async ({ request }) => {
         received.connect = await request.json();
@@ -35,17 +54,53 @@ describe('integração com o iFood', () => {
         received.simulated = params.id as string;
         return HttpResponse.json({ externalOrderId: 'x' }, { status: 202 });
       }),
+      http.post('/api/integrations/:id/catalog-import', async ({ request }) => {
+        const { dryRun } = (await request.json()) as { dryRun: boolean };
+        return HttpResponse.json({ ...IMPORT_RESULT, applied: !dryRun });
+      }),
     );
     const { user } = renderApp('/configuracoes/integracoes');
 
     expect(await screen.findByText(/Modo simulador/)).toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: 'Ligar ao iFood' }));
-    await waitFor(() => expect(received.connect).toEqual({ externalMerchantId: 'loja-teste', autoConfirm: false }));
+    await waitFor(() =>
+      expect(received.connect).toEqual({ provider: 'IFOOD', externalMerchantId: 'loja-teste', autoConfirm: false }),
+    );
 
     const card = await screen.findByLabelText('Integração Loja simulada');
     expect(within(card).getByText('Ativa')).toBeInTheDocument();
     await user.click(within(card).getByRole('button', { name: 'Simular pedido do iFood' }));
     await waitFor(() => expect(received.simulated).toBe(CONNECTION.id));
+
+    await user.click(within(card).getByRole('button', { name: 'Importar cardápio do iFood' }));
+    const modal = await screen.findByRole('dialog', { name: 'Importar cardápio do iFood' });
+    await user.click(within(modal).getByRole('button', { name: 'Pré-visualizar' }));
+    expect(await within(modal).findByText('Pré-visualização: nada foi gravado ainda.')).toBeInTheDocument();
+    expect(within(within(modal).getByLabelText('Produtos novos')).getByText('3')).toBeInTheDocument();
+    await user.click(within(modal).getByRole('button', { name: 'Importar' }));
+    expect(await within(modal).findByText('Cardápio importado.')).toBeInTheDocument();
+  });
+
+  it('liga a 99Food pelo padrão Open Delivery quando é o que o servidor tem', async () => {
+    loggedInAs('MANAGER');
+    let body: unknown;
+    server.use(
+      http.get('/api/integrations/platforms', () =>
+        HttpResponse.json(platforms({ IFOOD: { simulator: false }, NINETY_NINE_FOOD: { configured: true } })),
+      ),
+      http.get('/api/integrations', () => HttpResponse.json([])),
+      http.post('/api/integrations', async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ ...CONNECTION, provider: 'NINETY_NINE_FOOD', merchantName: '99Food' }, { status: 201 });
+      }),
+    );
+    const { user } = renderApp('/configuracoes/integracoes');
+
+    await user.type(await screen.findByLabelText('Id da loja no 99Food'), 'loja-99');
+    await user.click(screen.getByRole('button', { name: 'Ligar ao 99Food' }));
+    await waitFor(() =>
+      expect(body).toEqual({ provider: 'NINETY_NINE_FOOD', externalMerchantId: 'loja-99', autoConfirm: false }),
+    );
   });
 
   it('pedido do iFood mostra o selo e pede o cancelamento com um motivo do iFood', async () => {

@@ -4,6 +4,7 @@ import {
   Anchor,
   Button,
   Card,
+  Checkbox,
   CopyButton,
   Group,
   Loader,
@@ -20,7 +21,7 @@ import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircleAlert } from 'lucide-react';
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { api } from '../../shared/api/client';
 import { errorMessage, unwrap } from '../../shared/api/errors';
@@ -63,7 +64,29 @@ const schema = z.object({
     .min(3, 'Use pelo menos 3 caracteres.')
     .max(60, 'Use até 60 caracteres.')
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use só letras minúsculas, números e hífen (ex.: pizzaria-bella).'),
+  menuAutoConfirm: z.boolean(),
+  useHours: z.boolean(),
+  hours: z.array(z.object({ enabled: z.boolean(), opensAt: z.string(), closesAt: z.string() })).length(7),
+}).superRefine((form, context) => {
+  if (!form.useHours) {
+    return;
+  }
+  if (!form.hours.some((day) => day.enabled)) {
+    context.addIssue({ code: 'custom', path: ['hours'], message: 'Marque pelo menos um dia, ou desligue o horário.' });
+  }
+  form.hours.forEach((day, index) => {
+    if (!day.enabled) {
+      return;
+    }
+    if (!/^\d{2}:\d{2}$/.test(day.opensAt) || !/^\d{2}:\d{2}$/.test(day.closesAt)) {
+      context.addIssue({ code: 'custom', path: ['hours', index, 'opensAt'], message: 'Informe os dois horários.' });
+    } else if (day.opensAt === day.closesAt) {
+      context.addIssue({ code: 'custom', path: ['hours', index, 'opensAt'], message: 'Abre e fecha no mesmo horário.' });
+    }
+  });
 });
+
+const DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
 type StoreFormInput = z.input<typeof schema>;
 type StoreForm = z.output<typeof schema>;
@@ -79,6 +102,14 @@ function toForm(store: Store): StoreFormInput {
     autoConfirmOwnOrders: store.autoConfirmOwnOrders,
     startPreparationOnConfirm: store.startPreparationOnConfirm,
     slug: store.slug,
+    menuAutoConfirm: store.menuAutoConfirm,
+    useHours: store.openingHours.length > 0,
+    hours: DAYS.map((_, index) => {
+      const day = store.openingHours.find((hours) => hours.dayOfWeek === index + 1);
+      return day
+        ? { enabled: true, opensAt: day.opensAt.slice(0, 5), closesAt: day.closesAt.slice(0, 5) }
+        : { enabled: false, opensAt: '18:00', closesAt: '23:00' };
+    }),
   };
 }
 
@@ -93,6 +124,12 @@ function toRequest(form: StoreForm): UpdateStoreRequest {
     autoConfirmOwnOrders: form.autoConfirmOwnOrders,
     startPreparationOnConfirm: form.startPreparationOnConfirm,
     slug: form.slug,
+    menuAutoConfirm: form.menuAutoConfirm,
+    openingHours: form.useHours
+      ? form.hours.flatMap((day, index) =>
+          day.enabled ? [{ dayOfWeek: index + 1, opensAt: day.opensAt, closesAt: day.closesAt }] : [],
+        )
+      : [],
   };
 }
 
@@ -108,6 +145,8 @@ export function StoreSettingsPage() {
     setError,
     formState: { errors, isDirty },
   } = useForm<StoreFormInput, unknown, StoreForm>({ resolver: zodResolver(schema) });
+  const useHours = useWatch({ control, name: 'useHours' });
+  const hours = useWatch({ control, name: 'hours' });
 
   useEffect(() => {
     if (storeQuery.data) {
@@ -174,6 +213,72 @@ export function StoreSettingsPage() {
                 {...register('slug')}
                 error={errors.slug?.message}
               />
+              <Controller
+                control={control}
+                name="menuAutoConfirm"
+                render={({ field }) => (
+                  <Switch
+                    label="Aceitar pedidos do cardápio automaticamente"
+                    description="O pedido vai direto para a cozinha e a impressora, sem esperar em Recebidos."
+                    checked={field.value ?? false}
+                    onChange={(event) => field.onChange(event.currentTarget.checked)}
+                  />
+                )}
+              />
+              <Controller
+                control={control}
+                name="useHours"
+                render={({ field }) => (
+                  <Switch
+                    label="Usar horário de funcionamento"
+                    description="Fora do horário, o cardápio fica fechado para pedidos mesmo com a chave do quadro ligada."
+                    checked={field.value ?? false}
+                    onChange={(event) => field.onChange(event.currentTarget.checked)}
+                  />
+                )}
+              />
+              {useHours && (
+                <Stack gap={6} aria-label="Horário de funcionamento">
+                  {DAYS.map((label, index) => (
+                    <Group key={label} gap="sm" wrap="nowrap" align="flex-start">
+                      <Controller
+                        control={control}
+                        name={`hours.${index}.enabled`}
+                        render={({ field }) => (
+                          <Checkbox
+                            label={label}
+                            w={100}
+                            mt={8}
+                            checked={field.value ?? false}
+                            onChange={(event) => field.onChange(event.currentTarget.checked)}
+                          />
+                        )}
+                      />
+                      <TextInput
+                        type="time"
+                        aria-label={`${label}: abre às`}
+                        disabled={!hours?.[index]?.enabled}
+                        {...register(`hours.${index}.opensAt`)}
+                        error={errors.hours?.[index]?.opensAt?.message}
+                      />
+                      <TextInput
+                        type="time"
+                        aria-label={`${label}: fecha às`}
+                        disabled={!hours?.[index]?.enabled}
+                        {...register(`hours.${index}.closesAt`)}
+                      />
+                    </Group>
+                  ))}
+                  <Text size="xs" c="dimmed">
+                    Fechar antes de abrir passa da meia-noite (ex.: 18:00 às 02:00).
+                  </Text>
+                  {(errors.hours?.root?.message ?? errors.hours?.message) && (
+                    <Text size="sm" c="red">
+                      {errors.hours?.root?.message ?? errors.hours?.message}
+                    </Text>
+                  )}
+                </Stack>
+              )}
               <Group gap="xs">
                 <Anchor href={menuUrl(storeQuery.data.slug)} target="_blank" rel="noreferrer" size="sm">
                   {menuUrl(storeQuery.data.slug)}

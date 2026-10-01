@@ -80,6 +80,11 @@ function Menu({ store }: { store: Storefront }) {
               {store.open ? 'Aberto' : 'Fechado'}
             </Badge>
           </Group>
+          {store.openingHours.length > 0 && (
+            <Text size="sm" c="dimmed">
+              {todayHours(store)}
+            </Text>
+          )}
           {store.phone && (
             <Anchor href={`tel:${store.phone}`} size="sm" c="dimmed">
               <Group gap={4} component="span">
@@ -229,4 +234,11 @@ function ProductCard({ product, onPick }: { product: MenuProduct; onPick: () => 
       </Group>
     </Card>
   );
+}
+
+/** "Hoje: 18:00 às 23:30" ou "Fechado hoje", pelo horário que a loja cadastrou. */
+function todayHours(store: Storefront): string {
+  const weekday = new Date().getDay();
+  const today = store.openingHours.find((hours) => hours.dayOfWeek === (weekday === 0 ? 7 : weekday));
+  return today ? `Hoje: ${today.opensAt.slice(0, 5)} às ${today.closesAt.slice(0, 5)}` : 'Fechado hoje';
 }

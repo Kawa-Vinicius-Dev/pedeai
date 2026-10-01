@@ -7,15 +7,16 @@ import { orderKeys } from '../orders/api';
 
 export const integrationKeys = {
   all: ['integrations'] as const,
-  setup: ['integrations', 'setup'] as const,
+  platforms: ['integrations', 'platforms'] as const,
   connections: ['integrations', 'connections'] as const,
   merchants: ['integrations', 'merchants'] as const,
   sync: (orderId: string) => ['integrations', 'sync', orderId] as const,
   reasons: (orderId: string) => ['integrations', 'reasons', orderId] as const,
 };
 
-export function useIfoodSetup() {
-  return useQuery({ queryKey: integrationKeys.setup, queryFn: () => unwrap(api.GET('/api/integrations/ifood/setup')) });
+/** iFood, 99Food e o app Open Delivery: quais o servidor tem configurados, ou só no simulador. */
+export function usePlatforms() {
+  return useQuery({ queryKey: integrationKeys.platforms, queryFn: () => unwrap(api.GET('/api/integrations/platforms')) });
 }
 
 /** A saúde do vínculo muda com o polling (30 s): recarregar mais que isso não mostra nada novo. */
@@ -50,7 +51,7 @@ export function useSimulateOrder() {
     mutationFn: (id: string) =>
       unwrap(api.POST('/api/integrations/{id}/simulated-orders', { params: { path: { id } } })),
     onSuccess: () =>
-      notifications.show({ color: 'green', message: 'Pedido simulado do iFood enviado. Ele aparece no quadro em instantes.' }),
+      notifications.show({ color: 'green', message: 'Pedido simulado enviado. Ele aparece no quadro em instantes.' }),
     onError: (error) => notifications.show({ color: 'red', message: errorMessage(error) }),
   });
 }
@@ -82,7 +83,7 @@ export function useRequestCancellation(orderId: string) {
     onSuccess: () =>
       notifications.show({
         color: 'green',
-        message: 'Cancelamento solicitado ao iFood. O pedido é cancelado quando o iFood confirmar.',
+        message: 'Cancelamento solicitado ao app. O pedido é cancelado quando o app confirmar.',
       }),
     onError: (error) => notifications.show({ color: 'red', message: errorMessage(error) }),
     onSettled: () => {

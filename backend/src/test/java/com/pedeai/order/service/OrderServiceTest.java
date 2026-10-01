@@ -110,7 +110,7 @@ class OrderServiceTest {
 
     private void store(boolean autoConfirm, boolean startPreparation) {
         when(storeService.get(STORE_ID)).thenReturn(new StoreResponse(STORE_ID, "Pizzaria Bella", null, null,
-                "America/Sao_Paulo", LocalTime.of(5, 0), 1000, autoConfirm, startPreparation, "pizzaria-bella", true));
+                "America/Sao_Paulo", LocalTime.of(5, 0), 1000, autoConfirm, startPreparation, "pizzaria-bella", true, false, java.util.List.of()));
     }
 
     @Test

@@ -248,6 +248,8 @@ Convenções:
 | Recurso | Rotas principais |
 | --- | --- |
 | Autenticação | `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout` |
+| API de pedidos (chave `X-Api-Key`) | `GET /api/v1/menu`, `POST /api/v1/orders`, `GET /api/v1/orders/{id}`; chaves em `GET/POST /api/api-keys`, `DELETE /api/api-keys/{id}` |
+| Importação de cardápio | `POST /api/catalog/imports/spreadsheet`, `POST /api/integrations/{id}/catalog-import` (iFood) |
 | Cardápio digital (público, sem login) | `GET /api/public/stores/{slug}`, `POST /api/public/stores/{slug}/products/{id}/price-quotes`, `POST /api/public/stores/{slug}/orders`, `GET /api/public/orders/{trackingCode}` |
 | Loja e usuários | `GET/PATCH /api/store`, `PUT /api/store/menu-open`, `GET/POST /api/users`, `PATCH /api/users/{id}` |
 | Cardápio | `/api/sectors`, `/api/categories`, `/api/products`, `/api/option-groups`, `/api/option-groups/{id}/options`, `PUT /api/products/{id}/availability` |
