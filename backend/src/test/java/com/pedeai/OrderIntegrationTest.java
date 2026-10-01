@@ -263,9 +263,9 @@ class OrderIntegrationTest {
         Timestamp now = Timestamp.from(Instant.now());
         jdbc.update("""
                 INSERT INTO store (id, name, timezone, business_day_cutoff, service_fee_bp, auto_confirm_own_orders,
-                                   start_preparation_on_confirm, created_at, updated_at, version)
-                VALUES (?, 'Loja antiga', 'America/Sao_Paulo', '05:00:00', 1000, TRUE, FALSE, ?, ?, 0)""",
-                oldStore, now, now);
+                                   start_preparation_on_confirm, created_at, updated_at, version, slug)
+                VALUES (?, 'Loja antiga', 'America/Sao_Paulo', '05:00:00', 1000, TRUE, FALSE, ?, ?, 0, ?)""",
+                oldStore, now, now, "loja-" + oldStore);
 
         try (Connection connection = dataSource.getConnection()) {
             Context context = mock(Context.class);

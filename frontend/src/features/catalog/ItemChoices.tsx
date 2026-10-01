@@ -10,10 +10,13 @@ export function ItemChoices({
   groups,
   chosen,
   onChange,
+  showPricingRule = true,
 }: {
   groups: OptionGroup[];
   chosen: ChosenOptions;
   onChange: (chosen: ChosenOptions) => void;
+  /** A regra de preço ("maior valor", "soma") é da equipe; o cliente do cardápio vê só os preços. */
+  showPricingRule?: boolean;
 }) {
   return (
     <>
@@ -22,9 +25,11 @@ export function ItemChoices({
           <Group justify="space-between" wrap="nowrap">
             <Title order={5}>{group.name}</Title>
             <Group gap={6} wrap="nowrap">
-              <Badge variant="light" color="gray">
-                {PRICING_RULE_LABELS[group.pricingRule]}
-              </Badge>
+              {showPricingRule && (
+                <Badge variant="light" color="gray">
+                  {PRICING_RULE_LABELS[group.pricingRule]}
+                </Badge>
+              )}
               <Text size="sm" c="dimmed">
                 {describeChoices(group.minChoices, group.maxChoices)}
               </Text>

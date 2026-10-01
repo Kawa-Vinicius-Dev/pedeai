@@ -12,6 +12,12 @@ import java.util.UUID;
 
 public interface StoreRepository extends JpaRepository<Store, UUID> {
 
+    Optional<Store> findBySlug(String slug);
+
+    boolean existsBySlug(String slug);
+
+    boolean existsBySlugAndIdNot(String slug, UUID id);
+
     /** Trava a linha da loja até o fim da transação, para serializar mudanças concorrentes na mesma loja. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from Store s where s.id = :id")

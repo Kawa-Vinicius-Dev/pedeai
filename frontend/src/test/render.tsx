@@ -5,6 +5,8 @@ import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { Providers } from '../app/Providers';
 import { routes } from '../app/routes';
+import { MenuProviders } from '../menu/MenuApp';
+import { menuRoutes } from '../menu/routes';
 import type { Role } from '../shared/api/types';
 import { authResponse } from './fixtures';
 import { server } from './server';
@@ -27,4 +29,19 @@ export function renderApp(path: string) {
 /** Faz a renovação de sessão responder como se a pessoa já estivesse logada. */
 export function loggedInAs(role: Role) {
   server.use(http.post('/api/auth/refresh', () => HttpResponse.json(authResponse(role))));
+}
+
+/** Renderiza o cardápio digital do cliente (menu.html), sem login, começando no caminho informado. */
+export function renderMenu(path: string) {
+  const router = createMemoryRouter(menuRoutes, { initialEntries: [path] });
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const user = userEvent.setup();
+  render(
+    <MenuProviders queryClient={queryClient} env="test">
+      <RouterProvider router={router} />
+    </MenuProviders>,
+  );
+  return { user, router };
 }

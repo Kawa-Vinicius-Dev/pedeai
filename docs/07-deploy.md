@@ -59,6 +59,9 @@ funciona sem CORS. Em [`frontend/vercel.json`](../frontend/vercel.json), antes d
 { "source": "/api/:path*", "destination": "https://api.seudominio.com.br/api/:path*" }
 ```
 
+O cardápio digital do cliente é a página `menu.html`, servida em `/loja/<endereço>`: o `vercel.json` já tem a
+regra. O link de cada loja aparece em **Configurações > Loja**.
+
 > ⚠️ Conexões longas (o tempo real e o agente) passam pelo repasse da Vercel, que tem tempo máximo por
 > requisição. O app e o agente reconectam sozinhos. Se isso incomodar, o agente pode apontar direto para o
 > domínio da API (ele não usa cookie).

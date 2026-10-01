@@ -15,11 +15,14 @@ public record StoreResponse(
         LocalTime businessDayCutoff,
         int serviceFeeBp,
         boolean autoConfirmOwnOrders,
-        boolean startPreparationOnConfirm
+        boolean startPreparationOnConfirm,
+        String slug,
+        boolean menuOpen
 ) {
     public static StoreResponse from(Store store) {
         return new StoreResponse(store.getId(), store.getName(), store.getDocument(), store.getPhone(),
                 store.getTimezone(), store.getBusinessDayCutoff(), store.getServiceFeeBp(),
-                store.isAutoConfirmOwnOrders(), store.isStartPreparationOnConfirm());
+                store.isAutoConfirmOwnOrders(), store.isStartPreparationOnConfirm(), store.getSlug(),
+                store.isMenuOpen());
     }
 }

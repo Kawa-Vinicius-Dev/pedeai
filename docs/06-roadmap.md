@@ -228,24 +228,36 @@ dia, e os números do dashboard conferem com uma consulta manual.
 > Fica para depois: contagem "às cegas" (hoje quem fecha vê o esperado) e
 > gráficos além das barras por hora.
 
-## Etapa 8 · Cardápio digital PedeAí (em andamento)
+## Etapa 8 · Cardápio digital PedeAí
 
 Decisões (out/2026): mesmo backend e mesmo projeto do frontend, com uma página
 separada (`menu.html`, rota `/loja/:slug`) para o cliente final. Pagamento na
 entrega ou na retirada por enquanto; um endereço por loja dentro do PedeAí.
 
-Plano:
+- Origem própria `DIGITAL_MENU`. As regras de marketplace (cancelamento pela
+  plataforma, pagamento online) usam `OrderSource.isMarketplace()`, então o
+  pedido do cardápio segue as regras de um pedido da própria loja.
+- Loja com `slug` único (gerado do nome no cadastro, editável pelo dono) e
+  chave "Cardápio aberto" no quadro, para quem está no caixa.
+- Módulo `storefront`, público: cardápio da loja, preço do item montado,
+  pedido (preço e taxa de entrega recalculados no servidor, nasce **Recebido**,
+  limite por IP) e acompanhamento por um código aleatório.
+- Fluxo descrito em [01 · Fluxos](01-fluxos.md#fluxo-5--cardápio-digital-pedeaí).
 
-- Nova origem `DIGITAL_MENU`. Trocar as checagens `source != PEDEAI` por
-  `OrderSource.isMarketplace()` (status, cancelamento e pagamento), senão o
-  pedido do cardápio seria tratado como iFood.
-- Loja ganha `slug` (único) e `menu_open` (recebendo pedidos pelo cardápio),
-  com chave no quadro de pedidos para quem está no caixa.
-- Módulo `storefront`, público: cardápio da loja, pedido (preço e taxa de
-  entrega calculados no servidor, nasce **Recebido** para o aceite no quadro,
-  limite por IP) e acompanhamento por um código aleatório do pedido.
-- Depois: API de pedidos com chave por loja, Open Delivery (cardápios de
-  terceiros e 99Food) e importação de cardápio (iFood e planilha).
+**Pronto quando:** nos testes, o cliente sem login vê o cardápio, pede com o
+total calculado pela API, a loja aceita no quadro e o cliente acompanha até o
+cancelamento ou a conclusão.
+
+> **Situação (out/2026):** pronto e testado (`DigitalMenuIntegrationTest` e os
+> testes da página do cliente). Fica para depois: fotos dos produtos, horário
+> de funcionamento automático (hoje é a chave manual), aceite automático dos
+> pedidos do cardápio, pagamento online (Pix) e domínio próprio por loja.
+
+### Próximos passos depois do cardápio
+
+- API de pedidos com chave por loja, para cardápios de terceiros e automações.
+- Open Delivery (cardápios de terceiros e 99Food).
+- Importação de cardápio: do iFood (com as credenciais) e por planilha.
 
 ## Depois do escopo atual
 

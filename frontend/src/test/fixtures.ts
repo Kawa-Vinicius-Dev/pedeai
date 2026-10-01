@@ -43,6 +43,8 @@ export function store(overrides: Partial<Store> = {}): Store {
     serviceFeeBp: 1000,
     autoConfirmOwnOrders: true,
     startPreparationOnConfirm: false,
+    slug: 'pizzaria-bella',
+    menuOpen: false,
     ...overrides,
   };
 }
@@ -282,6 +284,7 @@ export function order(overrides: Partial<Order> = {}): Order {
     externalDisplayId: null,
     scheduledFor: null,
     externalId: null,
+    trackingCode: null,
     ...overrides,
   };
 }

@@ -1,5 +1,5 @@
 package com.pedeai.order.domain;
 
 public enum ActorType {
-    USER, SYSTEM, MARKETPLACE
+    USER, SYSTEM, MARKETPLACE, CUSTOMER
 }

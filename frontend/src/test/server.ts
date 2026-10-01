@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { apiError, type Menu } from './fixtures';
+import { apiError, type Menu, store } from './fixtures';
 
 const openStreams = new Set<ReadableStreamDefaultController<Uint8Array>>();
 
@@ -64,4 +64,6 @@ export const server = setupServer(
   http.get('/api/print-alerts', () => HttpResponse.json([])),
   http.get('/api/orders/:orderId/print-jobs', () => HttpResponse.json([])),
   http.get('/api/printers', () => HttpResponse.json([])),
+  // A chave "Cardápio aberto" do quadro lê a loja.
+  http.get('/api/store', () => HttpResponse.json(store())),
 );

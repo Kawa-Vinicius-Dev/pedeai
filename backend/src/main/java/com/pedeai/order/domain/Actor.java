@@ -13,6 +13,11 @@ public record Actor(ActorType type, UUID id, String name) {
         return new Actor(ActorType.MARKETPLACE, null, source == OrderSource.IFOOD ? "iFood" : "99Food");
     }
 
+    /** O próprio cliente, no cardápio digital. */
+    public static Actor customer(String name) {
+        return new Actor(ActorType.CUSTOMER, null, name);
+    }
+
     public static Actor system() {
         return new Actor(ActorType.SYSTEM, null, null);
     }

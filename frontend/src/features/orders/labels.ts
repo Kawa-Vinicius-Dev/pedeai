@@ -69,18 +69,23 @@ export function nextActions(order: { status: OrderStatus; type: OrderType }, rol
   return role === 'KITCHEN' ? actions.filter((action) => KITCHEN_TARGETS.includes(action.status)) : actions;
 }
 
+/** iFood e 99Food: status e cancelamento passam pela plataforma. Balcão e cardápio digital são da própria loja. */
+export function isMarketplace(source: string): boolean {
+  return source === 'IFOOD' || source === 'NINETY_NINE_FOOD';
+}
+
 /** Mesmas regras do backend (OrderStatusService): a API é quem barra de verdade. */
 export function canCancel(order: { status: OrderStatus; source: string }, role: Role): boolean {
   if (order.status === 'CANCELLED' || role === 'KITCHEN' || role === 'WAITER') {
     return false;
   }
   // Pedido de marketplace em andamento é cancelado pela plataforma: ver canRequestMarketplaceCancel.
-  if (order.source !== 'PEDEAI' && order.status !== 'COMPLETED') {
+  if (isMarketplace(order.source) && order.status !== 'COMPLETED') {
     return false;
   }
   const manager = role === 'OWNER' || role === 'MANAGER';
   if (order.status === 'COMPLETED') {
-    return manager && order.source === 'PEDEAI';
+    return manager && !isMarketplace(order.source);
   }
   const preparationStarted = order.status === 'IN_PREPARATION' || order.status === 'READY' || order.status === 'DISPATCHED';
   return !preparationStarted || manager;
@@ -89,10 +94,15 @@ export function canCancel(order: { status: OrderStatus; source: string }, role: 
 /** Pedido do iFood em andamento: o cancelamento é pedido à plataforma, com um motivo dela. */
 export function canRequestMarketplaceCancel(order: { status: OrderStatus; source: string }, role: Role): boolean {
   const final = order.status === 'CANCELLED' || order.status === 'COMPLETED';
-  return order.source !== 'PEDEAI' && !final && ['OWNER', 'MANAGER', 'CASHIER'].includes(role);
+  return isMarketplace(order.source) && !final && ['OWNER', 'MANAGER', 'CASHIER'].includes(role);
 }
 
-export const SOURCE_LABELS: Record<string, string> = { PEDEAI: 'PedeAí', IFOOD: 'iFood', NINETY_NINE_FOOD: '99Food' };
+export const SOURCE_LABELS: Record<string, string> = {
+  PEDEAI: 'Balcão/telefone',
+  DIGITAL_MENU: 'Cardápio',
+  IFOOD: 'iFood',
+  NINETY_NINE_FOOD: '99Food',
+};
 
 /** "iFood 7391": o número que o cliente e o entregador veem no aplicativo. */
 export function sourceBadge(order: { source: string; externalDisplayId: string | null }): string | null {

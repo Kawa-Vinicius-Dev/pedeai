@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/store/menu-open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["changeMenuOpen"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sectors/{sectorId}/printer": {
         parameters: {
             query?: never;
@@ -260,6 +276,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/stores/{slug}/products/{productId}/price-quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["quote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/stores/{slug}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["placeOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/products": {
         parameters: {
             query?: never;
@@ -285,7 +333,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["quote"];
+        post: operations["quote_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -837,6 +885,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/stores/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["menu"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/orders/{trackingCode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["track"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/print-jobs": {
         parameters: {
             query?: never;
@@ -1129,6 +1209,25 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        MenuOpenRequest: {
+            open: boolean;
+        };
+        StoreResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            document: string | null;
+            phone: string | null;
+            timezone: string;
+            /** Format: time-local */
+            businessDayCutoff: string;
+            /** Format: int32 */
+            serviceFeeBp: number;
+            autoConfirmOwnOrders: boolean;
+            startPreparationOnConfirm: boolean;
+            slug: string;
+            menuOpen: boolean;
+        };
         SectorPrinterRequest: {
             /** Format: uuid */
             printerId: string;
@@ -1466,6 +1565,34 @@ export interface components {
             /** Format: int64 */
             unitPriceCents: number;
         };
+        MenuOrderRequest: {
+            /** @enum {string} */
+            type: "TAKEOUT" | "DELIVERY" | "DINE_IN";
+            customerName: string;
+            customerPhone: string;
+            deliveryAddress?: components["schemas"]["AddressRequest"];
+            items: components["schemas"]["OrderItemRequest"][];
+            notes?: string;
+            /** Format: uuid */
+            paymentMethodId: string;
+            /** Format: int64 */
+            changeForCents?: number;
+        };
+        OrderItemRequest: {
+            /** Format: uuid */
+            productId: string;
+            /** Format: int32 */
+            quantity: number;
+            options: components["schemas"]["OptionChoice"][];
+            notes?: string;
+        };
+        MenuOrderResponse: {
+            /** Format: int32 */
+            number: number;
+            trackingCode: string;
+            /** Format: int64 */
+            totalCents: number;
+        };
         PrintJobResponse: {
             /** Format: uuid */
             id: string;
@@ -1512,14 +1639,6 @@ export interface components {
         OrderCustomerRequest: {
             name: string;
             phone?: string;
-        };
-        OrderItemRequest: {
-            /** Format: uuid */
-            productId: string;
-            /** Format: int32 */
-            quantity: number;
-            options: components["schemas"]["OptionChoice"][];
-            notes?: string;
         };
         OrderPaymentRequest: {
             /** Format: uuid */
@@ -1583,7 +1702,7 @@ export interface components {
             /** @enum {string} */
             type: "TAKEOUT" | "DELIVERY" | "DINE_IN";
             /** @enum {string} */
-            source: "PEDEAI" | "IFOOD" | "NINETY_NINE_FOOD";
+            source: "PEDEAI" | "DIGITAL_MENU" | "IFOOD" | "NINETY_NINE_FOOD";
             /** @enum {string} */
             status: "RECEIVED" | "CONFIRMED" | "IN_PREPARATION" | "READY" | "DISPATCHED" | "COMPLETED" | "CANCELLED";
             /** Format: uuid */
@@ -1626,6 +1745,7 @@ export interface components {
             /** Format: date-time */
             scheduledFor: string | null;
             externalId: string | null;
+            trackingCode: string | null;
         };
         ReprintRequest: {
             /** @enum {string} */
@@ -1692,7 +1812,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            provider: "PEDEAI" | "IFOOD" | "NINETY_NINE_FOOD";
+            provider: "PEDEAI" | "DIGITAL_MENU" | "IFOOD" | "NINETY_NINE_FOOD";
             externalMerchantId: string;
             merchantName: string | null;
             /** @enum {string} */
@@ -1807,20 +1927,7 @@ export interface components {
             serviceFeeBp?: number;
             autoConfirmOwnOrders?: boolean;
             startPreparationOnConfirm?: boolean;
-        };
-        StoreResponse: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            document: string | null;
-            phone: string | null;
-            timezone: string;
-            /** Format: time-local */
-            businessDayCutoff: string;
-            /** Format: int32 */
-            serviceFeeBp: number;
-            autoConfirmOwnOrders: boolean;
-            startPreparationOnConfirm: boolean;
+            slug?: string;
         };
         PaymentStatusRequest: {
             /** @enum {string} */
@@ -1922,6 +2029,71 @@ export interface components {
             /** Format: int64 */
             totalCents: number;
         };
+        MenuCategoryResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            products: components["schemas"]["MenuProductResponse"][];
+        };
+        MenuDeliveryZoneResponse: {
+            neighborhood: string;
+            /** Format: int64 */
+            feeCents: number;
+        };
+        MenuPaymentMethodResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            type: "CASH" | "PIX" | "CREDIT" | "DEBIT" | "VOUCHER" | "ONLINE" | "OTHER";
+        };
+        MenuProductResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string | null;
+            /** Format: int64 */
+            priceCents: number;
+            optionGroupIds: string[];
+            available: boolean;
+        };
+        StorefrontResponse: {
+            name: string;
+            slug: string;
+            phone: string | null;
+            open: boolean;
+            deliveryZones: components["schemas"]["MenuDeliveryZoneResponse"][];
+            paymentMethods: components["schemas"]["MenuPaymentMethodResponse"][];
+            categories: components["schemas"]["MenuCategoryResponse"][];
+            optionGroups: components["schemas"]["OptionGroupResponse"][];
+        };
+        OrderTrackingResponse: {
+            /** Format: int32 */
+            number: number;
+            /** @enum {string} */
+            type: "TAKEOUT" | "DELIVERY" | "DINE_IN";
+            /** @enum {string} */
+            status: "RECEIVED" | "CONFIRMED" | "IN_PREPARATION" | "READY" | "DISPATCHED" | "COMPLETED" | "CANCELLED";
+            storeName: string;
+            storeSlug: string;
+            storePhone: string | null;
+            items: components["schemas"]["TrackingItemResponse"][];
+            /** Format: int64 */
+            subtotalCents: number;
+            /** Format: int64 */
+            deliveryFeeCents: number;
+            /** Format: int64 */
+            totalCents: number;
+            /** Format: date-time */
+            createdAt: string;
+            cancelReason: string | null;
+        };
+        TrackingItemResponse: {
+            /** Format: int32 */
+            quantity: number;
+            name: string;
+            details: string | null;
+        };
         PageResponsePrintJobResponse: {
             content: components["schemas"]["PrintJobResponse"][];
             /** Format: int32 */
@@ -1963,7 +2135,7 @@ export interface components {
             /** @enum {string} */
             type: "TAKEOUT" | "DELIVERY" | "DINE_IN";
             /** @enum {string} */
-            source: "PEDEAI" | "IFOOD" | "NINETY_NINE_FOOD";
+            source: "PEDEAI" | "DIGITAL_MENU" | "IFOOD" | "NINETY_NINE_FOOD";
             /** @enum {string} */
             status: "RECEIVED" | "CONFIRMED" | "IN_PREPARATION" | "READY" | "DISPATCHED" | "COMPLETED" | "CANCELLED";
             customerName: string | null;
@@ -2018,7 +2190,7 @@ export interface components {
             /** @enum {string} */
             toStatus: "RECEIVED" | "CONFIRMED" | "IN_PREPARATION" | "READY" | "DISPATCHED" | "COMPLETED" | "CANCELLED";
             /** @enum {string} */
-            actorType: "USER" | "SYSTEM" | "MARKETPLACE";
+            actorType: "USER" | "SYSTEM" | "MARKETPLACE" | "CUSTOMER";
             actorName: string | null;
             reason: string | null;
             /** Format: date-time */
@@ -2124,6 +2296,30 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    changeMenuOpen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MenuOpenRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StoreResponse"];
+                };
+            };
+        };
+    };
     assign: {
         parameters: {
             query?: never;
@@ -2705,6 +2901,59 @@ export interface operations {
             };
         };
     };
+    quote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PriceQuoteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PriceQuoteResponse"];
+                };
+            };
+        };
+    };
+    placeOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MenuOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MenuOrderResponse"];
+                };
+            };
+        };
+    };
     list_2: {
         parameters: {
             query?: {
@@ -2751,7 +3000,7 @@ export interface operations {
             };
         };
     };
-    quote: {
+    quote_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3896,6 +4145,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["DashboardResponse"];
+                };
+            };
+        };
+    };
+    menu: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StorefrontResponse"];
+                };
+            };
+        };
+    };
+    track: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                trackingCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrderTrackingResponse"];
                 };
             };
         };

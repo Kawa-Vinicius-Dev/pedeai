@@ -17,5 +17,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecific
 
     Optional<Order> findByStoreIdAndSourceAndExternalId(UUID storeId, OrderSource source, String externalId);
 
+    Optional<Order> findByTrackingCode(String trackingCode);
+
     List<Order> findAllByStoreIdAndStatusInOrderByCreatedAtAsc(UUID storeId, Collection<OrderStatus> statuses);
 }

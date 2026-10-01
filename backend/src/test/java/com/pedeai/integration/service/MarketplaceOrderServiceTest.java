@@ -54,7 +54,7 @@ class MarketplaceOrderServiceTest {
     private static OrderResponse order(OrderSource source, OrderStatus status) {
         return new OrderResponse(ORDER_ID, 42, LocalDate.of(2026, 9, 27), OrderType.DELIVERY, source, status, null,
                 "Rita", null, null, null, List.of(), 0, 0, 0, 0, 0, 0, NOW, NOW, null, null, null, null, null, null, 0,
-                "7391", null, source == OrderSource.PEDEAI ? null : "ifood-1");
+                "7391", null, source == OrderSource.PEDEAI ? null : "ifood-1", null);
     }
 
     private void stored(OrderResponse order) {
