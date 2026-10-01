@@ -30,6 +30,11 @@ public record UpdateStoreRequest(
 
         Boolean autoConfirmOwnOrders,
 
-        Boolean startPreparationOnConfirm
+        Boolean startPreparationOnConfirm,
+
+        @Size(min = 3, max = 60, message = "O endereço do cardápio deve ter de 3 a 60 caracteres.")
+        @Pattern(regexp = "[a-z0-9]+(-[a-z0-9]+)*",
+                message = "Use só letras minúsculas, números e hífen no endereço do cardápio (ex.: pizzaria-bella).")
+        String slug
 ) {
 }

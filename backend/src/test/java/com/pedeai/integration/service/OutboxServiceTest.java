@@ -72,7 +72,7 @@ class OutboxServiceTest {
     private static OrderResponse order(OrderSource source) {
         return new OrderResponse(ORDER_ID, 42, LocalDate.of(2026, 9, 27), OrderType.DELIVERY, source,
                 OrderStatus.READY, null, "Rita", null, null, null, List.of(), 0, 0, 0, 0, 0, 0, NOW, NOW, null,
-                null, null, null, null, null, 0, "7391", null, source == OrderSource.PEDEAI ? null : "ifood-1");
+                null, null, null, null, null, 0, "7391", null, source == OrderSource.PEDEAI ? null : "ifood-1", null);
     }
 
     private static OrderStatusChanged changed(OrderStatus from, OrderStatus to, ActorType actor) {

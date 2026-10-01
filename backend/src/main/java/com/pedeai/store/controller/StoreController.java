@@ -3,6 +3,7 @@ package com.pedeai.store.controller;
 import com.pedeai.shared.security.CurrentUser;
 import com.pedeai.shared.security.Permissions;
 import com.pedeai.store.dto.AuthResponse;
+import com.pedeai.store.dto.MenuOpenRequest;
 import com.pedeai.store.dto.RegisterStoreRequest;
 import com.pedeai.store.dto.StoreResponse;
 import com.pedeai.store.dto.UpdateStoreRequest;
@@ -16,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,5 +57,12 @@ public class StoreController {
     @PreAuthorize(Permissions.OWNER)
     public StoreResponse update(CurrentUser user, @Valid @RequestBody UpdateStoreRequest request) {
         return storeService.update(user.storeId(), request);
+    }
+
+    /** Abrir ou fechar o cardápio digital para pedidos: quem está no caixa também faz, durante o serviço. */
+    @PutMapping("/api/store/menu-open")
+    @PreAuthorize(Permissions.TAKE_ORDERS)
+    public StoreResponse changeMenuOpen(CurrentUser user, @Valid @RequestBody MenuOpenRequest request) {
+        return storeService.changeMenuOpen(user.storeId(), request.open());
     }
 }

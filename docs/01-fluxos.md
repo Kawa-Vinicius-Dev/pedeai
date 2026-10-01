@@ -15,6 +15,7 @@ entregue ao cliente).
 | Cliente liga ou manda WhatsApp e pede entrega | `PEDEAI` | `DELIVERY` |
 | Cliente liga e busca no local | `PEDEAI` | `TAKEOUT` |
 | Garçom lança itens na mesa ou comanda | `PEDEAI` | `DINE_IN` |
+| Cliente pede pelo cardápio digital da loja | `DIGITAL_MENU` | `DELIVERY` ou `TAKEOUT` |
 | Pedido do iFood | `IFOOD` | `DELIVERY` ou `TAKEOUT` |
 | Pedido da 99Food | `NINETY_NINE_FOOD` | `DELIVERY` ou `TAKEOUT` |
 
@@ -186,6 +187,23 @@ sequenceDiagram
   enviada de volta à plataforma.
 - Se o cliente ou a plataforma cancelar, chega um evento. O pedido vira
   **Cancelado**, aparece um alerta e os setores recebem o aviso de cancelamento.
+
+## Fluxo 5 · Cardápio digital PedeAí
+
+1. A loja divulga o link `/loja/<endereço>` (o endereço fica em
+   **Configurações > Loja**). Quem está no caixa abre e fecha o cardápio para
+   pedidos no quadro de pedidos; fechado, o cliente ainda vê o cardápio.
+2. O cliente, sem login, monta os itens (sabores e adicionais com o preço
+   calculado pela API), escolhe entrega (só nos bairros cadastrados) ou
+   retirada, e a forma de pagamento. Paga na entrega ou na retirada.
+3. A API recalcula tudo: preço pelo cardápio, taxa pela área de entrega. O
+   pedido nasce **Recebido**, toca o alerta no quadro e a loja confirma. Só
+   depois de confirmado vai para a cozinha e para a impressora.
+4. O cliente acompanha pelo link com um código aleatório, sem ver telefone ou
+   endereço de ninguém. A loja cancela como um pedido de balcão, com motivo, e
+   o motivo aparece para o cliente.
+5. Contra pedido falso em massa: até 15 pedidos por IP a cada 10 minutos em
+   cada loja.
 
 ## Caixa
 

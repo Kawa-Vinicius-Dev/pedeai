@@ -1,8 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
+  Anchor,
   Button,
   Card,
+  CopyButton,
   Group,
   Loader,
   NumberInput,
@@ -55,6 +57,12 @@ const schema = z.object({
   ),
   autoConfirmOwnOrders: z.boolean(),
   startPreparationOnConfirm: z.boolean(),
+  slug: z
+    .string()
+    .trim()
+    .min(3, 'Use pelo menos 3 caracteres.')
+    .max(60, 'Use até 60 caracteres.')
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use só letras minúsculas, números e hífen (ex.: pizzaria-bella).'),
 });
 
 type StoreFormInput = z.input<typeof schema>;
@@ -70,6 +78,7 @@ function toForm(store: Store): StoreFormInput {
     serviceFeePercent: store.serviceFeeBp / 100,
     autoConfirmOwnOrders: store.autoConfirmOwnOrders,
     startPreparationOnConfirm: store.startPreparationOnConfirm,
+    slug: store.slug,
   };
 }
 
@@ -83,6 +92,7 @@ function toRequest(form: StoreForm): UpdateStoreRequest {
     serviceFeeBp: Math.round(form.serviceFeePercent * 100),
     autoConfirmOwnOrders: form.autoConfirmOwnOrders,
     startPreparationOnConfirm: form.startPreparationOnConfirm,
+    slug: form.slug,
   };
 }
 
@@ -150,6 +160,32 @@ export function StoreSettingsPage() {
                 <TextInput label="CNPJ ou CPF" {...register('document')} error={errors.document?.message} />
                 <TextInput label="Telefone" type="tel" {...register('phone')} error={errors.phone?.message} />
               </SimpleGrid>
+            </Stack>
+          </Card>
+
+          <Card withBorder radius="lg" padding="lg">
+            <Stack>
+              <Title order={4}>Cardápio digital</Title>
+              <TextInput
+                label="Endereço do cardápio"
+                description="É o link que o cliente abre para pedir. Abrir e fechar para pedidos fica no quadro de pedidos."
+                leftSection={<Text size="sm" c="dimmed">/loja/</Text>}
+                leftSectionWidth={52}
+                {...register('slug')}
+                error={errors.slug?.message}
+              />
+              <Group gap="xs">
+                <Anchor href={menuUrl(storeQuery.data.slug)} target="_blank" rel="noreferrer" size="sm">
+                  {menuUrl(storeQuery.data.slug)}
+                </Anchor>
+                <CopyButton value={menuUrl(storeQuery.data.slug)}>
+                  {({ copied, copy }) => (
+                    <Button size="compact-xs" variant="light" onClick={copy}>
+                      {copied ? 'Copiado' : 'Copiar link'}
+                    </Button>
+                  )}
+                </CopyButton>
+              </Group>
             </Stack>
           </Card>
 
@@ -234,4 +270,9 @@ export function StoreSettingsPage() {
       </form>
     </Stack>
   );
+}
+
+/** O link do cardápio, no mesmo endereço do painel. */
+function menuUrl(slug: string): string {
+  return `${window.location.origin}/loja/${slug}`;
 }

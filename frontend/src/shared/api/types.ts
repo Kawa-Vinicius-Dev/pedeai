@@ -67,3 +67,8 @@ export type Dashboard = Schemas['DashboardResponse'];
 export type Revenue = Schemas['RevenueResponse'];
 export type RevenueSummary = Schemas['RevenueSummaryResponse'];
 export type RevenueGroup = Schemas['RevenueGroupResponse'];
+
+export type Storefront = Schemas['StorefrontResponse'];
+export type MenuProduct = Schemas['MenuProductResponse'];
+export type MenuOrderRequest = Schemas['MenuOrderRequest'];
+export type OrderTracking = Schemas['OrderTrackingResponse'];

@@ -30,7 +30,7 @@ import { MarketplaceOrderPanel } from '../integrations/MarketplaceOrderPanel';
 import { OrderPrintJobs } from '../printing/OrderPrintJobs';
 import { PrintMenu } from '../printing/PrintMenu';
 import { orderKeys, useChangeStatus, useOrder, useOrderHistory, useOrderPayments, usePaymentMethods } from './api';
-import { canCancel, formatPhone, nextActions, STATUS_COLORS, STATUS_LABELS, TYPE_LABELS } from './labels';
+import { canCancel, formatPhone, isMarketplace, nextActions, STATUS_COLORS, STATUS_LABELS, TYPE_LABELS } from './labels';
 
 const time = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
 const dateTime = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
@@ -172,7 +172,7 @@ function OrderDetail({ order }: { order: Order }) {
         )}
       </Group>
 
-      {order.source !== 'PEDEAI' && <MarketplaceOrderPanel order={order} />}
+      {isMarketplace(order.source) && <MarketplaceOrderPanel order={order} />}
       <OrderPrintJobs order={order} />
 
       {takesOrders && (
@@ -327,6 +327,7 @@ function OrderTimeline({ orderId }: { orderId: string }) {
             <Timeline.Item key={`${entry.createdAt}-${index}`} title={STATUS_LABELS[entry.toStatus]}>
               <Text size="xs" c="dimmed">
                 {dateTime.format(new Date(entry.createdAt))}
+                {entry.actorType === 'CUSTOMER' ? ' · cliente pelo cardápio' : ''}
                 {entry.actorName ? ` · ${entry.actorName}` : entry.actorType === 'SYSTEM' ? ' · automático' : ''}
               </Text>
               {entry.reason && <Text size="xs">Motivo: {entry.reason}</Text>}

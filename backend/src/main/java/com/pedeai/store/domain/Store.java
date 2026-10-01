@@ -21,6 +21,8 @@ public class Store {
     @Id
     private UUID id;
     private String name;
+    private String slug;
+    private boolean menuOpen;
     private String document;
     private String phone;
     private String timezone;
@@ -37,8 +39,14 @@ public class Store {
     }
 
     public Store(String name, Instant now) {
+        this(name, Slugs.from(name), now);
+    }
+
+    /** {@code slug}: o endereço do cardápio digital, único entre as lojas. */
+    public Store(String name, String slug, Instant now) {
         this.id = UuidV7.generate();
         this.name = name;
+        this.slug = slug;
         this.timezone = DEFAULT_TIME_ZONE;
         this.businessDayCutoff = DEFAULT_BUSINESS_DAY_CUTOFF;
         this.serviceFeeBp = DEFAULT_SERVICE_FEE_BP;
@@ -62,8 +70,27 @@ public class Store {
         this.updatedAt = now;
     }
 
+    public void changeSlug(String slug, Instant now) {
+        this.slug = slug;
+        this.updatedAt = now;
+    }
+
+    /** Recebendo pedidos pelo cardápio digital agora. Fechado, o cardápio continua visível, mas sem pedido. */
+    public void changeMenuOpen(boolean open, Instant now) {
+        this.menuOpen = open;
+        this.updatedAt = now;
+    }
+
     public UUID getId() {
         return id;
+    }
+
+    public String getSlug() {
+        return slug;
+    }
+
+    public boolean isMenuOpen() {
+        return menuOpen;
     }
 
     public String getName() {

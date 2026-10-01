@@ -21,10 +21,12 @@ import com.pedeai.order.dto.CreateOrderRequest;
 import com.pedeai.order.dto.DeliveryAddressResponse;
 import com.pedeai.order.dto.MarketplaceOrderRequest;
 import com.pedeai.order.dto.OrderCustomerRequest;
+import com.pedeai.order.dto.OrderPaymentRequest;
 import com.pedeai.order.dto.OrderItemRequest;
 import com.pedeai.order.dto.OrderResponse;
 import com.pedeai.order.dto.OrderStatusHistoryResponse;
 import com.pedeai.order.dto.OrderSummaryResponse;
+import com.pedeai.order.dto.TrackedOrder;
 import com.pedeai.order.event.OrderCreated;
 import com.pedeai.order.repository.OrderRepository;
 import com.pedeai.order.repository.OrderSpecifications;
@@ -93,7 +95,10 @@ public class OrderService {
     @Transactional
     public OrderResponse create(CurrentUser user, CreateOrderRequest request) {
         UUID storeId = user.storeId();
-        validateShape(user, request);
+        if (request.discountCents() > 0 && user.role() != Role.OWNER && user.role() != Role.MANAGER) {
+            throw new ForbiddenOperationException(DISCOUNT_NEEDS_MANAGER);
+        }
+        validateShape(request);
         List<OrderItem> items = priceItems(storeId, request.items());
         OrderCustomer customer = recordCustomer(storeId, request);
         DeliveryAddress address = toDeliveryAddress(request.deliveryAddress());
@@ -126,6 +131,44 @@ public class OrderService {
         events.publishEvent(new OrderCreated(storeId, order.getId(), order.getNumber(), order.getStatus(),
                 order.getVersion(), order.getTotalCents(), request.payments(), user.userId(), OrderSource.PEDEAI));
         return OrderResponse.from(order);
+    }
+
+    /**
+     * Pedido feito pelo cliente no cardápio digital. O preço vem do cardápio e a taxa de entrega vem da área de
+     * entrega, nunca da tela. Nasce recebido: a loja aceita no quadro. O pagamento informado vale o total, pago na
+     * entrega ou na retirada. Devolve o pedido com o código que o cliente usa para acompanhar.
+     */
+    @Transactional
+    public OrderResponse placeFromMenu(UUID storeId, CreateOrderRequest request, UUID paymentMethodId,
+                                       Long changeForCents) {
+        validateShape(request);
+        List<OrderItem> items = priceItems(storeId, request.items());
+        OrderCustomer customer = recordCustomer(storeId, request);
+        StoreResponse store = storeService.get(storeId);
+        Instant now = Instant.now(clock);
+        LocalDate businessDate = BusinessDay.of(now, ZoneId.of(store.timezone()), store.businessDayCutoff());
+        int number = numberService.next(storeId, businessDate);
+
+        Order order = Order.placeOwn(storeId, businessDate, number, request.type(), customer,
+                toDeliveryAddress(request.deliveryAddress()), Texts.trimToNull(request.notes()), items, 0,
+                request.deliveryFeeCents(), null, now);
+        order.fromDigitalMenu(TrackingCodes.next());
+        orderRepository.save(order);
+        historyRepository.save(new OrderStatusHistory(order, null, OrderStatus.RECEIVED,
+                Actor.customer(customer == null ? null : customer.name()), null, now));
+        orderRepository.flush();
+        List<OrderPaymentRequest> payments = List.of(new OrderPaymentRequest(paymentMethodId, order.getTotalCents(),
+                changeForCents, false));
+        events.publishEvent(new OrderCreated(storeId, order.getId(), order.getNumber(), order.getStatus(),
+                order.getVersion(), order.getTotalCents(), payments, null, OrderSource.DIGITAL_MENU));
+        return OrderResponse.from(order);
+    }
+
+    /** O pedido do cardápio digital pelo código de acompanhamento do cliente. */
+    @Transactional(readOnly = true)
+    public java.util.Optional<TrackedOrder> findByTrackingCode(String trackingCode) {
+        return orderRepository.findByTrackingCode(trackingCode)
+                .map(order -> new TrackedOrder(order.getStoreId(), OrderResponse.from(order)));
     }
 
     /**
@@ -228,12 +271,9 @@ public class OrderService {
                 .toList();
     }
 
-    private void validateShape(CurrentUser user, CreateOrderRequest request) {
+    private static void validateShape(CreateOrderRequest request) {
         if (request.type() == OrderType.DINE_IN) {
             throw new BusinessRuleException(DINE_IN_BY_TAB);
-        }
-        if (request.discountCents() > 0 && user.role() != Role.OWNER && user.role() != Role.MANAGER) {
-            throw new ForbiddenOperationException(DISCOUNT_NEEDS_MANAGER);
         }
         if (request.type() == OrderType.DELIVERY) {
             OrderCustomerRequest customer = request.customer();

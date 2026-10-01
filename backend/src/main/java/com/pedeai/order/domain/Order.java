@@ -60,6 +60,7 @@ public class Order {
     private long additionalFeeCents;
     private long totalCents;
     private String externalId;
+    private String trackingCode;
     private String externalDisplayId;
     private Instant scheduledFor;
     private Instant confirmedAt;
@@ -323,6 +324,16 @@ public class Order {
 
     public String getExternalId() {
         return externalId;
+    }
+
+    public String getTrackingCode() {
+        return trackingCode;
+    }
+
+    /** Feito pelo cliente no cardápio digital, que acompanha o pedido por este código. */
+    public void fromDigitalMenu(String trackingCode) {
+        this.source = OrderSource.DIGITAL_MENU;
+        this.trackingCode = trackingCode;
     }
 
     public String getExternalDisplayId() {

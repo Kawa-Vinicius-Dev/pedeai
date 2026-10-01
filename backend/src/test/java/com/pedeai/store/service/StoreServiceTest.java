@@ -61,7 +61,7 @@ class StoreServiceTest {
         when(storeRepository.findById(STORE_ID)).thenReturn(Optional.of(store));
 
         StoreResponse response = service.update(STORE_ID, new UpdateStoreRequest(
-                null, null, "(11) 99999-0000", null, LocalTime.of(4, 30), 1200, null, true));
+                null, null, "(11) 99999-0000", null, LocalTime.of(4, 30), 1200, null, true, null));
 
         assertThat(response.name()).isEqualTo("Pizzaria Bella");
         assertThat(response.phone()).isEqualTo("(11) 99999-0000");
@@ -79,7 +79,7 @@ class StoreServiceTest {
         when(storeRepository.findById(STORE_ID)).thenReturn(Optional.of(store));
 
         StoreResponse response = service.update(STORE_ID, new UpdateStoreRequest(
-                null, "", " ", null, null, null, null, null));
+                null, "", " ", null, null, null, null, null, null));
 
         assertThat(response.document()).isNull();
         assertThat(response.phone()).isNull();
@@ -90,7 +90,7 @@ class StoreServiceTest {
         when(storeRepository.findById(STORE_ID)).thenReturn(Optional.of(store));
 
         assertThatThrownBy(() -> service.update(STORE_ID, new UpdateStoreRequest(
-                null, null, null, "Marte/Olympus", null, null, null, null)))
+                null, null, null, "Marte/Olympus", null, null, null, null, null)))
                 .isInstanceOf(BusinessRuleException.class);
     }
 }

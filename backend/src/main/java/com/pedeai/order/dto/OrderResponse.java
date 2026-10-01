@@ -44,7 +44,8 @@ public record OrderResponse(
         long version,
         @Schema(types = {"string", "null"}) String externalDisplayId,
         @Schema(types = {"string", "null"}) Instant scheduledFor,
-        @Schema(types = {"string", "null"}) String externalId
+        @Schema(types = {"string", "null"}) String externalId,
+        @Schema(types = {"string", "null"}) String trackingCode
 ) {
     public static OrderResponse from(Order order) {
         return from(order, item -> true);
@@ -60,6 +61,6 @@ public record OrderResponse(
                 order.getPlatformSubsidyCents(), order.getTotalCents(), order.getCreatedAt(), order.getConfirmedAt(),
                 order.getPreparationStartedAt(), order.getReadyAt(), order.getDispatchedAt(), order.getCompletedAt(),
                 order.getCancelledAt(), order.getCancelReason(), order.getVersion(), order.getExternalDisplayId(),
-                order.getScheduledFor(), order.getExternalId());
+                order.getScheduledFor(), order.getExternalId(), order.getTrackingCode());
     }
 }

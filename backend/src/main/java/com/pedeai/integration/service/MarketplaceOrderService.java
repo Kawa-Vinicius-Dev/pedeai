@@ -7,7 +7,6 @@ import com.pedeai.integration.dto.MarketplaceCancellationRequest;
 import com.pedeai.integration.dto.OutboundActionResponse;
 import com.pedeai.integration.ifood.IfoodClient;
 import com.pedeai.integration.repository.OutboundActionRepository;
-import com.pedeai.order.domain.OrderSource;
 import com.pedeai.order.dto.OrderResponse;
 import com.pedeai.order.service.OrderService;
 import com.pedeai.order.service.OrderStatusService;
@@ -125,7 +124,7 @@ public class MarketplaceOrderService {
 
     private OrderResponse marketplaceOrder(UUID storeId, UUID orderId) {
         OrderResponse order = orderService.get(storeId, orderId);
-        if (order.source() == OrderSource.PEDEAI || order.externalId() == null) {
+        if (!order.source().isMarketplace() || order.externalId() == null) {
             throw new BusinessRuleException(NOT_MARKETPLACE);
         }
         if (order.status().isFinal()) {

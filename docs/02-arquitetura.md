@@ -27,6 +27,7 @@
 | --- | --- | --- |
 | `shared` | Configuração, exceções e handler central, segurança (JWT, contexto da loja), `Money` | — |
 | `store` | Loja (tenant), configurações operacionais, usuários, papéis e auditoria | `store`, `app_user`, `refresh_token`, `audit_log` |
+| `storefront` | Cardápio digital público: lê o cardápio, as áreas de entrega e as formas de pagamento, e cria o pedido pelo `order`. Sem tabela própria. | — |
 | `catalog` | Categorias, produtos, grupos de adicionais, opções e setores de produção | `category`, `product`, `option_group`, `option_item`, `product_option_group`, `sector` |
 | `customer` | Clientes, endereços e taxa de entrega por bairro | `customer`, `customer_address`, `delivery_zone` |
 | `order` | Pedido, itens, máquina de estados, numeração diária, histórico | `orders`, `order_item`, `order_item_option`, `order_status_history`, `order_number_counter` |
@@ -247,7 +248,8 @@ Convenções:
 | Recurso | Rotas principais |
 | --- | --- |
 | Autenticação | `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout` |
-| Loja e usuários | `GET/PATCH /api/store`, `GET/POST /api/users`, `PATCH /api/users/{id}` |
+| Cardápio digital (público, sem login) | `GET /api/public/stores/{slug}`, `POST /api/public/stores/{slug}/products/{id}/price-quotes`, `POST /api/public/stores/{slug}/orders`, `GET /api/public/orders/{trackingCode}` |
+| Loja e usuários | `GET/PATCH /api/store`, `PUT /api/store/menu-open`, `GET/POST /api/users`, `PATCH /api/users/{id}` |
 | Cardápio | `/api/sectors`, `/api/categories`, `/api/products`, `/api/option-groups`, `/api/option-groups/{id}/options`, `PUT /api/products/{id}/availability` |
 | Clientes | `GET /api/customers?phone=`, `POST /api/customers`, `/api/customers/{id}/addresses`, `/api/delivery-zones` |
 | Pedidos | `GET /api/orders` (filtros e paginação), `POST /api/orders`, `GET /api/orders/{id}`, `PATCH /api/orders/{id}/status`, `PATCH /api/orders/{id}/items/{itemId}` (cancelar item), `GET /api/orders/{id}/history`, `POST /api/orders/{id}/payments`, `POST /api/orders/{id}/print-jobs` |

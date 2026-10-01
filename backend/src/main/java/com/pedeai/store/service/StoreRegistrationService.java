@@ -5,6 +5,7 @@ import com.pedeai.shared.exception.ConflictException;
 import com.pedeai.shared.exception.ForbiddenOperationException;
 import com.pedeai.shared.security.Role;
 import com.pedeai.store.domain.AppUser;
+import com.pedeai.store.domain.Slugs;
 import com.pedeai.store.domain.Store;
 import com.pedeai.store.dto.RegisterStoreRequest;
 import com.pedeai.store.event.StoreRegistered;
@@ -53,11 +54,21 @@ public class StoreRegistrationService {
             throw new ConflictException(Emails.ALREADY_IN_USE);
         }
         Instant now = Instant.now(clock);
-        Store store = storeRepository.save(new Store(request.storeName().trim(), now));
+        String name = request.storeName().trim();
+        Store store = storeRepository.save(new Store(name, availableSlug(Slugs.from(name)), now));
         AppUser owner = userRepository.save(new AppUser(store.getId(), request.ownerName().trim(), email,
                 passwordEncoder.encode(request.password()), Role.OWNER, now));
         // Na mesma transação: os cadastros padrão da loja nascem junto com ela.
         events.publishEvent(new StoreRegistered(store.getId()));
         return authService.startSession(owner, store, deviceName);
+    }
+
+    /** "pizzaria-bella", ou "pizzaria-bella-2" se já existir outra loja com o mesmo nome. */
+    private String availableSlug(String base) {
+        String slug = base;
+        for (int suffix = 2; storeRepository.existsBySlug(slug); suffix++) {
+            slug = base + "-" + suffix;
+        }
+        return slug;
     }
 }

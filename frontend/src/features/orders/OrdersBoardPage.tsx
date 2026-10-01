@@ -1,8 +1,11 @@
-import { Alert, Badge, Button, Group, Loader, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { Alert, Badge, Button, Group, Loader, SimpleGrid, Stack, Switch, Text, Title } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, BellRing, CircleAlert, History, Plus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { errorMessage } from '../../shared/api/errors';
+import { api } from '../../shared/api/client';
+import { errorMessage, unwrap } from '../../shared/api/errors';
 import type { OrderStatus, OrderSummary } from '../../shared/api/types';
 import { ORDER_TAKERS } from '../../shared/lib/roles';
 import { useSession } from '../auth/auth-context';
@@ -52,6 +55,7 @@ export function OrdersBoardPage() {
           <Text c="dimmed">Em andamento, do mais antigo para o mais novo. Atualiza sozinho.</Text>
         </Stack>
         <Group gap="xs">
+          {ORDER_TAKERS.includes(user.role) && <MenuOpenSwitch />}
           <Button
             variant={alertsOn ? 'light' : 'default'}
             color={alertsOn ? 'green' : 'gray'}
@@ -113,5 +117,34 @@ export function OrdersBoardPage() {
 
       <OrderDetailDrawer orderId={openId} onClose={() => setOpenId(null)} />
     </Stack>
+  );
+}
+
+/** Abrir e fechar o cardápio digital para pedidos durante o serviço. */
+function MenuOpenSwitch() {
+  const queryClient = useQueryClient();
+  const store = useQuery({ queryKey: ['store'], queryFn: () => unwrap(api.GET('/api/store')) });
+  const change = useMutation({
+    mutationFn: (open: boolean) => unwrap(api.PUT('/api/store/menu-open', { body: { open } })),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(['store'], saved);
+      notifications.show({
+        color: saved.menuOpen ? 'green' : 'gray',
+        message: saved.menuOpen ? 'Cardápio digital aberto para pedidos.' : 'Cardápio digital fechado.',
+      });
+    },
+    onError: (error) => notifications.show({ color: 'red', message: errorMessage(error) }),
+  });
+  if (!store.data) {
+    return null;
+  }
+  return (
+    <Switch
+      label="Cardápio aberto"
+      checked={store.data.menuOpen}
+      disabled={change.isPending}
+      onChange={(event) => change.mutate(event.currentTarget.checked)}
+      mr="xs"
+    />
   );
 }

@@ -45,6 +45,7 @@ public class SecurityConfig {
     private static final String STORES_PATH = "/api/stores";
     private static final String AUTH_PATH_PREFIX = "/api/auth/";
     private static final String IFOOD_WEBHOOK_PATH = "/api/integrations/ifood/webhook";
+    private static final String PUBLIC_PATH = "/api/public/**";
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationConverter jwtAuthenticationConverter,
@@ -62,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, STORES_PATH).permitAll()
                         // Webhook do iFood: sem login, a assinatura HMAC do corpo é conferida no controller.
                         .requestMatchers(HttpMethod.POST, IFOOD_WEBHOOK_PATH).permitAll()
+                        // Cardápio digital: o cliente do restaurante não tem login.
+                        .requestMatchers(PUBLIC_PATH).permitAll()
                         .requestMatchers("/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll()
                         .anyRequest().authenticated())
@@ -130,8 +133,8 @@ public class SecurityConfig {
     }
 
     /**
-     * Login, renovação, logout e cadastro de loja são públicos. Um token vencido enviado por engano
-     * nessas rotas não pode derrubar a chamada com 401, então o header é ignorado nelas.
+     * Login, renovação, logout, cadastro de loja e o cardápio digital são públicos. Um token vencido enviado por
+     * engano nessas rotas não pode derrubar a chamada com 401, então o header é ignorado nelas.
      */
     private static BearerTokenResolver publicEndpointAwareTokenResolver() {
         DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
@@ -140,6 +143,9 @@ public class SecurityConfig {
 
     private static boolean isPublicAuthEndpoint(HttpServletRequest request) {
         String uri = request.getRequestURI();
+        if (uri.startsWith("/api/public/")) {
+            return true;
+        }
         boolean post = HttpMethod.POST.matches(request.getMethod());
         return post && (uri.startsWith(AUTH_PATH_PREFIX) || uri.equals(STORES_PATH));
     }

@@ -3,7 +3,6 @@ package com.pedeai.order.service;
 import com.pedeai.order.domain.Actor;
 import com.pedeai.order.domain.ActorType;
 import com.pedeai.order.domain.Order;
-import com.pedeai.order.domain.OrderSource;
 import com.pedeai.order.domain.OrderStatus;
 import com.pedeai.order.domain.OrderStatusHistory;
 import com.pedeai.order.domain.OrderType;
@@ -141,7 +140,7 @@ public class OrderStatusService {
         if (reason == null) {
             throw new BusinessRuleException(REASON_REQUIRED);
         }
-        if (!withoutPlatform && order.getSource() != OrderSource.PEDEAI && order.getStatus() != OrderStatus.COMPLETED) {
+        if (!withoutPlatform && order.getSource().isMarketplace() && order.getStatus() != OrderStatus.COMPLETED) {
             throw new BusinessRuleException(MARKETPLACE_CANCEL_BY_REQUEST);
         }
         boolean manager = user.role() == Role.OWNER || user.role() == Role.MANAGER;
@@ -151,7 +150,7 @@ public class OrderStatusService {
         if (order.getStatus().isPreparationStarted() && !manager) {
             throw new ForbiddenOperationException(CANCEL_AFTER_PREPARATION);
         }
-        if (order.getStatus() == OrderStatus.COMPLETED && order.getSource() != OrderSource.PEDEAI) {
+        if (order.getStatus() == OrderStatus.COMPLETED && order.getSource().isMarketplace()) {
             throw new BusinessRuleException(CANCEL_COMPLETED_OWN_ONLY);
         }
     }
