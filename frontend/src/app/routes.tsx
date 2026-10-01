@@ -6,11 +6,18 @@ import { SignupPage } from '../features/auth/SignupPage';
 import { HomePage } from '../features/home/HomePage';
 import { NewOrderPage } from '../features/orders/NewOrderPage';
 import { OrdersBoardPage } from '../features/orders/OrdersBoardPage';
-import { AVAILABILITY_TOGGLERS, ORDER_TAKERS, ORDER_VIEWERS, SETTINGS_MANAGERS } from '../shared/lib/roles';
+import {
+  AVAILABILITY_TOGGLERS,
+  CASH_OPERATORS,
+  ORDER_TAKERS,
+  ORDER_VIEWERS,
+  REPORT_VIEWERS,
+  SETTINGS_MANAGERS,
+} from '../shared/lib/roles';
 import { AppLayout } from './AppLayout';
 
 /**
- * Telas fora do fluxo de pico (cardápio, histórico, configurações, impressão, integrações) baixam só quando alguém
+ * Telas fora do fluxo de pico (cardápio, histórico, caixa, relatórios, configurações, impressão, integrações) baixam só quando alguém
  * abre: o login, o quadro e o PDV carregam mais rápido no computador do caixa.
  */
 function page<M extends Record<string, unknown>>(load: () => Promise<M>, name: keyof M & string) {
@@ -51,6 +58,17 @@ export const routes: RouteObject[] = [
           {
             element: <RequireRole roles={ORDER_TAKERS} />,
             children: [{ path: '/pedidos/novo', element: <NewOrderPage /> }],
+          },
+          {
+            element: <RequireRole roles={CASH_OPERATORS} />,
+            children: [{ path: '/caixa', lazy: page(() => import('../features/cash/CashPage'), 'CashPage') }],
+          },
+          {
+            element: <RequireRole roles={REPORT_VIEWERS} />,
+            children: [
+              { path: '/relatorios', lazy: page(() => import('../features/reports/ReportsPages'), 'DashboardPage') },
+              { path: '/relatorios/faturamento', lazy: page(() => import('../features/reports/ReportsPages'), 'RevenuePage') },
+            ],
           },
           {
             element: <RequireRole roles={SETTINGS_MANAGERS} />,

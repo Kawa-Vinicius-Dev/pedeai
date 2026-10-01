@@ -548,6 +548,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cash-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_10"];
+        put?: never;
+        post: operations["open"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cash-sessions/{sessionId}/print-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["printCashReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cash-sessions/{id}/movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["addMovement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/refresh": {
         parameters: {
             query?: never;
@@ -692,6 +740,22 @@ export interface paths {
         patch: operations["update_10"];
         trace?: never;
     };
+    "/api/cash-sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_7"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["close"];
+        trace?: never;
+    };
     "/api/agent/jobs/{id}": {
         parameters: {
             query?: never;
@@ -741,6 +805,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/revenue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["revenue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/print-jobs": {
         parameters: {
             query?: never;
@@ -764,7 +860,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_7"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -796,7 +892,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_10"];
+        get: operations["list_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -812,7 +908,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -860,7 +956,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -957,6 +1053,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["merchants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cash-sessions/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["current"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1363,7 +1475,7 @@ export interface components {
             /** Format: uuid */
             printerId: string;
             /** @enum {string} */
-            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET";
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET" | "CASH_REPORT";
             /** Format: uuid */
             sectorId: string | null;
             /** @enum {string} */
@@ -1517,7 +1629,7 @@ export interface components {
         };
         ReprintRequest: {
             /** @enum {string} */
-            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET";
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET" | "CASH_REPORT";
             /** Format: uuid */
             sectorId?: string;
             /** Format: uuid */
@@ -1592,6 +1704,73 @@ export interface components {
             /** Format: int64 */
             failedActions: number;
         };
+        OpenCashSessionRequest: {
+            /** Format: int64 */
+            openingAmountCents: number;
+        };
+        CashLineResponse: {
+            /** Format: uuid */
+            paymentMethodId: string;
+            name: string;
+            /** @enum {string} */
+            type: "CASH" | "PIX" | "CREDIT" | "DEBIT" | "VOUCHER" | "ONLINE" | "OTHER";
+            /** Format: int64 */
+            paymentsCents: number;
+            /** Format: int64 */
+            payments: number;
+            /** Format: int64 */
+            expectedCents: number;
+            /** Format: int64 */
+            countedCents: number | null;
+            /** Format: int64 */
+            differenceCents: number | null;
+        };
+        CashMovementResponse: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "WITHDRAWAL" | "DEPOSIT";
+            /** Format: int64 */
+            amountCents: number;
+            reason: string;
+            createdByName: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CashSessionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "OPEN" | "CLOSED";
+            /** Format: date-time */
+            openedAt: string;
+            openedByName: string | null;
+            /** Format: int64 */
+            openingAmountCents: number;
+            /** Format: date-time */
+            closedAt: string | null;
+            closedByName: string | null;
+            notes: string | null;
+            lines: components["schemas"]["CashLineResponse"][];
+            movements: components["schemas"]["CashMovementResponse"][];
+            /** Format: int64 */
+            expectedCents: number;
+            /** Format: int64 */
+            countedCents: number | null;
+            /** Format: int64 */
+            differenceCents: number | null;
+        };
+        CashReportPrintRequest: {
+            /** Format: uuid */
+            printerId: string;
+        };
+        CashMovementRequest: {
+            /** @enum {string} */
+            type: "WITHDRAWAL" | "DEPOSIT";
+            /** Format: int64 */
+            amountCents: number;
+            reason: string;
+        };
         LoginRequest: {
             /** Format: email */
             email: string;
@@ -1659,10 +1838,89 @@ export interface components {
             status: "ACTIVE" | "PAUSED" | "ERROR";
             autoConfirm: boolean;
         };
+        CloseCashSessionRequest: {
+            counts: components["schemas"]["Count"][];
+            notes?: string;
+        };
+        Count: {
+            /** Format: uuid */
+            paymentMethodId: string;
+            /** Format: int64 */
+            countedCents: number;
+        };
         AgentJobUpdateRequest: {
             /** @enum {string} */
             status: "SENT" | "PRINTED" | "FAILED" | "UNCERTAIN";
             error?: string;
+        };
+        PaymentMethodRevenueResponse: {
+            /** Format: uuid */
+            paymentMethodId: string;
+            name: string;
+            type: string;
+            /** Format: int64 */
+            payments: number;
+            /** Format: int64 */
+            totalCents: number;
+            /** Format: int64 */
+            pendingCents: number;
+        };
+        RevenueGroupResponse: {
+            key: string;
+            /** Format: int64 */
+            orders: number;
+            /** Format: int64 */
+            totalCents: number;
+        };
+        RevenueResponse: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            summary: components["schemas"]["RevenueSummaryResponse"];
+            byDay: components["schemas"]["RevenueGroupResponse"][];
+            bySource: components["schemas"]["RevenueGroupResponse"][];
+            byType: components["schemas"]["RevenueGroupResponse"][];
+            byPaymentMethod: components["schemas"]["PaymentMethodRevenueResponse"][];
+        };
+        RevenueSummaryResponse: {
+            /** Format: int64 */
+            orders: number;
+            /** Format: int64 */
+            grossCents: number;
+            /** Format: int64 */
+            subtotalCents: number;
+            /** Format: int64 */
+            discountCents: number;
+            /** Format: int64 */
+            platformSubsidyCents: number;
+            /** Format: int64 */
+            deliveryFeeCents: number;
+            /** Format: int64 */
+            additionalFeeCents: number;
+            /** Format: int64 */
+            averageTicketCents: number;
+            /** Format: int64 */
+            cancelledOrders: number;
+            /** Format: int64 */
+            cancelledCents: number;
+        };
+        DashboardResponse: {
+            /** Format: date */
+            date: string;
+            summary: components["schemas"]["RevenueSummaryResponse"];
+            /** Format: int64 */
+            averagePreparationSeconds: number | null;
+            ordersByHour: number[];
+            topProducts: components["schemas"]["TopProductResponse"][];
+            bySource: components["schemas"]["RevenueGroupResponse"][];
+        };
+        TopProductResponse: {
+            name: string;
+            /** Format: int64 */
+            quantity: number;
+            /** Format: int64 */
+            totalCents: number;
         };
         PageResponsePrintJobResponse: {
             content: components["schemas"]["PrintJobResponse"][];
@@ -1745,7 +2003,7 @@ export interface components {
         };
         TicketResponse: {
             /** @enum {string} */
-            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET";
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET" | "CASH_REPORT";
             /** Format: int32 */
             columns: number;
             lines: components["schemas"]["TicketLineResponse"][];
@@ -1789,6 +2047,35 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
         };
+        CashSessionSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "OPEN" | "CLOSED";
+            /** Format: date-time */
+            openedAt: string;
+            /** Format: date-time */
+            closedAt: string | null;
+            /** Format: int64 */
+            openingAmountCents: number;
+            /** Format: int64 */
+            expectedCents: number | null;
+            /** Format: int64 */
+            countedCents: number | null;
+            /** Format: int64 */
+            differenceCents: number | null;
+        };
+        PageResponseCashSessionSummaryResponse: {
+            content: components["schemas"]["CashSessionSummaryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
         AgentJobResponse: {
             /** Format: uuid */
             id: string;
@@ -1796,7 +2083,7 @@ export interface components {
             printerId: string;
             deliveryKey: string;
             /** @enum {string} */
-            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET";
+            documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET" | "CASH_REPORT";
             /** Format: byte */
             payload: string;
             /** Format: date-time */
@@ -3094,6 +3381,107 @@ export interface operations {
             };
         };
     };
+    list_10: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseCashSessionSummaryResponse"];
+                };
+            };
+        };
+    };
+    open: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpenCashSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CashSessionResponse"];
+                };
+            };
+        };
+    };
+    printCashReport: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CashReportPrintRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrintJobResponse"];
+                };
+            };
+        };
+    };
+    addMovement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CashMovementRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CashSessionResponse"];
+                };
+            };
+        };
+    };
     refresh: {
         parameters: {
             query?: never;
@@ -3355,6 +3743,54 @@ export interface operations {
             };
         };
     };
+    get_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CashSessionResponse"];
+                };
+            };
+        };
+    };
+    close: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloseCashSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CashSessionResponse"];
+                };
+            };
+        };
+    };
     updateJob: {
         parameters: {
             query?: never;
@@ -3419,6 +3855,51 @@ export interface operations {
             };
         };
     };
+    revenue: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RevenueResponse"];
+                };
+            };
+        };
+    };
+    dashboard: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DashboardResponse"];
+                };
+            };
+        };
+    };
     recent: {
         parameters: {
             query?: {
@@ -3442,7 +3923,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -3484,7 +3965,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -3504,7 +3985,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: {
                 sectorId?: string;
@@ -3513,7 +3994,7 @@ export interface operations {
             header?: never;
             path: {
                 orderId: string;
-                documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET";
+                documentType: "PRODUCTION_TICKET" | "ORDER_TICKET" | "CANCELLATION_TICKET" | "CASH_REPORT";
             };
             cookie?: never;
         };
@@ -3574,7 +4055,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -3716,6 +4197,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MerchantResponse"][];
+                };
+            };
+        };
+    };
+    current: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CashSessionResponse"];
                 };
             };
         };

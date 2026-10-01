@@ -4,6 +4,11 @@ import com.pedeai.catalog.dto.SectorResponse;
 import com.pedeai.catalog.service.SectorService;
 import com.pedeai.order.domain.OrderStatus;
 import com.pedeai.order.service.OrderService;
+import com.pedeai.payment.domain.CashSession;
+import com.pedeai.payment.domain.PaymentMethodType;
+import com.pedeai.payment.dto.CashLineResponse;
+import com.pedeai.payment.dto.CashSessionResponse;
+import com.pedeai.payment.service.CashSessionService;
 import com.pedeai.printing.domain.DocumentType;
 import com.pedeai.printing.domain.PrintJob;
 import com.pedeai.printing.domain.Printer;
@@ -19,6 +24,7 @@ import com.pedeai.shared.exception.BusinessRuleException;
 import com.pedeai.shared.exception.ConflictException;
 import com.pedeai.shared.exception.ForbiddenOperationException;
 import com.pedeai.shared.security.Role;
+import com.pedeai.store.service.StoreService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +35,7 @@ import org.mockito.quality.Strictness;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.pedeai.printing.PrintingFixtures.AGENT_ID;
 import static com.pedeai.printing.PrintingFixtures.KITCHEN;
@@ -36,6 +43,7 @@ import static com.pedeai.printing.PrintingFixtures.ORDER_ID;
 import static com.pedeai.printing.PrintingFixtures.job;
 import static com.pedeai.printing.PrintingFixtures.order;
 import static com.pedeai.printing.PrintingFixtures.printer;
+import static com.pedeai.printing.PrintingFixtures.store;
 import static com.pedeai.printing.PrintingFixtures.user;
 import static com.pedeai.support.TestSecurity.CLOCK;
 import static com.pedeai.support.TestSecurity.NOW;
@@ -69,6 +77,10 @@ class PrintJobServiceTest {
     private OrderService orders;
     @Mock
     private SectorService sectors;
+    @Mock
+    private CashSessionService cashSessions;
+    @Mock
+    private StoreService stores;
 
     private PrintJobService service;
     private Printer kitchen;
@@ -76,7 +88,8 @@ class PrintJobServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PrintJobService(jobs, printers, agents, tickets, orders, sectors, CLOCK);
+        service = new PrintJobService(jobs, printers, agents, tickets, orders, sectors, cashSessions, stores,
+                CLOCK);
         kitchen = printer("Cozinha");
         cashier = printer("Caixa");
         when(printers.findByIdAndStoreId(kitchen.getId(), STORE_ID)).thenReturn(Optional.of(kitchen));
@@ -87,6 +100,37 @@ class PrintJobServiceTest {
         when(sectors.get(STORE_ID, KITCHEN)).thenReturn(new SectorResponse(KITCHEN, "Cozinha", true, true));
         when(jobs.save(any())).then(returnsFirstArg());
         when(agents.onlineAgentIds(STORE_ID)).thenReturn(List.of(AGENT_ID));
+        when(stores.get(STORE_ID)).thenReturn(store());
+    }
+
+    @Test
+    void closedCashReportPrintsTheCountAndItsRetryKeepsTheSameBytes() {
+        UUID sessionId = UUID.randomUUID();
+        UUID cash = UUID.randomUUID();
+        when(cashSessions.get(STORE_ID, sessionId)).thenReturn(new CashSessionResponse(sessionId,
+                CashSession.Status.CLOSED, NOW.minusSeconds(36_000), "Ana", 10_000, NOW, "Ana", null,
+                List.of(new CashLineResponse(cash, "Dinheiro", PaymentMethodType.CASH, 5_000, 2, 15_000, 14_500L,
+                        -500L)),
+                List.of(), 15_000, 14_500L, -500L));
+        when(jobs.findByStoreIdAndIdempotencyKey(any(), anyString())).thenReturn(Optional.empty());
+
+        PrintJobResponse printed = service.printCashReport(user(Role.CASHIER), sessionId, cashier.getId(), "clique");
+
+        assertThat(printed.title()).isEqualTo("Fechamento de caixa");
+        assertThat(printed.orderId()).isNull();
+        verify(jobs).save(org.mockito.ArgumentMatchers.argThat(job -> job.getPreview().contains("FECHAMENTO DE CAIXA")
+                && job.getPreview().contains("-5,00")));
+
+        PrintJob report = new PrintJob(STORE_ID, cashier.getId(), AGENT_ID, DocumentType.CASH_REPORT, null, null,
+                PrintJob.Reason.MANUAL, "cash:x", "Fechamento de caixa", new byte[]{1, 2, 3}, "texto",
+                java.time.Duration.ofMinutes(5), NOW);
+        report.reserve(NOW);
+        report.uncertain("Agente reiniciou", NOW);
+        when(jobs.findByIdAndStoreId(report.getId(), STORE_ID)).thenReturn(Optional.of(report));
+        service.retry(user(Role.CASHIER), report.getId(), kitchen.getId());
+        assertThat(report.getPayload()).containsExactly(1, 2, 3);
+        assertThat(report.getPrinterId()).isEqualTo(kitchen.getId());
+        verify(tickets, never()).build(any(), any(), eq(DocumentType.CASH_REPORT), any(), anyInt());
     }
 
     @Test

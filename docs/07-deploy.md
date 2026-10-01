@@ -73,3 +73,8 @@ funciona sem CORS. Em [`frontend/vercel.json`](../frontend/vercel.json), antes d
 - [ ] Login, pedido de balcão e delivery testados no domínio final, no computador do caixa.
 - [ ] Agente pareado apontando para o endereço final e página de teste impressa.
 - [ ] Impressão e aceite automáticos de **outros programas** desligados (evita pedido duplicado).
+- [ ] iFood, quando houver credenciais: `IFOOD_ENABLED=true`, `IFOOD_CLIENT_ID` e `IFOOD_CLIENT_SECRET` nas variáveis
+      do provedor, e o webhook cadastrado no iFood Developer como `https://api.seudominio.com.br/api/integrations/ifood/webhook`
+      (direto na API, sem passar pela Vercel). O polling segue ligado como contingência.
+- [ ] Versão do agente: `AGENT_LATEST_VERSION` e `AGENT_DOWNLOAD_URL` apontando para o instalador publicado, para a
+      tela de impressão marcar computadores desatualizados.

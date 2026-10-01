@@ -190,8 +190,16 @@ Um cancelamento do cliente imprime o aviso na cozinha.
 > contra o iFood de verdade, conferir os caminhos do polling e do ack na
 > homologação
 > ([D26](decisoes.md#d26--integração-com-o-ifood-sem-credenciais-simulador-e-caminhos-configuráveis)),
-> negociação (disputas), webhook assinado, reconciliação periódica e a
-> homologação.
+> negociação (disputas) e a homologação.
+>
+> Webhook assinado: pronto em `POST /api/integrations/ifood/webhook`, sem login.
+> Confere o HMAC-SHA256 do corpo cru com o client secret
+> (`X-IFood-Signature`, comparação em tempo constante), grava no mesmo inbox do
+> polling e responde 202. Assinatura errada: 401 e nada gravado. O polling
+> continua ligado como contingência e o inbox deduplica o que chega pelos dois.
+> Reconciliação: o próprio polling a cada 30 s recupera eventos perdidos pelo
+> webhook; uma consulta periódica do status dos pedidos abertos fica para a
+> homologação, quando der para ver se os detalhes do pedido trazem o status.
 
 ## Etapa 6 · 99Food
 
@@ -212,6 +220,13 @@ status sincronizado.
 
 **Pronto quando:** nos testes, o fechamento de caixa bate com os pagamentos do
 dia, e os números do dashboard conferem com uma consulta manual.
+
+> **Situação (set/2026):** pronto. Telas **Caixa**, **Painel do dia** e
+> **Faturamento**; relatório de caixa na impressora térmica. O critério de pronto
+> é o `CashAndReportsIntegrationTest`: o esperado do fechamento bate com a soma
+> dos pagamentos no banco, e o painel e o faturamento batem com consultas diretas.
+> Fica para depois: contagem "às cegas" (hoje quem fecha vê o esperado) e
+> gráficos além das barras por hora.
 
 ## Depois do escopo atual
 
