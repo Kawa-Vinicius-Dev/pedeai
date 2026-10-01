@@ -79,5 +79,9 @@ regra. O link de cada loja aparece em **Configurações > Loja**.
 - [ ] iFood, quando houver credenciais: `IFOOD_ENABLED=true`, `IFOOD_CLIENT_ID` e `IFOOD_CLIENT_SECRET` nas variáveis
       do provedor, e o webhook cadastrado no iFood Developer como `https://api.seudominio.com.br/api/integrations/ifood/webhook`
       (direto na API, sem passar pela Vercel). O polling segue ligado como contingência.
+- [ ] 99Food, quando houver credenciamento como integradora: `NINETYNINE_BASE_URL`, `NINETYNINE_CLIENT_ID`,
+      `NINETYNINE_CLIENT_SECRET` e `NINETYNINE_APP_ID`, e o webhook cadastrado como
+      `https://api.seudominio.com.br/api/integrations/opendelivery/webhook`. Outro app Open Delivery usa as variáveis
+      `OPENDELIVERY_*`.
 - [ ] Versão do agente: `AGENT_LATEST_VERSION` e `AGENT_DOWNLOAD_URL` apontando para o instalador publicado, para a
       tela de impressão marcar computadores desatualizados.

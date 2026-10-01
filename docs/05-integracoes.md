@@ -193,6 +193,43 @@ sequenceDiagram
   `marketplace_connection.credentials_encrypted`.
 - Suporte técnico da 99Food para integradores: 99FoodTechSupport@didiglobal.com.
 
+## Open Delivery
+
+Implementado conforme a especificação v1.7.1 (`openapi.yaml` do repositório da Abrasel). O PedeAí é o
+**Software Service**; a 99Food e os outros apps são **Ordering Applications**.
+
+| O que | Como |
+| --- | --- |
+| Token | `POST {baseUrl}/oauth/token`, formulário com `client_credentials`. Renovado 5 min antes de vencer e, num 401, uma vez. |
+| Polling | `GET /v1/events:polling` a cada 30 s, **um merchant por chamada** (o evento não diz de qual merchant é). `200` com eventos ou `204`. |
+| Acknowledgment | `POST /v1/events/acknowledgment` com `[{id, orderId, eventType}]`, em lotes de 100, depois de gravar no inbox. |
+| Webhook | `POST /api/integrations/opendelivery/webhook`. O app é achado pelo `X-App-Id`, a assinatura `X-App-Signature` (HMAC-SHA256 hexadecimal do corpo cru com o client secret) é conferida e o merchant vem do `X-App-MerchantId`. Responde `200` sem corpo. |
+| Pedido | `GET /v1/orders/{id}`, traduzido no `OpenDeliveryOrderMapper`: itens pelo `externalCode`, `otherFees` (taxa de entrega separada das outras), descontos por patrocinador, `PREPAID` vira "Online <app>" já pago e `PENDING` vira a forma da loja, com troco. |
+| Status de volta | `confirm` (com o id do pedido aqui em `orderExternalCode`), `preparing`, `readyForPickup`, `dispatch`, pelo mesmo outbox do iFood. |
+| Cancelamento | `requestCancellation` com um dos motivos fixos da especificação; o pedido só cancela aqui com o evento `CANCELLED`. `ORDER_CANCELLATION_REQUEST` (o cliente pediu pelo app) aparece no painel da integração para a loja decidir no app. |
+| Configuração | Variáveis `NINETYNINE_*` (99Food) e `OPENDELIVERY_*` (outro app): URL, client id, client secret e app id. Sem elas, o app fica desligado. `OPENDELIVERY_SIMULATOR=true` libera pedidos simulados. |
+
+> ponytail: um app por provider (99Food e um app genérico). Para vários apps genéricos ao mesmo tempo, o vínculo da
+> loja precisa guardar o app id. Com muitas lojas no mesmo app, juntar os merchants no polling e achar o merchant pelo
+> pedido.
+
+O `GET /v1/merchant` (o app lê o cardápio da loja no PedeAí) ainda não foi feito: publicar o cardápio nos apps está em
+"depois do escopo atual".
+
+## API de pedidos do PedeAí
+
+Para um site, um bot de WhatsApp ou um cardápio de terceiros que não fala Open Delivery. A loja cria uma chave em
+**Configurações > API de pedidos**; o sistema manda a chave no header `X-Api-Key`.
+
+| Endpoint | O que faz |
+| --- | --- |
+| `GET /api/v1/menu` | O cardápio da loja com os ids, as áreas de entrega e as formas de pagamento. |
+| `POST /api/v1/orders` | Cria o pedido. Mesmas regras do cardápio digital: preço pelo cardápio, taxa pela área de entrega, horário e aceite automático da loja. `externalId` (opcional) é o id no sistema de origem: reenviar o mesmo devolve o pedido já criado (`200`), sem duplicar. |
+| `GET /api/v1/orders/{id}` | Status e totais. A chave só enxerga os pedidos criados pela API. |
+
+A chave tem 256 bits aleatórios e só aparece na criação; o banco guarda o SHA-256. Revogar corta o acesso na hora.
+Limite de 300 pedidos a cada 10 minutos por loja. O pedido entra com a origem `API`.
+
 ## Regras da plataforma que o PedeAí precisa cumprir
 
 ### iFood

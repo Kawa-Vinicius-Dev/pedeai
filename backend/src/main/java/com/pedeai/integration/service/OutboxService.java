@@ -1,9 +1,9 @@
 package com.pedeai.integration.service;
 
-import com.pedeai.integration.config.IfoodProperties;
 import com.pedeai.integration.domain.OutboundAction;
 import com.pedeai.integration.domain.OutboundAction.Action;
 import com.pedeai.integration.ifood.IfoodClient;
+import com.pedeai.integration.opendelivery.OpenDeliveryClient;
 import com.pedeai.integration.repository.MarketplaceConnectionRepository;
 import com.pedeai.integration.repository.OutboundActionRepository;
 import com.pedeai.order.domain.ActorType;
@@ -36,25 +36,30 @@ public class OutboxService {
     private static final Map<Action, String> IFOOD_PATH = Map.of(
             Action.CONFIRM, "confirm", Action.START_PREPARATION, "startPreparation", Action.READY, "readyToPickup",
             Action.DISPATCH, "dispatch");
+    private static final Map<Action, String> OPEN_DELIVERY_PATH = Map.of(
+            Action.CONFIRM, "confirm", Action.START_PREPARATION, "preparing", Action.READY, "readyForPickup",
+            Action.DISPATCH, "dispatch", Action.REQUEST_CANCELLATION, "requestCancellation");
 
     private final OutboundActionRepository actions;
     private final MarketplaceConnectionRepository connections;
     private final OrderService orderService;
     private final InboundService inbound;
     private final IfoodClient ifood;
-    private final IfoodProperties properties;
+    private final OpenDeliveryClient openDelivery;
+    private final Platforms platforms;
     private final ObjectMapper json;
     private final Clock clock;
 
     public OutboxService(OutboundActionRepository actions, MarketplaceConnectionRepository connections,
                          OrderService orderService, InboundService inbound, IfoodClient ifood,
-                         IfoodProperties properties, ObjectMapper json, Clock clock) {
+                         OpenDeliveryClient openDelivery, Platforms platforms, ObjectMapper json, Clock clock) {
         this.actions = actions;
         this.connections = connections;
         this.orderService = orderService;
         this.inbound = inbound;
         this.ifood = ifood;
-        this.properties = properties;
+        this.openDelivery = openDelivery;
+        this.platforms = platforms;
         this.json = json;
         this.clock = clock;
     }
@@ -62,7 +67,7 @@ public class OutboxService {
     /** Aceite automático: o pedido nasceu confirmado aqui, e o iFood precisa saber. */
     @EventListener
     public void onOrderCreated(OrderCreated event) {
-        if (event.source() == OrderSource.IFOOD && event.status() != OrderStatus.RECEIVED) {
+        if (event.source().isMarketplace() && event.status() != OrderStatus.RECEIVED) {
             OrderResponse order = orderService.get(event.storeId(), event.orderId());
             enqueue(event.storeId(), order, Action.CONFIRM, null);
         }
@@ -75,7 +80,7 @@ public class OutboxService {
             return;
         }
         OrderResponse order = orderService.get(event.storeId(), event.orderId());
-        if (order.source() != OrderSource.IFOOD || order.externalId() == null) {
+        if (!order.source().isMarketplace() || order.externalId() == null) {
             return;
         }
         List<Action> toSend = new ArrayList<>();
@@ -112,13 +117,18 @@ public class OutboxService {
         if (action.getStatus() != OutboundAction.Status.PENDING) {
             return;
         }
-        if (!properties.configured()) {
-            if (properties.simulator()) {
+        OrderSource provider = action.getProvider();
+        if (!platforms.configured(provider)) {
+            if (platforms.simulator(provider)) {
                 simulate(action);
                 action.done(now);
             } else {
-                action.skipped("Integração com o iFood desligada no servidor.", now);
+                action.skipped("Integração com o " + platforms.label(provider) + " desligada no servidor.", now);
             }
+            return;
+        }
+        if (provider != OrderSource.IFOOD) {
+            sendOpenDelivery(action, now);
             return;
         }
         try {
@@ -131,6 +141,30 @@ public class OutboxService {
             }
             action.done(now);
         } catch (IfoodClient.IfoodApiException e) {
+            if (e.retryable()) {
+                action.retryLater(e.getMessage(), now);
+            } else {
+                action.rejected(e.getMessage(), now);
+            }
+        }
+    }
+
+    /** Mesmas ações pela Order API do Open Delivery. O confirm leva o id do pedido aqui como código externo. */
+    private void sendOpenDelivery(OutboundAction action, Instant now) {
+        Object body = switch (action.getAction()) {
+            case CONFIRM -> Map.of("createdAt", now.toString(), "orderExternalCode", action.getOrderId().toString());
+            case REQUEST_CANCELLATION -> {
+                JsonNode payload = json.readTree(action.getPayload());
+                yield Map.of("reason", payload.path("description").asString(), "code",
+                        payload.path("code").asString(), "mode", "MANUAL");
+            }
+            default -> null;
+        };
+        try {
+            openDelivery.action(action.getProvider(), action.getExternalOrderId(),
+                    OPEN_DELIVERY_PATH.get(action.getAction()), body);
+            action.done(now);
+        } catch (OpenDeliveryClient.OpenDeliveryApiException e) {
             if (e.retryable()) {
                 action.retryLater(e.getMessage(), now);
             } else {
@@ -152,21 +186,21 @@ public class OutboxService {
     }
 
     private OutboundAction enqueue(UUID storeId, OrderResponse order, Action action, String payload) {
-        return actions.save(new OutboundAction(storeId, OrderSource.IFOOD, order.id(), order.externalId(),
+        return actions.save(new OutboundAction(storeId, order.source(), order.id(), order.externalId(),
                 action, payload, Instant.now(clock)));
     }
 
-    /** O simulador responde como o iFood: o pedido de cancelamento aceito volta como evento de cancelado. */
+    /** O simulador responde como a plataforma: o pedido de cancelamento aceito volta como evento de cancelado. */
     private void simulate(OutboundAction action) {
         if (action.getAction() != Action.REQUEST_CANCELLATION) {
             return;
         }
         String merchantId = connections.findAllByStoreIdOrderByCreatedAtAsc(action.getStoreId()).stream()
-                .filter(connection -> connection.getProvider() == OrderSource.IFOOD)
+                .filter(connection -> connection.getProvider() == action.getProvider())
                 .map(connection -> connection.getExternalMerchantId()).findFirst().orElse(null);
         JsonNode payload = json.readTree(action.getPayload());
-        inbound.record(OrderSource.IFOOD, json.valueToTree(Map.of(
-                "id", "sim-can-" + action.getId(), "code", "CAN", "fullCode", "CANCELLED",
+        inbound.record(action.getProvider(), json.valueToTree(Map.of(
+                "id", "sim-can-" + action.getId(), "code", "CANCELLED", "fullCode", "CANCELLED",
                 "orderId", action.getExternalOrderId(), "merchantId", merchantId == null ? "" : merchantId,
                 "metadata", Map.of("CANCEL_REASON", payload.path("description").asString()))));
     }

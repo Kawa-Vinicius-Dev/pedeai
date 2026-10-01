@@ -1,9 +1,11 @@
 package com.pedeai.integration.service;
 
 import com.pedeai.integration.config.IfoodProperties;
+import com.pedeai.support.IntegrationTestProperties;
 import com.pedeai.integration.domain.OutboundAction;
 import com.pedeai.integration.domain.OutboundAction.Action;
 import com.pedeai.integration.ifood.IfoodClient;
+import com.pedeai.integration.opendelivery.OpenDeliveryClient;
 import com.pedeai.integration.repository.MarketplaceConnectionRepository;
 import com.pedeai.integration.repository.OutboundActionRepository;
 import com.pedeai.order.domain.ActorType;
@@ -36,6 +38,7 @@ import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,7 +47,7 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class OutboxServiceTest {
     private static final UUID ORDER_ID = UUID.randomUUID();
-    private static final IfoodProperties CONFIGURED = new IfoodProperties(true, "http://ifood", "id", "segredo",
+    private static final IfoodProperties CONFIGURED = IntegrationTestProperties.ifood(true, "http://ifood", "id", "segredo",
             "/p", "/a", false);
 
     @Mock
@@ -59,8 +62,8 @@ class OutboxServiceTest {
     private IfoodClient ifood;
 
     private OutboxService service(IfoodProperties properties) {
-        return new OutboxService(actions, connections, orders, inbound, ifood, properties,
-                JsonMapper.builder().build(), CLOCK);
+        return new OutboxService(actions, connections, orders, inbound, ifood, mock(OpenDeliveryClient.class),
+                IntegrationTestProperties.platforms(properties), JsonMapper.builder().build(), CLOCK);
     }
 
     @BeforeEach
@@ -136,7 +139,7 @@ class OutboxServiceTest {
                 null, NOW);
         when(actions.findById(action.getId())).thenReturn(Optional.of(action));
 
-        service(new IfoodProperties(false, "http://ifood", null, null, "/p", "/a", false)).send(action.getId());
+        service(IntegrationTestProperties.ifood(false, "http://ifood", null, null, "/p", "/a", false)).send(action.getId());
 
         assertThat(action.getStatus()).isEqualTo(OutboundAction.Status.SKIPPED);
         verify(ifood, never()).orderAction(anyString(), anyString());

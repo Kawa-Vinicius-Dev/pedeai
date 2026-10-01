@@ -1,11 +1,14 @@
 package com.pedeai.store.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalTime;
+import java.util.List;
 
 /** Atualização parcial: campo ausente (null) fica como está. Texto vazio apaga documento e telefone. */
 public record UpdateStoreRequest(
@@ -35,6 +38,12 @@ public record UpdateStoreRequest(
         @Size(min = 3, max = 60, message = "O endereço do cardápio deve ter de 3 a 60 caracteres.")
         @Pattern(regexp = "[a-z0-9]+(-[a-z0-9]+)*",
                 message = "Use só letras minúsculas, números e hífen no endereço do cardápio (ex.: pizzaria-bella).")
-        String slug
+        String slug,
+
+        Boolean menuAutoConfirm,
+
+        /** Horário do cardápio, um período por dia. Lista vazia: sem restrição de horário. Nulo: não muda. */
+        @Size(max = 7, message = "Informe no máximo um horário por dia da semana.")
+        List<@Valid @NotNull OpeningHoursRequest> openingHours
 ) {
 }

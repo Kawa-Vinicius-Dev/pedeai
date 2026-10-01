@@ -46,7 +46,7 @@ class StorefrontControllerTest {
     @Test
     void menuIsPublicEvenWithAStaleToken() throws Exception {
         when(storefrontService.menu("pizzaria-bella")).thenReturn(new StorefrontResponse("Pizzaria Bella",
-                "pizzaria-bella", null, true, List.of(), List.of(), List.of(), List.of()));
+                "pizzaria-bella", null, true, List.of(), List.of(), List.of(), List.of(), List.of()));
 
         mockMvc.perform(get("/api/public/stores/pizzaria-bella"))
                 .andExpect(status().isOk())

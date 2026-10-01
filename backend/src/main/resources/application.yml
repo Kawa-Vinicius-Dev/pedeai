@@ -64,3 +64,19 @@ app:
     client-id: ${IFOOD_CLIENT_ID:}
     client-secret: ${IFOOD_CLIENT_SECRET:}
     simulator: ${IFOOD_SIMULATOR:false}
+  # Apps no padrão Open Delivery (docs/05-integracoes.md#open-delivery). Sem URL e credenciais, o app fica desligado.
+  opendelivery:
+    simulator: ${OPENDELIVERY_SIMULATOR:false}
+    apps:
+      - provider: NINETY_NINE_FOOD
+        name: 99Food
+        base-url: ${NINETYNINE_BASE_URL:}
+        client-id: ${NINETYNINE_CLIENT_ID:}
+        client-secret: ${NINETYNINE_CLIENT_SECRET:}
+        app-id: ${NINETYNINE_APP_ID:}
+      - provider: OPEN_DELIVERY
+        name: ${OPENDELIVERY_APP_NAME:Open Delivery}
+        base-url: ${OPENDELIVERY_BASE_URL:}
+        client-id: ${OPENDELIVERY_CLIENT_ID:}
+        client-secret: ${OPENDELIVERY_CLIENT_SECRET:}
+        app-id: ${OPENDELIVERY_APP_ID:}

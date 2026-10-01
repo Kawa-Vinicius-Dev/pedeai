@@ -72,3 +72,7 @@ export type Storefront = Schemas['StorefrontResponse'];
 export type MenuProduct = Schemas['MenuProductResponse'];
 export type MenuOrderRequest = Schemas['MenuOrderRequest'];
 export type OrderTracking = Schemas['OrderTrackingResponse'];
+export type OpeningHours = Schemas['OpeningHoursResponse'];
+export type ApiKey = Schemas['ApiKeyResponse'];
+export type CatalogImport = Schemas['CatalogImportResponse'];
+export type Platform = Schemas['PlatformResponse'];

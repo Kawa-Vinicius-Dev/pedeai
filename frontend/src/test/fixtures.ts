@@ -45,6 +45,8 @@ export function store(overrides: Partial<Store> = {}): Store {
     startPreparationOnConfirm: false,
     slug: 'pizzaria-bella',
     menuOpen: false,
+    menuAutoConfirm: false,
+    openingHours: [],
     ...overrides,
   };
 }

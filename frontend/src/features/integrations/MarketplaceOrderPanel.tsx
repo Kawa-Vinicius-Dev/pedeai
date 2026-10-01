@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { errorMessage } from '../../shared/api/errors';
 import type { MarketplaceAction, Order } from '../../shared/api/types';
 import { useSession } from '../auth/auth-context';
-import { canRequestMarketplaceCancel, sourceBadge } from '../orders/labels';
+import { canRequestMarketplaceCancel, SOURCE_LABELS, sourceBadge } from '../orders/labels';
 import {
   ACTION_LABELS,
   useCancellationReasons,
@@ -21,8 +21,8 @@ const ACTION_STATUS: Record<MarketplaceAction['status'], { label: string; color:
 };
 
 /**
- * No detalhe de um pedido do iFood: o que foi sincronizado com a plataforma e o pedido de cancelamento, que só vale
- * quando o iFood confirma (docs/05-integracoes.md#cancelamento).
+ * No detalhe de um pedido de app (iFood, 99Food, Open Delivery): o que foi sincronizado com a plataforma e o pedido
+ * de cancelamento, que só vale quando o app confirma (docs/05-integracoes.md#cancelamento).
  */
 export function MarketplaceOrderPanel({ order }: { order: Order }) {
   const { user } = useSession();
@@ -34,7 +34,7 @@ export function MarketplaceOrderPanel({ order }: { order: Order }) {
   );
 
   return (
-    <Stack gap="xs" aria-label="Sincronização com o iFood">
+    <Stack gap="xs" aria-label={`Sincronização com o ${SOURCE_LABELS[order.source] ?? order.source}`}>
       <Group justify="space-between">
         <Title order={5}>{sourceBadge(order)}</Title>
         {canRequestMarketplaceCancel(order, user.role) && !cancellationRequested && (
@@ -45,7 +45,8 @@ export function MarketplaceOrderPanel({ order }: { order: Order }) {
       </Group>
       {cancellationRequested && order.status !== 'CANCELLED' && (
         <Alert color="orange" variant="light" p="xs">
-          Cancelamento solicitado ao iFood. O pedido é cancelado aqui quando o iFood confirmar.
+          Cancelamento solicitado ao {SOURCE_LABELS[order.source] ?? 'app'}. O pedido é cancelado aqui quando o app
+          confirmar.
         </Alert>
       )}
       {sync.data?.map((action) => (
@@ -91,7 +92,8 @@ function CancelRequestModal({ order, opened, onClose }: { order: Order; opened: 
     <Modal opened={opened} onClose={onClose} title={`Solicitar cancelamento do pedido ${order.number}`}>
       <Stack>
         <Text size="sm" c="dimmed">
-          O iFood só aceita os motivos abaixo para este pedido agora. O pedido é cancelado quando ele confirmar.
+          O {SOURCE_LABELS[order.source] ?? 'app'} só aceita os motivos abaixo para este pedido agora. O pedido é
+          cancelado quando ele confirmar.
         </Text>
         {reasons.isPending && <Loader size="sm" aria-label="Carregando motivos" />}
         {reasons.isError && (

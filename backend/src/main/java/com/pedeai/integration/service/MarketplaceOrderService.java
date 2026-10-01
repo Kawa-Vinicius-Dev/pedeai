@@ -1,12 +1,12 @@
 package com.pedeai.integration.service;
 
-import com.pedeai.integration.config.IfoodProperties;
 import com.pedeai.integration.domain.OutboundAction;
 import com.pedeai.integration.dto.CancellationReasonResponse;
 import com.pedeai.integration.dto.MarketplaceCancellationRequest;
 import com.pedeai.integration.dto.OutboundActionResponse;
 import com.pedeai.integration.ifood.IfoodClient;
 import com.pedeai.integration.repository.OutboundActionRepository;
+import com.pedeai.order.domain.OrderSource;
 import com.pedeai.order.dto.OrderResponse;
 import com.pedeai.order.service.OrderService;
 import com.pedeai.order.service.OrderStatusService;
@@ -27,7 +27,7 @@ import java.util.UUID;
 public class MarketplaceOrderService {
     static final String NOT_MARKETPLACE = "Este pedido não veio de um marketplace.";
     static final String ALREADY_FINAL = "Este pedido já foi concluído ou cancelado.";
-    static final String CANCELLATION_PENDING = "O cancelamento deste pedido já foi solicitado ao iFood.";
+    static final String CANCELLATION_PENDING = "O cancelamento deste pedido já foi solicitado à plataforma.";
     static final String ACTION_NOT_FOUND = "Sincronização não encontrada.";
     static final String CANNOT_RETRY = "Só dá para tentar de novo o que falhou.";
 
@@ -43,23 +43,37 @@ public class MarketplaceOrderService {
             new CancellationReasonResponse("506", "Pedido fora da área de entrega"),
             new CancellationReasonResponse("509", "Dificuldades internas do restaurante"));
 
+    /** Motivos fixos da especificação Open Delivery (RequestCancelled.code). */
+    static final List<CancellationReasonResponse> OPEN_DELIVERY_REASONS = List.of(
+            new CancellationReasonResponse("SYSTEMIC_ISSUES", "Problemas de sistema"),
+            new CancellationReasonResponse("DUPLICATE_APPLICATION", "Pedido em duplicidade"),
+            new CancellationReasonResponse("UNAVAILABLE_ITEM", "Item indisponível"),
+            new CancellationReasonResponse("RESTAURANT_WITHOUT_DELIVERY_PERSON", "Restaurante sem entregador"),
+            new CancellationReasonResponse("OUTDATED_MENU", "Cardápio desatualizado"),
+            new CancellationReasonResponse("ORDER_OUTSIDE_THE_DELIVERY_AREA", "Pedido fora da área de entrega"),
+            new CancellationReasonResponse("BLOCKED_CUSTOMER", "Cliente bloqueado"),
+            new CancellationReasonResponse("OUTSIDE_DELIVERY_HOURS", "Fora do horário de entrega"),
+            new CancellationReasonResponse("INTERNAL_DIFFICULTIES_OF_THE_RESTAURANT",
+                    "Dificuldades internas do restaurante"),
+            new CancellationReasonResponse("RISK_AREA", "Área de risco"));
+
     private final OrderService orderService;
     private final OrderStatusService orderStatusService;
     private final OutboxService outbox;
     private final OutboundActionRepository actions;
     private final IfoodClient ifood;
-    private final IfoodProperties properties;
+    private final Platforms platforms;
     private final Clock clock;
 
     public MarketplaceOrderService(OrderService orderService, OrderStatusService orderStatusService,
                                    OutboxService outbox, OutboundActionRepository actions, IfoodClient ifood,
-                                   IfoodProperties properties, Clock clock) {
+                                   Platforms platforms, Clock clock) {
         this.orderService = orderService;
         this.orderStatusService = orderStatusService;
         this.outbox = outbox;
         this.actions = actions;
         this.ifood = ifood;
-        this.properties = properties;
+        this.platforms = platforms;
         this.clock = clock;
     }
 
@@ -72,8 +86,14 @@ public class MarketplaceOrderService {
 
     public List<CancellationReasonResponse> cancellationReasons(UUID storeId, UUID orderId) {
         OrderResponse order = marketplaceOrder(storeId, orderId);
-        if (!properties.configured()) {
-            if (properties.simulator()) {
+        if (order.source() != OrderSource.IFOOD) {
+            if (!platforms.available(order.source())) {
+                throw new BusinessRuleException(ConnectionService.NOT_CONFIGURED);
+            }
+            return OPEN_DELIVERY_REASONS;
+        }
+        if (!platforms.configured(OrderSource.IFOOD)) {
+            if (platforms.simulator(OrderSource.IFOOD)) {
                 return SIMULATED_REASONS;
             }
             throw new BusinessRuleException(ConnectionService.NOT_CONFIGURED);
@@ -91,11 +111,11 @@ public class MarketplaceOrderService {
                                                       MarketplaceCancellationRequest request) {
         UUID storeId = user.storeId();
         OrderResponse order = marketplaceOrder(storeId, orderId);
-        if (!properties.configured() && !properties.simulator()) {
+        if (!platforms.available(order.source())) {
             orderStatusService.cancelWithoutPlatform(user, orderId, request.description().trim());
             OutboundAction skipped = outbox.requestCancellation(storeId, order, request.code().trim(),
                     request.description().trim());
-            skipped.skipped("Integração desligada: cancelado só no PedeAí. Confira no Portal do Parceiro.",
+            skipped.skipped("Integração desligada: cancelado só no PedeAí. Confira no painel da plataforma.",
                     Instant.now(clock));
             return OutboundActionResponse.from(skipped);
         }

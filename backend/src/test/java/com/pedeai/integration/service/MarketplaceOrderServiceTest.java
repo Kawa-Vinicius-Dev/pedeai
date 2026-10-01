@@ -1,6 +1,7 @@
 package com.pedeai.integration.service;
 
 import com.pedeai.integration.config.IfoodProperties;
+import com.pedeai.support.IntegrationTestProperties;
 import com.pedeai.integration.domain.OutboundAction;
 import com.pedeai.integration.dto.MarketplaceCancellationRequest;
 import com.pedeai.integration.ifood.IfoodClient;
@@ -47,8 +48,8 @@ class MarketplaceOrderServiceTest {
     private final OutboundActionRepository actions = mock(OutboundActionRepository.class);
 
     private MarketplaceOrderService service(IfoodProperties properties) {
-        return new MarketplaceOrderService(orders, statuses, outbox, actions, mock(IfoodClient.class), properties,
-                CLOCK);
+        return new MarketplaceOrderService(orders, statuses, outbox, actions, mock(IfoodClient.class),
+                IntegrationTestProperties.platforms(properties), CLOCK);
     }
 
     private static OrderResponse order(OrderSource source, OrderStatus status) {
@@ -69,7 +70,7 @@ class MarketplaceOrderServiceTest {
     void withTheIntegrationOnTheCancellationIsOnlyRequested() {
         stored(order(OrderSource.IFOOD, OrderStatus.CONFIRMED));
 
-        var response = service(new IfoodProperties(false, "x", null, null, "/p", "/a", true))
+        var response = service(IntegrationTestProperties.ifood(false, "x", null, null, "/p", "/a", true))
                 .requestCancellation(CASHIER, ORDER_ID, REQUEST);
 
         assertThat(response.status()).isEqualTo(OutboundAction.Status.PENDING);
@@ -80,7 +81,7 @@ class MarketplaceOrderServiceTest {
     void withTheIntegrationOffTheOrderIsCancelledHereSoItIsNotStuck() {
         stored(order(OrderSource.IFOOD, OrderStatus.CONFIRMED));
 
-        var response = service(new IfoodProperties(false, "x", null, null, "/p", "/a", false))
+        var response = service(IntegrationTestProperties.ifood(false, "x", null, null, "/p", "/a", false))
                 .requestCancellation(CASHIER, ORDER_ID, REQUEST);
 
         verify(statuses).cancelWithoutPlatform(CASHIER, ORDER_ID, "Item indisponível");
@@ -90,7 +91,7 @@ class MarketplaceOrderServiceTest {
     @Test
     void ownOrdersAndRepeatedRequestsAreRefused() {
         stored(order(OrderSource.PEDEAI, OrderStatus.CONFIRMED));
-        IfoodProperties simulator = new IfoodProperties(false, "x", null, null, "/p", "/a", true);
+        IfoodProperties simulator = IntegrationTestProperties.ifood(false, "x", null, null, "/p", "/a", true);
         assertThatThrownBy(() -> service(simulator).requestCancellation(CASHIER, ORDER_ID, REQUEST))
                 .isInstanceOf(BusinessRuleException.class);
 

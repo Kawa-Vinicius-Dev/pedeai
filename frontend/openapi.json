@@ -755,6 +755,46 @@
         }
       }
     },
+    "/api/v1/orders": {
+      "post": {
+        "tags": [
+          "partner-api-controller"
+        ],
+        "operationId": "placeOrder",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartnerOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerOrderResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users": {
       "get": {
         "tags": [
@@ -953,7 +993,7 @@
         "tags": [
           "storefront-controller"
         ],
-        "operationId": "placeOrder",
+        "operationId": "placeOrder_1",
         "parameters": [
           {
             "name": "slug",
@@ -1737,6 +1777,47 @@
         }
       }
     },
+    "/api/integrations/{id}/catalog-import": {
+      "post": {
+        "tags": [
+          "integration-controller"
+        ],
+        "operationId": "importCatalog",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogImportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/delivery-zones": {
       "get": {
         "tags": [
@@ -1962,6 +2043,36 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/imports/spreadsheet": {
+      "post": {
+        "tags": [
+          "catalog-import-controller"
+        ],
+        "operationId": "importSpreadsheet",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpreadsheetImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogImportResponse"
                 }
               }
             }
@@ -2208,6 +2319,57 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/api-keys": {
+      "get": {
+        "tags": [
+          "api-key-controller"
+        ],
+        "operationId": "list_11",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "api-key-controller"
+        ],
+        "operationId": "create_10",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedApiKeyResponse"
                 }
               }
             }
@@ -2599,6 +2761,75 @@
         }
       }
     },
+    "/api/v1/orders/{id}": {
+      "get": {
+        "tags": [
+          "partner-api-controller"
+        ],
+        "operationId": "order",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerOrderResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/menu": {
+      "get": {
+        "tags": [
+          "partner-api-controller"
+        ],
+        "operationId": "menu",
+        "parameters": [
+          {
+            "name": "X-Api-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorefrontResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/stream": {
       "get": {
         "tags": [
@@ -2719,7 +2950,7 @@
         "tags": [
           "storefront-controller"
         ],
-        "operationId": "menu",
+        "operationId": "menu_1",
         "parameters": [
           {
             "name": "slug",
@@ -2881,7 +3112,7 @@
         "tags": [
           "print-agent-controller"
         ],
-        "operationId": "list_11",
+        "operationId": "list_12",
         "responses": {
           "200": {
             "description": "OK",
@@ -3175,6 +3406,29 @@
         }
       }
     },
+    "/api/integrations/platforms": {
+      "get": {
+        "tags": [
+          "integration-controller"
+        ],
+        "operationId": "platforms",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/integrations/ifood/setup": {
       "get": {
         "tags": [
@@ -3304,6 +3558,30 @@
           }
         }
       }
+    },
+    "/api/api-keys/{id}": {
+      "delete": {
+        "tags": [
+          "api-key-controller"
+        ],
+        "operationId": "revoke_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3317,6 +3595,28 @@
         },
         "required": [
           "open"
+        ]
+      },
+      "OpeningHoursResponse": {
+        "type": "object",
+        "properties": {
+          "dayOfWeek": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "opensAt": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "closesAt": {
+            "type": "string",
+            "format": "time-local"
+          }
+        },
+        "required": [
+          "closesAt",
+          "dayOfWeek",
+          "opensAt"
         ]
       },
       "StoreResponse": {
@@ -3363,6 +3663,15 @@
           },
           "menuOpen": {
             "type": "boolean"
+          },
+          "menuAutoConfirm": {
+            "type": "boolean"
+          },
+          "openingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpeningHoursResponse"
+            }
           }
         },
         "required": [
@@ -3370,8 +3679,10 @@
           "businessDayCutoff",
           "document",
           "id",
+          "menuAutoConfirm",
           "menuOpen",
           "name",
+          "openingHours",
           "phone",
           "serviceFeeBp",
           "slug",
@@ -4392,6 +4703,191 @@
           "status"
         ]
       },
+      "OptionChoice": {
+        "type": "object",
+        "properties": {
+          "optionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 99,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "optionId",
+          "quantity"
+        ]
+      },
+      "OrderItemRequest": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 999,
+            "minimum": 1
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionChoice"
+            },
+            "maxItems": 50,
+            "minItems": 0
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "options",
+          "productId",
+          "quantity"
+        ]
+      },
+      "PartnerOrderRequest": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 80,
+            "minLength": 0,
+            "pattern": "[A-Za-z0-9._:-]*"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TAKEOUT",
+              "DELIVERY",
+              "DINE_IN"
+            ]
+          },
+          "customerName": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 0
+          },
+          "customerPhone": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 0
+          },
+          "deliveryAddress": {
+            "$ref": "#/components/schemas/AddressRequest"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemRequest"
+            },
+            "maxItems": 50,
+            "minItems": 0
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
+          },
+          "paymentMethodId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "changeForCents": {
+            "type": "integer",
+            "format": "int64",
+            "maximum": 100000000,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "customerName",
+          "customerPhone",
+          "items",
+          "paymentMethodId",
+          "type"
+        ]
+      },
+      "PartnerOrderResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "CONFIRMED",
+              "IN_PREPARATION",
+              "READY",
+              "DISPATCHED",
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "externalId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "trackingCode": {
+            "type": "string"
+          },
+          "subtotalCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "deliveryFeeCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cancelReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "cancelReason",
+          "createdAt",
+          "deliveryFeeCents",
+          "externalId",
+          "id",
+          "number",
+          "status",
+          "subtotalCents",
+          "totalCents",
+          "trackingCode"
+        ]
+      },
       "CreateUserRequest": {
         "type": "object",
         "properties": {
@@ -4543,25 +5039,6 @@
         "required": [
           "id",
           "name"
-        ]
-      },
-      "OptionChoice": {
-        "type": "object",
-        "properties": {
-          "optionId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "quantity": {
-            "type": "integer",
-            "format": "int32",
-            "maximum": 99,
-            "minimum": 1
-          }
-        },
-        "required": [
-          "optionId",
-          "quantity"
         ]
       },
       "PriceQuoteRequest": {
@@ -4746,39 +5223,6 @@
           "items",
           "paymentMethodId",
           "type"
-        ]
-      },
-      "OrderItemRequest": {
-        "type": "object",
-        "properties": {
-          "productId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "quantity": {
-            "type": "integer",
-            "format": "int32",
-            "maximum": 999,
-            "minimum": 1
-          },
-          "options": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OptionChoice"
-            },
-            "maxItems": 50,
-            "minItems": 0
-          },
-          "notes": {
-            "type": "string",
-            "maxLength": 300,
-            "minLength": 0
-          }
-        },
-        "required": [
-          "options",
-          "productId",
-          "quantity"
         ]
       },
       "MenuOrderResponse": {
@@ -5223,8 +5667,10 @@
             "enum": [
               "PEDEAI",
               "DIGITAL_MENU",
+              "API",
               "IFOOD",
-              "NINETY_NINE_FOOD"
+              "NINETY_NINE_FOOD",
+              "OPEN_DELIVERY"
             ]
           },
           "status": {
@@ -5630,6 +6076,17 @@
       "ConnectionRequest": {
         "type": "object",
         "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "PEDEAI",
+              "DIGITAL_MENU",
+              "API",
+              "IFOOD",
+              "NINETY_NINE_FOOD",
+              "OPEN_DELIVERY"
+            ]
+          },
           "externalMerchantId": {
             "type": "string",
             "maxLength": 80,
@@ -5656,8 +6113,10 @@
             "enum": [
               "PEDEAI",
               "DIGITAL_MENU",
+              "API",
               "IFOOD",
-              "NINETY_NINE_FOOD"
+              "NINETY_NINE_FOOD",
+              "OPEN_DELIVERY"
             ]
           },
           "externalMerchantId": {
@@ -5708,6 +6167,87 @@
           "merchantName",
           "provider",
           "status"
+        ]
+      },
+      "CatalogImportRequest": {
+        "type": "object",
+        "properties": {
+          "dryRun": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "dryRun"
+        ]
+      },
+      "CatalogImportResponse": {
+        "type": "object",
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "categoriesCreated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productsCreated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productsUpdated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "optionGroupsCreated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportIssueResponse"
+            }
+          }
+        },
+        "required": [
+          "applied",
+          "categoriesCreated",
+          "errors",
+          "optionGroupsCreated",
+          "productsCreated",
+          "productsUpdated"
+        ]
+      },
+      "ImportIssueResponse": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "origin"
+        ]
+      },
+      "SpreadsheetImportRequest": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "maxLength": 2000000,
+            "minLength": 0
+          },
+          "dryRun": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "content",
+          "dryRun"
         ]
       },
       "OpenCashSessionRequest": {
@@ -5979,6 +6519,75 @@
           "password"
         ]
       },
+      "ApiKeyRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "ApiKeyResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "keyPrefix": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastUsedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "revokedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "createdAt",
+          "id",
+          "keyPrefix",
+          "lastUsedAt",
+          "name",
+          "revokedAt"
+        ]
+      },
+      "CreatedApiKeyResponse": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ApiKeyResponse"
+          },
+          "secret": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "secret"
+        ]
+      },
       "AgentPairingRequest": {
         "type": "object",
         "properties": {
@@ -6061,6 +6670,30 @@
           }
         }
       },
+      "OpeningHoursRequest": {
+        "type": "object",
+        "properties": {
+          "dayOfWeek": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 7,
+            "minimum": 1
+          },
+          "opensAt": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "closesAt": {
+            "type": "string",
+            "format": "time-local"
+          }
+        },
+        "required": [
+          "closesAt",
+          "dayOfWeek",
+          "opensAt"
+        ]
+      },
       "UpdateStoreRequest": {
         "type": "object",
         "properties": {
@@ -6106,6 +6739,17 @@
             "maxLength": 60,
             "minLength": 3,
             "pattern": "[a-z0-9]+(-[a-z0-9]+)*"
+          },
+          "menuAutoConfirm": {
+            "type": "boolean"
+          },
+          "openingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpeningHoursRequest"
+            },
+            "maxItems": 7,
+            "minItems": 0
           }
         }
       },
@@ -6234,6 +6878,175 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "MenuCategoryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuProductResponse"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "products"
+        ]
+      },
+      "MenuDeliveryZoneResponse": {
+        "type": "object",
+        "properties": {
+          "neighborhood": {
+            "type": "string"
+          },
+          "feeCents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "feeCents",
+          "neighborhood"
+        ]
+      },
+      "MenuPaymentMethodResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "PIX",
+              "CREDIT",
+              "DEBIT",
+              "VOUCHER",
+              "ONLINE",
+              "OTHER"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type"
+        ]
+      },
+      "MenuProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "priceCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "optionGroupIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "available": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "available",
+          "description",
+          "id",
+          "name",
+          "optionGroupIds",
+          "priceCents"
+        ]
+      },
+      "StorefrontResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "open": {
+            "type": "boolean"
+          },
+          "openingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpeningHoursResponse"
+            }
+          },
+          "deliveryZones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuDeliveryZoneResponse"
+            }
+          },
+          "paymentMethods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuPaymentMethodResponse"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuCategoryResponse"
+            }
+          },
+          "optionGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionGroupResponse"
+            }
+          }
+        },
+        "required": [
+          "categories",
+          "deliveryZones",
+          "name",
+          "open",
+          "openingHours",
+          "optionGroups",
+          "paymentMethods",
+          "phone",
+          "slug"
         ]
       },
       "PaymentMethodRevenueResponse": {
@@ -6463,168 +7276,6 @@
           "name",
           "quantity",
           "totalCents"
-        ]
-      },
-      "MenuCategoryResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "products": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MenuProductResponse"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "products"
-        ]
-      },
-      "MenuDeliveryZoneResponse": {
-        "type": "object",
-        "properties": {
-          "neighborhood": {
-            "type": "string"
-          },
-          "feeCents": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "required": [
-          "feeCents",
-          "neighborhood"
-        ]
-      },
-      "MenuPaymentMethodResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "CASH",
-              "PIX",
-              "CREDIT",
-              "DEBIT",
-              "VOUCHER",
-              "ONLINE",
-              "OTHER"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "type"
-        ]
-      },
-      "MenuProductResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "priceCents": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "optionGroupIds": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          "available": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "available",
-          "description",
-          "id",
-          "name",
-          "optionGroupIds",
-          "priceCents"
-        ]
-      },
-      "StorefrontResponse": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "phone": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "open": {
-            "type": "boolean"
-          },
-          "deliveryZones": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MenuDeliveryZoneResponse"
-            }
-          },
-          "paymentMethods": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MenuPaymentMethodResponse"
-            }
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MenuCategoryResponse"
-            }
-          },
-          "optionGroups": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OptionGroupResponse"
-            }
-          }
-        },
-        "required": [
-          "categories",
-          "deliveryZones",
-          "name",
-          "open",
-          "optionGroups",
-          "paymentMethods",
-          "phone",
-          "slug"
         ]
       },
       "OrderTrackingResponse": {
@@ -6870,8 +7521,10 @@
             "enum": [
               "PEDEAI",
               "DIGITAL_MENU",
+              "API",
               "IFOOD",
-              "NINETY_NINE_FOOD"
+              "NINETY_NINE_FOOD",
+              "OPEN_DELIVERY"
             ]
           },
           "status": {
@@ -7137,6 +7790,37 @@
         "required": [
           "store",
           "user"
+        ]
+      },
+      "PlatformResponse": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "PEDEAI",
+              "DIGITAL_MENU",
+              "API",
+              "IFOOD",
+              "NINETY_NINE_FOOD",
+              "OPEN_DELIVERY"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "configured": {
+            "type": "boolean"
+          },
+          "simulator": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "configured",
+          "name",
+          "provider",
+          "simulator"
         ]
       },
       "IfoodSetupResponse": {

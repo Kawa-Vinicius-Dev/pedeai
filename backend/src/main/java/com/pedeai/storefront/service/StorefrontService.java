@@ -37,6 +37,8 @@ import com.pedeai.storefront.dto.MenuOrderResponse;
 import com.pedeai.storefront.dto.MenuPaymentMethodResponse;
 import com.pedeai.storefront.dto.MenuProductResponse;
 import com.pedeai.storefront.dto.OrderTrackingResponse;
+import com.pedeai.storefront.dto.PartnerOrderRequest;
+import com.pedeai.storefront.dto.PartnerOrderResponse;
 import com.pedeai.storefront.dto.StorefrontResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +72,8 @@ public class StorefrontService {
     /** Contra pedido falso em massa. Generoso: vários clientes podem sair pelo mesmo IP da operadora. */
     static final int MAX_ORDERS_PER_ADDRESS = 15;
     static final Duration ORDER_WINDOW = Duration.ofMinutes(10);
+    /** Um sistema de terceiros manda os pedidos de muitos clientes: o limite é por loja, e maior. */
+    static final int MAX_PARTNER_ORDERS = 300;
 
     private final StoreService storeService;
     private final CategoryService categoryService;
@@ -79,6 +83,7 @@ public class StorefrontService {
     private final PaymentMethodService paymentMethodService;
     private final OrderService orderService;
     private final AttemptLimiter orders;
+    private final AttemptLimiter partnerOrders;
 
     public StorefrontService(StoreService storeService, CategoryService categoryService, ProductService productService,
                              OptionGroupService optionGroupService, DeliveryZoneService deliveryZoneService,
@@ -91,11 +96,21 @@ public class StorefrontService {
         this.paymentMethodService = paymentMethodService;
         this.orderService = orderService;
         this.orders = new AttemptLimiter(MAX_ORDERS_PER_ADDRESS, ORDER_WINDOW, clock);
+        this.partnerOrders = new AttemptLimiter(MAX_PARTNER_ORDERS, ORDER_WINDOW, clock);
     }
 
     @Transactional(readOnly = true)
     public StorefrontResponse menu(String slug) {
-        StoreResponse store = storeService.getBySlug(slug);
+        return menu(storeService.getBySlug(slug));
+    }
+
+    /** O mesmo cardápio, para a API de pedidos (a loja vem da chave). */
+    @Transactional(readOnly = true)
+    public StorefrontResponse menu(UUID storeId) {
+        return menu(storeService.get(storeId));
+    }
+
+    private StorefrontResponse menu(StoreResponse store) {
         UUID storeId = store.id();
         Map<UUID, List<ProductResponse>> byCategory = productService.list(storeId, null).stream()
                 .filter(ProductResponse::active)
@@ -118,7 +133,8 @@ public class StorefrontService {
                         group.maxChoices(), group.pricingRule(), true,
                         group.options().stream().filter(option -> option.active()).toList()))
                 .toList();
-        return new StorefrontResponse(store.name(), store.slug(), store.phone(), store.menuOpen(),
+        return new StorefrontResponse(store.name(), store.slug(), store.phone(),
+                storeService.acceptingMenuOrders(store), store.openingHours(),
                 zones(storeId).stream().map(zone -> new MenuDeliveryZoneResponse(zone.neighborhood(), zone.feeCents()))
                         .toList(),
                 methods(storeId).stream().map(method -> new MenuPaymentMethodResponse(method.id(), method.name(),
@@ -140,12 +156,51 @@ public class StorefrontService {
     @Transactional
     public MenuOrderResponse placeOrder(String slug, MenuOrderRequest request, String clientKey) {
         StoreResponse store = storeService.getBySlug(slug);
-        String limitKey = store.id() + ":" + clientKey;
-        if (orders.blocked(limitKey)) {
+        limit(orders, store.id() + ":" + clientKey);
+        OrderResponse placed = place(store, request, OrderSource.DIGITAL_MENU, null);
+        return new MenuOrderResponse(placed.number(), placed.trackingCode(), placed.totalCents());
+    }
+
+    /** Pedido pela API de pedidos. {@code created = false}: o mesmo {@code externalId} já tinha virado pedido. */
+    public record PartnerOrder(PartnerOrderResponse order, boolean created) {
+    }
+
+    @Transactional
+    public PartnerOrder placePartnerOrder(UUID storeId, PartnerOrderRequest request) {
+        String externalId = request.externalId() == null || request.externalId().isBlank() ? null
+                : request.externalId();
+        if (externalId != null) {
+            var existing = orderService.findExternal(storeId, OrderSource.API, externalId);
+            if (existing.isPresent()) {
+                return new PartnerOrder(PartnerOrderResponse.from(existing.get()), false);
+            }
+        }
+        limit(partnerOrders, storeId.toString());
+        StoreResponse store = storeService.get(storeId);
+        return new PartnerOrder(PartnerOrderResponse.from(place(store, request.toMenuOrder(), OrderSource.API,
+                externalId)), true);
+    }
+
+    @Transactional(readOnly = true)
+    public PartnerOrderResponse partnerOrder(UUID storeId, UUID orderId) {
+        OrderResponse order = orderService.get(storeId, orderId);
+        if (order.source() != OrderSource.API) {
+            // A chave da API só enxerga os pedidos que ela mesma criou, não o balcão nem os marketplaces.
+            throw new ResourceNotFoundException(ORDER_NOT_FOUND);
+        }
+        return PartnerOrderResponse.from(order);
+    }
+
+    private static void limit(AttemptLimiter limiter, String key) {
+        if (limiter.blocked(key)) {
             throw new TooManyRequestsException(TOO_MANY_ORDERS);
         }
-        orders.failed(limitKey);
-        if (!store.menuOpen()) {
+        limiter.failed(key);
+    }
+
+    private OrderResponse place(StoreResponse store, MenuOrderRequest request, OrderSource source,
+                                String externalId) {
+        if (!storeService.acceptingMenuOrders(store)) {
             throw new BusinessRuleException(CLOSED);
         }
         UUID storeId = store.id();
@@ -183,14 +238,14 @@ public class StorefrontService {
         CreateOrderRequest order = new CreateOrderRequest(request.type(),
                 new OrderCustomerRequest(request.customerName().trim(), request.customerPhone().trim()), address,
                 request.items(), request.notes(), 0L, deliveryFee, List.of());
-        OrderResponse placed = orderService.placeFromMenu(storeId, order, method.id(), request.changeForCents());
-        return new MenuOrderResponse(placed.number(), placed.trackingCode(), placed.totalCents());
+        return orderService.placeFromChannel(storeId, source, externalId, order, method.id(),
+                request.changeForCents(), store.menuAutoConfirm());
     }
 
     @Transactional(readOnly = true)
     public OrderTrackingResponse track(String trackingCode) {
         TrackedOrder tracked = orderService.findByTrackingCode(trackingCode)
-                .filter(found -> found.order().source() == OrderSource.DIGITAL_MENU)
+                .filter(found -> found.order().trackingCode() != null)
                 .orElseThrow(() -> new ResourceNotFoundException(ORDER_NOT_FOUND));
         OrderResponse order = tracked.order();
         StoreResponse store = storeService.get(tracked.storeId());

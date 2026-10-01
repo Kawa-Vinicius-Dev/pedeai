@@ -192,13 +192,16 @@ sequenceDiagram
 
 1. A loja divulga o link `/loja/<endereço>` (o endereço fica em
    **Configurações > Loja**). Quem está no caixa abre e fecha o cardápio para
-   pedidos no quadro de pedidos; fechado, o cliente ainda vê o cardápio.
+   pedidos no quadro de pedidos; fechado, o cliente ainda vê o cardápio. Com
+   horário de funcionamento cadastrado, fora dele o cardápio também fica
+   fechado.
 2. O cliente, sem login, monta os itens (sabores e adicionais com o preço
    calculado pela API), escolhe entrega (só nos bairros cadastrados) ou
    retirada, e a forma de pagamento. Paga na entrega ou na retirada.
 3. A API recalcula tudo: preço pelo cardápio, taxa pela área de entrega. O
    pedido nasce **Recebido**, toca o alerta no quadro e a loja confirma. Só
-   depois de confirmado vai para a cozinha e para a impressora.
+   depois de confirmado vai para a cozinha e para a impressora. Com o aceite
+   automático ligado, já nasce confirmado.
 4. O cliente acompanha pelo link com um código aleatório, sem ver telefone ou
    endereço de ninguém. A loja cancela como um pedido de balcão, com motivo, e
    o motivo aparece para o cliente.

@@ -1,11 +1,15 @@
 package com.pedeai.integration.controller;
 
+import com.pedeai.catalog.dto.CatalogImportResponse;
+import com.pedeai.integration.dto.CatalogImportRequest;
 import com.pedeai.integration.dto.ConnectionRequest;
 import com.pedeai.integration.dto.ConnectionResponse;
 import com.pedeai.integration.dto.ConnectionUpdateRequest;
 import com.pedeai.integration.dto.IfoodSetupResponse;
 import com.pedeai.integration.dto.MerchantResponse;
+import com.pedeai.integration.dto.PlatformResponse;
 import com.pedeai.integration.service.ConnectionService;
+import com.pedeai.integration.service.IfoodCatalogImportService;
 import com.pedeai.integration.service.SimulatorService;
 import com.pedeai.shared.security.CurrentUser;
 import com.pedeai.shared.security.Permissions;
@@ -32,16 +36,25 @@ import java.util.UUID;
 public class IntegrationController {
     private final ConnectionService connectionService;
     private final SimulatorService simulatorService;
+    private final IfoodCatalogImportService ifoodCatalogImportService;
 
-    public IntegrationController(ConnectionService connectionService, SimulatorService simulatorService) {
+    public IntegrationController(ConnectionService connectionService, SimulatorService simulatorService,
+                                 IfoodCatalogImportService ifoodCatalogImportService) {
         this.connectionService = connectionService;
         this.simulatorService = simulatorService;
+        this.ifoodCatalogImportService = ifoodCatalogImportService;
     }
 
     /** Se o servidor tem as credenciais do iFood, e se o simulador está ligado. */
     @GetMapping("/ifood/setup")
     public IfoodSetupResponse setup() {
         return connectionService.setup();
+    }
+
+    /** iFood, 99Food e o app Open Delivery: quais estão disponíveis neste servidor. */
+    @GetMapping("/platforms")
+    public List<PlatformResponse> platforms() {
+        return connectionService.platforms();
     }
 
     @GetMapping
@@ -65,6 +78,13 @@ public class IntegrationController {
     public ConnectionResponse update(CurrentUser user, @PathVariable UUID id,
                                      @Valid @RequestBody ConnectionUpdateRequest request) {
         return connectionService.update(user.storeId(), id, request);
+    }
+
+    /** Traz o cardápio da loja no iFood para o PedeAí. Com {@code dryRun}, só mostra o que seria feito. */
+    @PostMapping("/{id}/catalog-import")
+    public CatalogImportResponse importCatalog(CurrentUser user, @PathVariable UUID id,
+                                               @Valid @RequestBody CatalogImportRequest request) {
+        return ifoodCatalogImportService.importCatalog(user.storeId(), id, request.dryRun());
     }
 
     /** Só com o simulador ligado: injeta um pedido de teste do "iFood" no mesmo caminho do pedido real. */

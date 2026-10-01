@@ -164,6 +164,62 @@ class DigitalMenuIntegrationTest {
         send(other, patch("/api/store"), "{\"slug\":\"Com Espaço\"}").andExpect(status().isBadRequest());
     }
 
+    @Test
+    void openingHoursCloseTheMenuAndAutoConfirmSendsTheOrderStraightToTheKitchen() throws Exception {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        String owner = register("Lanches " + suffix, "lanches-" + suffix);
+        String slug = JsonPath.read(send(owner, get("/api/store"), "").andReturn().getResponse().getContentAsString(),
+                "$.slug");
+        String category = id(send(owner, post("/api/categories"), """
+                {"name":"Lanches","active":true}"""));
+        String burger = product(owner, category, "X-Burger", 3000, true);
+        send(owner, put("/api/store/menu-open"), "{\"open\":true}").andExpect(status().isOk());
+        String methods = mockMvc.perform(get("/api/public/stores/" + slug)).andReturn().getResponse()
+                .getContentAsString();
+        List<String> cash = JsonPath.read(methods, "$.paymentMethods[?(@.type == 'CASH')].id");
+        String order = """
+                {"type":"TAKEOUT","customerName":"João","customerPhone":"11977770000",
+                 "items":[{"productId":"%s","quantity":1,"options":[]}],"paymentMethodId":"%s"}"""
+                .formatted(burger, cash.getFirst());
+
+        // Todo dia, só daqui a 2 horas: com a chave ligada, o cardápio continua fechado pelo horário.
+        java.time.LocalTime now = java.time.LocalTime.now(java.time.ZoneId.of("America/Sao_Paulo"));
+        send(owner, patch("/api/store"), week(now.plusHours(2), now.plusHours(3)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openingHours.length()").value(7));
+        mockMvc.perform(get("/api/public/stores/" + slug))
+                .andExpect(jsonPath("$.open").value(false))
+                .andExpect(jsonPath("$.openingHours.length()").value(7));
+        mockMvc.perform(post("/api/public/stores/" + slug + "/orders").contentType(MediaType.APPLICATION_JSON)
+                .content(order)).andExpect(status().isUnprocessableContent());
+
+        // Dentro do horário e com aceite automático: o pedido já nasce confirmado.
+        String within = week(now.minusHours(1), now.plusHours(1));
+        send(owner, patch("/api/store"), within.substring(0, within.length() - 1) + ",\"menuAutoConfirm\":true}")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.menuAutoConfirm").value(true));
+        mockMvc.perform(get("/api/public/stores/" + slug)).andExpect(jsonPath("$.open").value(true));
+        String code = JsonPath.read(mockMvc.perform(post("/api/public/stores/" + slug + "/orders")
+                        .contentType(MediaType.APPLICATION_JSON).content(order))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.trackingCode");
+        mockMvc.perform(get("/api/public/orders/" + code)).andExpect(jsonPath("$.status").value("CONFIRMED"));
+
+        send(owner, patch("/api/store"), "{\"openingHours\":[]}")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.openingHours.length()").value(0));
+        send(owner, patch("/api/store"), """
+                {"openingHours":[{"dayOfWeek":1,"opensAt":"10:00","closesAt":"14:00"},
+                                 {"dayOfWeek":1,"opensAt":"18:00","closesAt":"23:00"}]}""")
+                .andExpect(status().isUnprocessableContent());
+    }
+
+    /** O mesmo horário nos sete dias da semana, como corpo do PATCH /api/store. */
+    private static String week(java.time.LocalTime opens, java.time.LocalTime closes) {
+        String hours = java.util.stream.IntStream.rangeClosed(1, 7)
+                .mapToObj(day -> "{\"dayOfWeek\":%d,\"opensAt\":\"%s\",\"closesAt\":\"%s\"}".formatted(day,
+                        opens.withSecond(0).withNano(0), closes.withSecond(0).withNano(0)))
+                .collect(java.util.stream.Collectors.joining(","));
+        return "{\"openingHours\":[" + hours + "]}";
+    }
+
     private String product(String owner, String category, String name, int price, boolean active) throws Exception {
         return id(send(owner, post("/api/products"), """
                 {"categoryId":"%s","name":"%s","priceCents":%d,"optionGroupIds":[],"available":true,"active":%s}"""

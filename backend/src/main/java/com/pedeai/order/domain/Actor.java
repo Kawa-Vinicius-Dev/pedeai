@@ -8,9 +8,14 @@ public record Actor(ActorType type, UUID id, String name) {
         return new Actor(ActorType.USER, id, name);
     }
 
-    /** "iFood" ou "99Food" na linha do tempo. */
+    /** "iFood", "99Food" ou "Open Delivery" na linha do tempo. */
     public static Actor marketplace(OrderSource source) {
-        return new Actor(ActorType.MARKETPLACE, null, source == OrderSource.IFOOD ? "iFood" : "99Food");
+        String name = switch (source) {
+            case IFOOD -> "iFood";
+            case NINETY_NINE_FOOD -> "99Food";
+            default -> "Open Delivery";
+        };
+        return new Actor(ActorType.MARKETPLACE, null, name);
     }
 
     /** O próprio cliente, no cardápio digital. */

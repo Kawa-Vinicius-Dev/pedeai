@@ -45,7 +45,9 @@ public class SecurityConfig {
     private static final String STORES_PATH = "/api/stores";
     private static final String AUTH_PATH_PREFIX = "/api/auth/";
     private static final String IFOOD_WEBHOOK_PATH = "/api/integrations/ifood/webhook";
+    private static final String OPEN_DELIVERY_WEBHOOK_PATH = "/api/integrations/opendelivery/webhook";
     private static final String PUBLIC_PATH = "/api/public/**";
+    private static final String PARTNER_API_PATH = "/api/v1/**";
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationConverter jwtAuthenticationConverter,
@@ -62,9 +64,11 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, STORES_PATH).permitAll()
                         // Webhook do iFood: sem login, a assinatura HMAC do corpo é conferida no controller.
-                        .requestMatchers(HttpMethod.POST, IFOOD_WEBHOOK_PATH).permitAll()
+                        .requestMatchers(HttpMethod.POST, IFOOD_WEBHOOK_PATH, OPEN_DELIVERY_WEBHOOK_PATH).permitAll()
                         // Cardápio digital: o cliente do restaurante não tem login.
                         .requestMatchers(PUBLIC_PATH).permitAll()
+                        // API de pedidos: autenticada pela chave da loja (X-Api-Key), conferida no controller.
+                        .requestMatchers(PARTNER_API_PATH).permitAll()
                         .requestMatchers("/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll()
                         .anyRequest().authenticated())
@@ -143,7 +147,7 @@ public class SecurityConfig {
 
     private static boolean isPublicAuthEndpoint(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        if (uri.startsWith("/api/public/")) {
+        if (uri.startsWith("/api/public/") || uri.startsWith("/api/v1/")) {
             return true;
         }
         boolean post = HttpMethod.POST.matches(request.getMethod());

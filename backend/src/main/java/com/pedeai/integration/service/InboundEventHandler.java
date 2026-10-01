@@ -5,6 +5,8 @@ import com.pedeai.integration.domain.MarketplaceConnection;
 import com.pedeai.integration.domain.OutboundAction;
 import com.pedeai.integration.ifood.IfoodClient;
 import com.pedeai.integration.ifood.IfoodOrderMapper;
+import com.pedeai.integration.opendelivery.OpenDeliveryClient;
+import com.pedeai.integration.opendelivery.OpenDeliveryOrderMapper;
 import com.pedeai.integration.repository.InboundEventRepository;
 import com.pedeai.integration.repository.MarketplaceConnectionRepository;
 import com.pedeai.integration.repository.OutboundActionRepository;
@@ -26,7 +28,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Processa um evento do iFood, cada um na sua transação: pedido novo é importado, mudança de status é aplicada.
+ * Processa um evento do iFood ou de um app Open Delivery, cada um na sua transação: pedido novo é importado, mudança de status é aplicada.
  * O mapeamento de códigos está em docs/05-integracoes.md#mapeamento-de-status.
  */
 @Service
@@ -37,8 +39,11 @@ public class InboundEventHandler {
             Map.entry("RTP", OrderStatus.READY), Map.entry("READY_TO_PICKUP", OrderStatus.READY),
             Map.entry("DSP", OrderStatus.DISPATCHED), Map.entry("DISPATCHED", OrderStatus.DISPATCHED),
             Map.entry("CON", OrderStatus.COMPLETED), Map.entry("CONCLUDED", OrderStatus.COMPLETED),
-            Map.entry("CAN", OrderStatus.CANCELLED), Map.entry("CANCELLED", OrderStatus.CANCELLED));
-    static final String CANCELLATION_REFUSED = "O iFood não aceitou o pedido de cancelamento.";
+            Map.entry("CAN", OrderStatus.CANCELLED), Map.entry("CANCELLED", OrderStatus.CANCELLED),
+            // Open Delivery (os outros nomes são os mesmos do iFood).
+            Map.entry("PREPARING", OrderStatus.IN_PREPARATION), Map.entry("READY_FOR_PICKUP", OrderStatus.READY),
+            Map.entry("DELIVERED", OrderStatus.COMPLETED));
+    static final String CANCELLATION_REFUSED = "A plataforma não aceitou o pedido de cancelamento.";
 
     private final InboundEventRepository events;
     private final MarketplaceConnectionRepository connections;
@@ -47,13 +52,17 @@ public class InboundEventHandler {
     private final OrderStatusService orderStatusService;
     private final IfoodClient ifood;
     private final IfoodOrderMapper mapper;
+    private final OpenDeliveryClient openDelivery;
+    private final OpenDeliveryOrderMapper openDeliveryMapper;
+    private final Platforms platforms;
     private final ObjectMapper json;
     private final Clock clock;
 
     public InboundEventHandler(InboundEventRepository events, MarketplaceConnectionRepository connections,
                                OutboundActionRepository actions, OrderService orderService,
                                OrderStatusService orderStatusService, IfoodClient ifood, IfoodOrderMapper mapper,
-                               ObjectMapper json, Clock clock) {
+                               OpenDeliveryClient openDelivery, OpenDeliveryOrderMapper openDeliveryMapper,
+                               Platforms platforms, ObjectMapper json, Clock clock) {
         this.events = events;
         this.connections = connections;
         this.actions = actions;
@@ -61,6 +70,9 @@ public class InboundEventHandler {
         this.orderStatusService = orderStatusService;
         this.ifood = ifood;
         this.mapper = mapper;
+        this.openDelivery = openDelivery;
+        this.openDeliveryMapper = openDeliveryMapper;
+        this.platforms = platforms;
         this.json = json;
         this.clock = clock;
     }
@@ -84,14 +96,22 @@ public class InboundEventHandler {
         }
         String code = event.getEventCode();
         JsonNode payload = json.readTree(event.getPayload());
-        if ("PLC".equals(code) || "PLACED".equals(code)) {
+        if ("PLC".equals(code) || "PLACED".equals(code) || "CREATED".equals(code)) {
             ensureImported(connection, event.getExternalOrderId(), payload);
         } else if (STATUS_BY_CODE.containsKey(code)) {
             OrderResponse order = ensureImported(connection, event.getExternalOrderId(), payload);
             orderStatusService.applyFromMarketplace(storeId, order.id(), STATUS_BY_CODE.get(code),
-                    STATUS_BY_CODE.get(code) == OrderStatus.CANCELLED ? cancelReason(payload) : null);
-        } else if ("CARF".equals(code) || "CANCELLATION_REQUEST_FAILED".equals(code)) {
-            orderService.findExternal(storeId, OrderSource.IFOOD, event.getExternalOrderId())
+                    STATUS_BY_CODE.get(code) == OrderStatus.CANCELLED
+                            ? cancelReason(platforms.label(event.getProvider()), payload) : null);
+        } else if ("ORDER_CANCELLATION_REQUEST".equals(code)) {
+            // Open Delivery: o cliente pediu o cancelamento pelo app. Quem aceita ou recusa é a loja, no painel do app.
+            connection.failed("O app pediu o cancelamento do pedido " + event.getExternalOrderId()
+                    + ": aceite ou recuse no painel do " + platforms.label(event.getProvider()) + ".", now);
+            event.ignored(storeId, "Pedido de cancelamento do app: decidir no painel do app.", now);
+            return;
+        } else if ("CARF".equals(code) || "CANCELLATION_REQUEST_FAILED".equals(code)
+                || "CANCELLATION_REQUEST_DENIED".equals(code)) {
+            orderService.findExternal(storeId, event.getProvider(), event.getExternalOrderId())
                     .ifPresent(order -> actions.findAllByOrderIdOrderByCreatedAtAsc(order.id()).stream()
                             .filter(action -> action.getAction() == OutboundAction.Action.REQUEST_CANCELLATION)
                             .reduce((first, second) -> second)
@@ -126,24 +146,30 @@ public class InboundEventHandler {
      * pedido dentro do próprio evento.
      */
     private OrderResponse ensureImported(MarketplaceConnection connection, String externalOrderId, JsonNode payload) {
-        Optional<OrderResponse> existing = orderService.findExternal(connection.getStoreId(), OrderSource.IFOOD,
+        OrderSource provider = connection.getProvider();
+        Optional<OrderResponse> existing = orderService.findExternal(connection.getStoreId(), provider,
                 externalOrderId);
         if (existing.isPresent()) {
             return existing.get();
         }
-        JsonNode details = payload.has("order") ? payload.get("order") : ifood.order(externalOrderId);
-        return orderService.importFromMarketplace(connection.getStoreId(),
-                mapper.map(connection.getStoreId(), details, connection.isAutoConfirm()));
+        if (provider == OrderSource.IFOOD) {
+            JsonNode details = payload.has("order") ? payload.get("order") : ifood.order(externalOrderId);
+            return orderService.importFromMarketplace(connection.getStoreId(),
+                    mapper.map(connection.getStoreId(), details, connection.isAutoConfirm()));
+        }
+        JsonNode details = payload.has("order") ? payload.get("order") : openDelivery.order(provider, externalOrderId);
+        return orderService.importFromMarketplace(connection.getStoreId(), openDeliveryMapper.map(
+                connection.getStoreId(), provider, platforms.label(provider), details, connection.isAutoConfirm()));
     }
 
-    private static String cancelReason(JsonNode payload) {
+    private static String cancelReason(String platform, JsonNode payload) {
         JsonNode metadata = payload.path("metadata");
         for (String field : new String[]{"CANCEL_REASON", "reason", "cancelReason", "details"}) {
             String reason = metadata.path(field).asString("");
             if (!reason.isBlank()) {
-                return "iFood: " + (reason.length() > 290 ? reason.substring(0, 290) : reason);
+                return platform + ": " + (reason.length() > 280 ? reason.substring(0, 280) : reason);
             }
         }
-        return "Cancelado pelo iFood";
+        return "Cancelado pelo " + platform;
     }
 }

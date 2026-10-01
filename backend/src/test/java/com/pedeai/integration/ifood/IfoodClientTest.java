@@ -1,6 +1,7 @@
 package com.pedeai.integration.ifood;
 
 import com.pedeai.integration.config.IfoodProperties;
+import com.pedeai.support.IntegrationTestProperties;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
@@ -64,7 +65,7 @@ class IfoodClientTest {
             respond(exchange, 202, "");
         });
         server.start();
-        client = new IfoodClient(new IfoodProperties(true, "http://127.0.0.1:" + server.getAddress().getPort(),
+        client = new IfoodClient(IntegrationTestProperties.ifood(true, "http://127.0.0.1:" + server.getAddress().getPort(),
                 "cliente", "segredo", "/order/v1.0/orders:polling", "/order/v1.0/orders:acknowledgment", false),
                 CLOCK);
     }
