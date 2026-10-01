@@ -17,11 +17,20 @@ public record ConnectionResponse(
         boolean autoConfirm,
         @Schema(types = {"string", "null"}) Instant lastEventAt,
         @Schema(types = {"string", "null"}) String lastError,
-        long failedActions
+        long failedActions,
+        boolean catalogSync,
+        long syncPending,
+        long syncFailed
 ) {
     public static ConnectionResponse from(MarketplaceConnection connection, long failedActions) {
+        return from(connection, failedActions, 0, 0);
+    }
+
+    public static ConnectionResponse from(MarketplaceConnection connection, long failedActions, long syncPending,
+                                          long syncFailed) {
         return new ConnectionResponse(connection.getId(), connection.getProvider(),
                 connection.getExternalMerchantId(), connection.getMerchantName(), connection.getStatus(),
-                connection.isAutoConfirm(), connection.getLastEventAt(), connection.getLastError(), failedActions);
+                connection.isAutoConfirm(), connection.getLastEventAt(), connection.getLastError(), failedActions,
+                connection.isCatalogSync(), syncPending, syncFailed);
     }
 }

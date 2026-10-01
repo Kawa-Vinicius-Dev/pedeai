@@ -63,6 +63,8 @@ class CatalogControllersTest {
     private OptionGroupService optionGroupService;
     @MockitoBean
     private ProductService productService;
+    @MockitoBean
+    private com.pedeai.catalog.service.ProductImageService productImageService;
 
     @Test
     void anyoneFromTheStoreCanReadTheMenu() throws Exception {
@@ -202,6 +204,6 @@ class CatalogControllersTest {
 
     private static ProductResponse product() {
         return new ProductResponse(PRODUCT_ID, CATEGORY_ID, "500", "Pizza Grande", null, 0, null, null, List.of(),
-                true, true);
+                true, true, true, null, null);
     }
 }

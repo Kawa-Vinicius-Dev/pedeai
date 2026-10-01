@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * homologação (docs/05-integracoes.md#pendências-para-validar-na-documentação-oficial).
  *
  * @param simulator libera a injeção de pedidos simulados, para desenvolver e demonstrar sem credenciais
+ * @param catalogsPath e {@code categoriesPath}: a API de catálogo, para importar o cardápio do iFood. Conferir na
+ *                     homologação, como os caminhos do polling.
  */
 @ConfigurationProperties("app.ifood")
 public record IfoodProperties(
@@ -18,7 +20,10 @@ public record IfoodProperties(
         String clientSecret,
         @DefaultValue("/order/v1.0/orders:polling") String pollingPath,
         @DefaultValue("/order/v1.0/orders:acknowledgment") String acknowledgmentPath,
-        @DefaultValue("false") boolean simulator
+        @DefaultValue("false") boolean simulator,
+        @DefaultValue("/catalog/v2.0/merchants/{merchantId}/catalogs") String catalogsPath,
+        @DefaultValue("/catalog/v2.0/merchants/{merchantId}/catalogs/{catalogId}/categories?includeItems=true")
+        String categoriesPath
 ) {
     /** Ligado e com credenciais: só então o PedeAí conversa com o iFood. */
     public boolean configured() {

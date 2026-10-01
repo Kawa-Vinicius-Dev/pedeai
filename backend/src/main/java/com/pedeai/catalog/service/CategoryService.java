@@ -1,5 +1,6 @@
 package com.pedeai.catalog.service;
 
+import com.pedeai.catalog.event.CatalogChanged;
 import com.pedeai.catalog.domain.Category;
 import com.pedeai.catalog.dto.CategoryRequest;
 import com.pedeai.catalog.dto.CategoryResponse;
@@ -9,6 +10,7 @@ import com.pedeai.shared.exception.BusinessRuleException;
 import com.pedeai.shared.exception.ConflictException;
 import com.pedeai.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -24,11 +26,14 @@ public class CategoryService {
 
     private final CategoryRepository repository;
     private final SectorRepository sectorRepository;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
-    public CategoryService(CategoryRepository repository, SectorRepository sectorRepository, Clock clock) {
+    public CategoryService(CategoryRepository repository, SectorRepository sectorRepository,
+                           ApplicationEventPublisher events, Clock clock) {
         this.repository = repository;
         this.sectorRepository = sectorRepository;
+        this.events = events;
         this.clock = clock;
     }
 
@@ -70,6 +75,7 @@ public class CategoryService {
         validateSector(storeId, request.defaultSectorId());
         int sortOrder = request.sortOrder() != null ? request.sortOrder() : category.getSortOrder();
         category.update(name, request.defaultSectorId(), sortOrder, request.active(), Instant.now(clock));
+        events.publishEvent(CatalogChanged.category(storeId, id));
         return CategoryResponse.from(category);
     }
 

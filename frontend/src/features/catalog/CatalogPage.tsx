@@ -1,5 +1,6 @@
-import { Stack, Tabs, Text, Title } from '@mantine/core';
-import { BookOpen, ChefHat, FolderOpen, ListPlus, type LucideIcon } from 'lucide-react';
+import { Button, Group, Stack, Tabs, Text, Title } from '@mantine/core';
+import { BookOpen, ChefHat, FileSpreadsheet, FolderOpen, ListPlus, type LucideIcon } from 'lucide-react';
+import { useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { CATALOG_MANAGERS } from '../../shared/lib/roles';
 import { useSession } from '../auth/auth-context';
@@ -7,6 +8,7 @@ import { CategoriesTab } from './CategoriesTab';
 import { OptionGroupsTab } from './OptionGroupsTab';
 import { ProductsTab } from './ProductsTab';
 import { SectorsTab } from './SectorsTab';
+import { SpreadsheetImportModal } from './SpreadsheetImportModal';
 
 type TabId = 'produtos' | 'categorias' | 'adicionais' | 'setores';
 
@@ -24,6 +26,7 @@ export function CatalogPage() {
   const { user } = useSession();
   const manage = CATALOG_MANAGERS.includes(user.role);
   const tabs = TABS.filter((current) => manage || !current.managersOnly);
+  const [importing, setImporting] = useState(false);
 
   if (!tabs.some((current) => current.id === tab)) {
     return <Navigate to="/cardapio/produtos" replace />;
@@ -31,14 +34,22 @@ export function CatalogPage() {
 
   return (
     <Stack maw={1100} gap="lg">
-      <Stack gap={4}>
-        <Title order={2}>Cardápio</Title>
-        <Text c="dimmed">
-          {manage
-            ? 'Produtos, adicionais e o setor que prepara cada item.'
-            : 'Pause o que acabou e libere quando voltar.'}
-        </Text>
-      </Stack>
+      <Group justify="space-between" align="flex-end">
+        <Stack gap={4}>
+          <Title order={2}>Cardápio</Title>
+          <Text c="dimmed">
+            {manage
+              ? 'Produtos, adicionais e o setor que prepara cada item.'
+              : 'Pause o que acabou e libere quando voltar.'}
+          </Text>
+        </Stack>
+        {manage && (
+          <Button variant="default" leftSection={<FileSpreadsheet size={16} />} onClick={() => setImporting(true)}>
+            Importar planilha
+          </Button>
+        )}
+      </Group>
+      <SpreadsheetImportModal opened={importing} onClose={() => setImporting(false)} />
       <Tabs value={tab} onChange={(value) => value && navigate(`/cardapio/${value}`)} keepMounted={false}>
         <Tabs.List>
           {tabs.map(({ id, label, icon: Icon }) => (

@@ -12,6 +12,7 @@ public record MenuProductResponse(
         @Schema(types = {"string", "null"}) String description,
         long priceCents,
         List<UUID> optionGroupIds,
-        boolean available
+        boolean available,
+        @Schema(types = {"string", "null"}) String imageUrl
 ) {
 }

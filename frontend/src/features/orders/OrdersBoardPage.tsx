@@ -120,7 +120,7 @@ export function OrdersBoardPage() {
   );
 }
 
-/** Abrir e fechar o cardápio digital para pedidos durante o serviço. */
+/** Abrir e fechar a loja para pedidos durante o serviço: o cardápio digital e, se ligado, o iFood. */
 function MenuOpenSwitch() {
   const queryClient = useQueryClient();
   const store = useQuery({ queryKey: ['store'], queryFn: () => unwrap(api.GET('/api/store')) });
@@ -130,7 +130,9 @@ function MenuOpenSwitch() {
       queryClient.setQueryData(['store'], saved);
       notifications.show({
         color: saved.menuOpen ? 'green' : 'gray',
-        message: saved.menuOpen ? 'Cardápio digital aberto para pedidos.' : 'Cardápio digital fechado.',
+        message: saved.menuOpen
+          ? 'Pedidos abertos: cardápio digital e iFood (se a loja estiver ligada a ele).'
+          : 'Pedidos fechados: cardápio digital fechado e iFood pausado (se a loja estiver ligada a ele).',
       });
     },
     onError: (error) => notifications.show({ color: 'red', message: errorMessage(error) }),

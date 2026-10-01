@@ -1,13 +1,19 @@
 package com.pedeai.store.domain;
 
 import com.pedeai.shared.id.UuidV7;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import java.time.Instant;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /** A loja (restaurante). É o tenant: todo dado de negócio pertence a uma loja. */
@@ -23,6 +29,13 @@ public class Store {
     private String name;
     private String slug;
     private boolean menuOpen;
+    private boolean menuAutoConfirm;
+    /** Acréscimo nos preços do iFood em pontos-base (1500 = 15%), para cobrir a comissão. */
+    private int ifoodMarkupBp;
+    @ElementCollection
+    @CollectionTable(name = "store_opening_hours", joinColumns = @JoinColumn(name = "store_id"))
+    @OrderBy("dayOfWeek")
+    private List<OpeningHours> openingHours = new ArrayList<>();
     private String document;
     private String phone;
     private String timezone;
@@ -91,6 +104,30 @@ public class Store {
 
     public boolean isMenuOpen() {
         return menuOpen;
+    }
+
+    public int getIfoodMarkupBp() {
+        return ifoodMarkupBp;
+    }
+
+    public void changeIfoodMarkup(int markupBp, Instant now) {
+        this.ifoodMarkupBp = markupBp;
+        this.updatedAt = now;
+    }
+
+    public boolean isMenuAutoConfirm() {
+        return menuAutoConfirm;
+    }
+
+    public List<OpeningHours> getOpeningHours() {
+        return List.copyOf(openingHours);
+    }
+
+    /** Aceite automático dos pedidos do cardápio e horário de funcionamento (vazio: sem restrição de horário). */
+    public void changeMenuSettings(boolean autoConfirm, List<OpeningHours> hours, Instant now) {
+        this.menuAutoConfirm = autoConfirm;
+        this.openingHours = new ArrayList<>(hours);
+        this.updatedAt = now;
     }
 
     public String getName() {

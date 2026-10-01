@@ -77,6 +77,7 @@ export const routes: RouteObject[] = [
               { path: '/configuracoes/taxas', lazy: page(() => import('../features/settings/DeliveryZonesPage'), 'DeliveryZonesPage') },
               { path: '/configuracoes/impressao', lazy: page(() => import('../features/printing/PrintingSettingsPage'), 'PrintingSettingsPage') },
               { path: '/configuracoes/integracoes', lazy: page(() => import('../features/integrations/IntegrationsPage'), 'IntegrationsPage') },
+              { path: '/configuracoes/api-de-pedidos', lazy: page(() => import('../features/settings/ApiKeysPage'), 'ApiKeysPage') },
             ],
           },
           {

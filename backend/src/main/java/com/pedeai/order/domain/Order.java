@@ -330,9 +330,13 @@ public class Order {
         return trackingCode;
     }
 
-    /** Feito pelo cliente no cardápio digital, que acompanha o pedido por este código. */
-    public void fromDigitalMenu(String trackingCode) {
-        this.source = OrderSource.DIGITAL_MENU;
+    /**
+     * Feito por um canal próprio da loja (cardápio digital ou API de pedidos). O cliente acompanha pelo código;
+     * {@code externalId} é o id do pedido no sistema de origem, quando houver.
+     */
+    public void fromOwnChannel(OrderSource source, String externalId, String trackingCode) {
+        this.source = source;
+        this.externalId = externalId;
         this.trackingCode = trackingCode;
     }
 

@@ -46,8 +46,8 @@ Serviços que "dormem" sem acesso (como o plano grátis do Render) **não servem
    **Root Directory = `backend`** (o `railway.toml` já configura o Dockerfile e o health check).
 2. Na API, configure as variáveis: `DB_URL` (`jdbc:postgresql://<host>:<porta>/<banco>` a partir dos dados do
    PostgreSQL da Railway), `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `REFRESH_COOKIE_SECURE=true`,
-   `SIGNUP_ENABLED=false`, `APP_CORS_ALLOWED_ORIGINS` (endereço da Vercel) e, quando houver, `SENTRY_DSN` e as do
-   iFood.
+   `SIGNUP_ENABLED=false`, `APP_CORS_ALLOWED_ORIGINS` (endereço da Vercel) e, quando houver, `SENTRY_DSN`, as do
+   iFood e as `R2_*` das fotos.
 3. Gere um domínio público para a API nas configurações do serviço.
 
 ## Ligar a Vercel à API
@@ -66,6 +66,21 @@ regra. O link de cada loja aparece em **Configurações > Loja**.
 > requisição. O app e o agente reconectam sozinhos. Se isso incomodar, o agente pode apontar direto para o
 > domínio da API (ele não usa cookie).
 
+## Fotos dos produtos
+
+As fotos ficam no **Cloudflare R2** (sem custo de saída; até 10 GB grátis). Sem as variáveis abaixo, a API funciona
+e só o envio de foto avisa que está desligado.
+
+1. No painel da Cloudflare: **R2 > Create bucket** (ex.: `pedeai-fotos`).
+2. No bucket: **Settings > Public access** ligue o endereço público `r2.dev` ou um domínio seu
+   (ex.: `fotos.seudominio.com.br`). Esse endereço é o `R2_PUBLIC_URL`.
+3. **R2 > Manage API tokens > Create API token** com permissão **Object Read & Write** só nesse bucket.
+4. Nas variáveis da API (nunca no repositório): `R2_ACCOUNT_ID` (o id da conta, no painel do R2),
+   `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` e `R2_PUBLIC_URL`.
+
+A tela reduz a foto antes de mandar (lado maior 1200 px, JPEG); a API aceita JPEG ou PNG até 2 MB e confere o
+formato pelo conteúdo. Trocar a foto apaga a antiga.
+
 ## Checklist antes de abrir para o piloto
 
 - [ ] `JWT_SECRET` e senha do banco gerados, fortes e só no `.env` / variáveis do provedor.
@@ -79,5 +94,10 @@ regra. O link de cada loja aparece em **Configurações > Loja**.
 - [ ] iFood, quando houver credenciais: `IFOOD_ENABLED=true`, `IFOOD_CLIENT_ID` e `IFOOD_CLIENT_SECRET` nas variáveis
       do provedor, e o webhook cadastrado no iFood Developer como `https://api.seudominio.com.br/api/integrations/ifood/webhook`
       (direto na API, sem passar pela Vercel). O polling segue ligado como contingência.
+- [ ] 99Food, quando houver credenciamento como integradora: `NINETYNINE_BASE_URL`, `NINETYNINE_CLIENT_ID`,
+      `NINETYNINE_CLIENT_SECRET` e `NINETYNINE_APP_ID`, e o webhook cadastrado como
+      `https://api.seudominio.com.br/api/integrations/opendelivery/webhook`. Outro app Open Delivery usa as variáveis
+      `OPENDELIVERY_*`.
+- [ ] Fotos: variáveis `R2_*` configuradas e uma foto enviada pela tela do produto aparecendo no cardápio digital.
 - [ ] Versão do agente: `AGENT_LATEST_VERSION` e `AGENT_DOWNLOAD_URL` apontando para o instalador publicado, para a
       tela de impressão marcar computadores desatualizados.

@@ -147,12 +147,58 @@ sequenceDiagram
   evento `CANCELLED`. Aí o cancelamento é aplicado e os setores recebem o aviso.
 - **Pela plataforma ou pelo cliente:** o evento de cancelamento cancela o pedido,
   toca um alerta e imprime o aviso nos setores que já receberam o pedido.
-- **Negociação (iFood):** o evento `HANDSHAKE_DISPUTE` traz o pedido do cliente
-  (cancelamento total ou parcial, reembolso), as evidências, o **prazo** e a
-  **ação automática** caso ninguém responda. O PedeAí abre um modal com prazo
-  regressivo e as opções da plataforma: aceitar, rejeitar ou propor
-  alternativa. A disputa só pode ser respondida uma vez. Sem resposta, vale a
-  ação automática da plataforma.
+
+### Cancelamento pedido pelo cliente
+
+O cliente pede no app para cancelar (iFood: evento `HANDSHAKE_DISPUTE`/`HSD`;
+Open Delivery: `ORDER_CANCELLATION_REQUEST`). O PedeAí grava a disputa
+(`marketplace_dispute`, uma por id da plataforma) e mostra uma faixa laranja no
+topo de todas as telas de quem pode responder: **caixa, gerente e dono**.
+
+- **Aceitar:** a resposta vai pelo outbox (`ACCEPT_DISPUTE`) e o pedido só é
+  cancelado quando chega o evento de cancelamento do app.
+- **Recusar:** exige um dos motivos que o PedeAí oferece ("O pedido já está
+  pronto", "O pedido já saiu para entrega"); vai como `REJECT_DISPUTE`. O
+  pedido continua.
+- **Prazo:** a faixa mostra até quando dá para responder. Depois dele, ou sem
+  resposta, **quem decide é o app**. A disputa só pode ser respondida uma vez.
+- O acordo (`HANDSHAKE_SETTLEMENT`/`HSS`) ou o fim do pedido fecham a disputa.
+- Por enquanto só cancelamento total. Reembolso parcial e contraproposta ficam
+  para quando o iFood confirmar o formato na homologação.
+
+## Sincronização com o iFood
+
+**O PedeAí manda; o iFood é cópia.** Tudo passa por uma fila por loja
+(`marketplace_sync`), enviada a cada 5 s, com nova tentativa em `429`/`5xx`
+(até 10, com espera crescente). O envio lê o estado **na hora**: dez alterações
+seguidas no mesmo produto viram um envio só.
+
+| O que | Quando vai | Observação |
+| --- | --- | --- |
+| **Pausa** | Ao mudar a chave "Cardápio aberto" do quadro de pedidos | Uma chave fecha tudo: o cardápio digital e o iFood (interrupção de 12 h, o máximo seguro; reabrir tira a pausa). Ligar o iFood ou "Enviar tudo" **não** mexem na pausa, para não fechar a loja de quem não usa o cardápio digital. |
+| **Horário** | Ao salvar o horário em Configurações > Loja, e em "Enviar tudo" | Substitui o horário do iFood. Sem horário no PedeAí, o do iFood fica como está. Passar da meia-noite vira uma duração maior. |
+| **Cardápio** | Com a chave "O PedeAí manda no cardápio do iFood" ligada no vínculo: a cada produto, adicional ou categoria salvo, e em "Enviar tudo" | Um item completo por produto (`PUT /catalog/v2.0/merchants/{id}/items`): preço, status, descrição, foto e complementos. Ids derivados dos daqui, então reenviar atualiza. O que for mudado direto no iFood é sobrescrito. |
+
+**Preço no iFood:** o preço daqui mais o **acréscimo da loja** (Integrações,
+só o dono muda), arredondado para cima até terminar em **,90**. Complementos
+recebem o mesmo acréscimo, arredondado para os **10 centavos de cima** (um
+adicional de R$ 2,00 terminando em ,90 quase dobraria). Produto com **preço
+fixo no iFood** usa esse valor. Preço zero (monte o seu) continua zero.
+
+**Quais produtos:** cada produto tem "Vender no iFood", ligado por padrão.
+Desligado, ou produto inativo, vai como indisponível se já esteve no iFood; se
+nunca foi, não vai. Pedido de balcão continua só no PedeAí.
+
+**Código PDV:** o `externalCode` do item é o código PDV ou, sem código, o id do
+produto. O pedido que volta do iFood é ligado ao produto por qualquer um dos
+dois.
+
+**Não vai (e aparece como erro no vínculo):** produto com grupo cobrado pelo
+maior valor ou pela média (pizza meio a meio). O iFood soma os complementos;
+pizza precisa do modelo de pizza do iFood, cadastrado lá.
+
+**99Food:** o Open Delivery não tem pausa nem envio de cardápio. Fica para
+quando a 99Food disser por qual protocolo homologa.
 
 ## Autenticação e vínculo da loja
 
@@ -192,6 +238,43 @@ sequenceDiagram
 - As credenciais por loja, se existirem nesse modelo, ficam **cifradas** em
   `marketplace_connection.credentials_encrypted`.
 - Suporte técnico da 99Food para integradores: 99FoodTechSupport@didiglobal.com.
+
+## Open Delivery
+
+Implementado conforme a especificação v1.7.1 (`openapi.yaml` do repositório da Abrasel). O PedeAí é o
+**Software Service**; a 99Food e os outros apps são **Ordering Applications**.
+
+| O que | Como |
+| --- | --- |
+| Token | `POST {baseUrl}/oauth/token`, formulário com `client_credentials`. Renovado 5 min antes de vencer e, num 401, uma vez. |
+| Polling | `GET /v1/events:polling` a cada 30 s, **um merchant por chamada** (o evento não diz de qual merchant é). `200` com eventos ou `204`. |
+| Acknowledgment | `POST /v1/events/acknowledgment` com `[{id, orderId, eventType}]`, em lotes de 100, depois de gravar no inbox. |
+| Webhook | `POST /api/integrations/opendelivery/webhook`. O app é achado pelo `X-App-Id`, a assinatura `X-App-Signature` (HMAC-SHA256 hexadecimal do corpo cru com o client secret) é conferida e o merchant vem do `X-App-MerchantId`. Responde `200` sem corpo. |
+| Pedido | `GET /v1/orders/{id}`, traduzido no `OpenDeliveryOrderMapper`: itens pelo `externalCode`, `otherFees` (taxa de entrega separada das outras), descontos por patrocinador, `PREPAID` vira "Online <app>" já pago e `PENDING` vira a forma da loja, com troco. |
+| Status de volta | `confirm` (com o id do pedido aqui em `orderExternalCode`), `preparing`, `readyForPickup`, `dispatch`, pelo mesmo outbox do iFood. |
+| Cancelamento | `requestCancellation` com um dos motivos fixos da especificação; o pedido só cancela aqui com o evento `CANCELLED`. `ORDER_CANCELLATION_REQUEST` (o cliente pediu pelo app) aparece no painel da integração para a loja decidir no app. |
+| Configuração | Variáveis `NINETYNINE_*` (99Food) e `OPENDELIVERY_*` (outro app): URL, client id, client secret e app id. Sem elas, o app fica desligado. `OPENDELIVERY_SIMULATOR=true` libera pedidos simulados. |
+
+> ponytail: um app por provider (99Food e um app genérico). Para vários apps genéricos ao mesmo tempo, o vínculo da
+> loja precisa guardar o app id. Com muitas lojas no mesmo app, juntar os merchants no polling e achar o merchant pelo
+> pedido.
+
+O `GET /v1/merchant` (o app lê o cardápio da loja no PedeAí) ainda não foi feito: publicar o cardápio nos apps está em
+"depois do escopo atual".
+
+## API de pedidos do PedeAí
+
+Para um site, um bot de WhatsApp ou um cardápio de terceiros que não fala Open Delivery. A loja cria uma chave em
+**Configurações > API de pedidos**; o sistema manda a chave no header `X-Api-Key`.
+
+| Endpoint | O que faz |
+| --- | --- |
+| `GET /api/v1/menu` | O cardápio da loja com os ids, as áreas de entrega e as formas de pagamento. |
+| `POST /api/v1/orders` | Cria o pedido. Mesmas regras do cardápio digital: preço pelo cardápio, taxa pela área de entrega, horário e aceite automático da loja. `externalId` (opcional) é o id no sistema de origem: reenviar o mesmo devolve o pedido já criado (`200`), sem duplicar. |
+| `GET /api/v1/orders/{id}` | Status e totais. A chave só enxerga os pedidos criados pela API. |
+
+A chave tem 256 bits aleatórios e só aparece na criação; o banco guarda o SHA-256. Revogar corta o acesso na hora.
+Limite de 300 pedidos a cada 10 minutos por loja. O pedido entra com a origem `API`.
 
 ## Regras da plataforma que o PedeAí precisa cumprir
 
@@ -235,8 +318,9 @@ sequenceDiagram
 
 ## Painel de saúde da integração
 
-Por loja: status da conexão, último evento recebido, última presença, ações
-pendentes e com falha, último erro e botão "sincronizar agora". Na operação do
+Por loja: status da conexão, último evento recebido, ações com falha, envios
+ao iFood na fila e com falha, último erro e o botão "Enviar cardápio e horário
+agora". Na operação do
 PedeAí: métricas de atraso do inbox, falhas por plataforma e taxa de `429` e
 `5xx`.
 
@@ -288,7 +372,12 @@ Antes da Etapa 5 (iFood):
   pelo iFood.
 - Checklist completo de homologação e limites de taxa por endpoint.
 - Caminhos dos endpoints da plataforma de negociação e das respostas às
-  disputas.
+  disputas (hoje `POST /order/v1.0/disputes/{id}/accept|reject`).
+- Sincronização ([acima](#sincronização-com-o-ifood)): interrupções
+  (`/merchant/v1.0/merchants/{id}/interruptions`), horário
+  (`PUT .../opening-hours`), catálogo v2 (`PUT /catalog/v2.0/merchants/{id}/items`,
+  criação de categoria e `POST .../image/upload`). Conferir os formatos na
+  homologação.
 
 Antes da Etapa 6 (99Food):
 

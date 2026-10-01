@@ -5,6 +5,7 @@ import com.pedeai.integration.domain.OutboundAction;
 import com.pedeai.integration.dto.ConnectionResponse;
 import com.pedeai.integration.dto.OutboundActionResponse;
 import com.pedeai.integration.service.ConnectionService;
+import com.pedeai.integration.service.IfoodCatalogImportService;
 import com.pedeai.integration.service.MarketplaceOrderService;
 import com.pedeai.integration.service.SimulatorService;
 import com.pedeai.order.domain.OrderSource;
@@ -50,12 +51,14 @@ class IntegrationControllersTest {
     @MockitoBean
     private SimulatorService simulatorService;
     @MockitoBean
+    private IfoodCatalogImportService ifoodCatalogImportService;
+    @MockitoBean
     private MarketplaceOrderService marketplaceOrderService;
 
     @Test
     void managerLinksTheStoreAndGetsTheLocation() throws Exception {
         when(connectionService.connect(eq(STORE_ID), any())).thenReturn(new ConnectionResponse(CONNECTION,
-                OrderSource.IFOOD, "m-1", "Lanchonete", MarketplaceConnection.Status.ACTIVE, false, null, null, 0));
+                OrderSource.IFOOD, "m-1", "Lanchonete", MarketplaceConnection.Status.ACTIVE, false, null, null, 0, false, 0, 0));
 
         mockMvc.perform(post("/api/integrations").with(as(Role.MANAGER)).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"externalMerchantId\":\"m-1\",\"autoConfirm\":false}"))
@@ -69,7 +72,7 @@ class IntegrationControllersTest {
         mockMvc.perform(post("/api/integrations").with(as(Role.OWNER)).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"externalMerchantId\":\" \"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fields.externalMerchantId").value("Informe o merchant do iFood."));
+                .andExpect(jsonPath("$.fields.externalMerchantId").value("Informe o id da loja na plataforma (merchant)."));
         mockMvc.perform(get("/api/integrations").with(as(Role.CASHIER))).andExpect(status().isForbidden());
         verify(connectionService, never()).connect(any(), any());
     }

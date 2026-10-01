@@ -14,6 +14,7 @@ function storefront(overrides: Partial<Storefront> = {}): Storefront {
     slug: 'pizzaria-bella',
     phone: '(11) 3333-4444',
     open: true,
+    openingHours: [],
     deliveryZones: [{ neighborhood: 'Centro', feeCents: 800 }],
     paymentMethods: [
       { id: ORDER_IDS.cash, name: 'Dinheiro', type: 'CASH' },
@@ -24,8 +25,8 @@ function storefront(overrides: Partial<Storefront> = {}): Storefront {
         id: MENU_IDS.pizzas,
         name: 'Pizzas',
         products: [
-          { id: MENU_IDS.pizza, name: 'Pizza Grande', description: '8 fatias', priceCents: 0, optionGroupIds: [MENU_IDS.flavors], available: true },
-          { id: MENU_IDS.soda, name: 'Refrigerante lata', description: null, priceCents: 700, optionGroupIds: [], available: false },
+          { id: MENU_IDS.pizza, name: 'Pizza Grande', description: '8 fatias', priceCents: 0, optionGroupIds: [MENU_IDS.flavors], available: true, imageUrl: null },
+          { id: MENU_IDS.soda, name: 'Refrigerante lata', description: null, priceCents: 700, optionGroupIds: [], available: false, imageUrl: null },
         ],
       },
     ],
@@ -156,10 +157,16 @@ describe('cardápio digital', () => {
   });
 
   it('com a loja fechada mostra o cardápio mas não deixa pedir', async () => {
-    server.use(http.get('/api/public/stores/pizzaria-bella', () => HttpResponse.json(storefront({ open: false }))));
+    const everyDay = [1, 2, 3, 4, 5, 6, 7].map((dayOfWeek) => ({ dayOfWeek, opensAt: '18:00:00', closesAt: '23:30:00' }));
+    server.use(
+      http.get('/api/public/stores/pizzaria-bella', () =>
+        HttpResponse.json(storefront({ open: false, openingHours: everyDay })),
+      ),
+    );
     renderMenu('/loja/pizzaria-bella');
 
     expect(await screen.findByText('A loja não está recebendo pedidos agora. Dá para ver o cardápio.')).toBeInTheDocument();
+    expect(screen.getByText('Hoje: 18:00 às 23:30')).toBeInTheDocument();
     expect(screen.getByText('Fechado')).toBeInTheDocument();
   });
 

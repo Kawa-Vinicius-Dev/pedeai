@@ -134,6 +134,99 @@ public class IfoodClient {
                 .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).toBodilessEntity());
     }
 
+    /** Pausa a loja no iFood agora (até reabrir pelo PedeAí, no máximo 12 h). Devolve o id da pausa. */
+    public String pause(String merchantId, Instant now) {
+        JsonNode body = call(() -> http.post().uri("/merchant/v1.0/merchants/{id}/interruptions", merchantId)
+                .headers(this::auth).contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("description", "Pausado pelo PedeAí", "start", now.toString(),
+                        "end", now.plus(java.time.Duration.ofHours(12)).toString()))
+                .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).body(JsonNode.class));
+        return body == null ? null : body.path("id").asString(null);
+    }
+
+    public void resume(String merchantId, String interruptionId) {
+        call(() -> http.delete().uri("/merchant/v1.0/merchants/{id}/interruptions/{interruption}", merchantId,
+                        interruptionId).headers(this::auth)
+                .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).toBodilessEntity());
+    }
+
+    /** Substitui o horário da loja no iFood. {@code shifts}: dia ("MONDAY"), início e duração em minutos. */
+    public void openingHours(String merchantId, List<Map<String, Object>> shifts) {
+        call(() -> http.put().uri("/merchant/v1.0/merchants/{id}/opening-hours", merchantId).headers(this::auth)
+                .contentType(MediaType.APPLICATION_JSON).body(Map.of("storeId", merchantId, "shifts", shifts))
+                .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).toBodilessEntity());
+    }
+
+    /** O catálogo padrão da loja (contexto DEFAULT, ou o primeiro). */
+    public String defaultCatalogId(String merchantId) {
+        JsonNode catalogs = call(() -> http.get().uri(properties.catalogsPath(), merchantId).headers(this::auth)
+                .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).body(JsonNode.class));
+        if (catalogs == null || !catalogs.isArray() || catalogs.isEmpty()) {
+            throw new IfoodApiException(404, "A loja não tem cardápio no iFood.");
+        }
+        JsonNode chosen = catalogs.get(0);
+        for (JsonNode catalog : catalogs) {
+            for (JsonNode context : catalog.path("context")) {
+                if ("DEFAULT".equals(context.asString())) {
+                    chosen = catalog;
+                }
+            }
+        }
+        return chosen.path("catalogId").asString(chosen.path("id").asString());
+    }
+
+    /** Cria a categoria no catálogo do iFood e devolve o id dela. */
+    public String createCategory(String merchantId, String catalogId, String name, String externalCode) {
+        JsonNode body = call(() -> http.post()
+                .uri("/catalog/v2.0/merchants/{merchantId}/catalogs/{catalogId}/categories", merchantId, catalogId)
+                .headers(this::auth).contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("name", name, "status", "AVAILABLE", "template", "DEFAULT", "externalCode", externalCode))
+                .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).body(JsonNode.class));
+        if (body == null || body.path("id").asString("").isBlank()) {
+            throw new IfoodApiException(502, "o iFood não devolveu o id da categoria");
+        }
+        return body.path("id").asString();
+    }
+
+    /** Cria ou atualiza um item completo (produto, preço, complementos) numa chamada. */
+    public void putItem(String merchantId, Map<String, Object> item) {
+        call(() -> http.put().uri("/catalog/v2.0/merchants/{merchantId}/items", merchantId).headers(this::auth)
+                .contentType(MediaType.APPLICATION_JSON).body(item)
+                .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).toBodilessEntity());
+    }
+
+    /** Envia a foto do produto; o iFood devolve o caminho que o item usa. */
+    public String uploadImage(String merchantId, byte[] image, String contentType) {
+        String data = "data:" + contentType + ";base64," + java.util.Base64.getEncoder().encodeToString(image);
+        JsonNode body = call(() -> http.post().uri("/catalog/v2.0/merchants/{merchantId}/image/upload", merchantId)
+                .headers(this::auth).contentType(MediaType.APPLICATION_JSON).body(Map.of("image", data))
+                .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).body(JsonNode.class));
+        return body == null ? null : body.path("path").asString(null);
+    }
+
+    /**
+     * Categorias do cardápio da loja no iFood, com os itens. Usa o catálogo de contexto DEFAULT (ou o primeiro, se a
+     * loja só tiver outro).
+     */
+    public JsonNode catalogCategories(String merchantId) {
+        String catalogId = defaultCatalogId(merchantId);
+        return call(() -> http.get().uri(properties.categoriesPath(), merchantId, catalogId).headers(this::auth)
+                .retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).body(JsonNode.class));
+    }
+
+    /** Responde à disputa (pedido de cancelamento do cliente): aceitar, ou recusar com o motivo. */
+    public void answerDispute(String disputeId, boolean accept, String reason) {
+        call(() -> {
+            var request = http.post().uri("/order/v1.0/disputes/{id}/{answer}", disputeId, accept ? "accept" : "reject")
+                    .headers(this::auth);
+            if (!accept) {
+                request = request.contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("reason", reason == null ? "Recusado pela loja" : reason));
+            }
+            return request.retrieve().onStatus(HttpStatusCode::isError, IfoodClient::fail).toBodilessEntity();
+        });
+    }
+
     /** Um 401 com token em cache: o token pode ter sido revogado antes da hora. Renova e tenta uma vez mais. */
     private <T> T call(Supplier<T> request) {
         try {

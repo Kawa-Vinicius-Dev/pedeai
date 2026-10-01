@@ -13,7 +13,9 @@ public record ProductDraft(
         UUID sectorId,
         List<UUID> optionGroupIds,
         boolean available,
-        boolean active
+        boolean active,
+        Boolean sellOnIfood,
+        Long ifoodPriceCents
 ) {
     public ProductDraft {
         optionGroupIds = List.copyOf(optionGroupIds);

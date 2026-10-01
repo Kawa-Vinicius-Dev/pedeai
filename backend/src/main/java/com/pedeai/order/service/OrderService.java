@@ -134,13 +134,22 @@ public class OrderService {
     }
 
     /**
-     * Pedido feito pelo cliente no cardápio digital. O preço vem do cardápio e a taxa de entrega vem da área de
-     * entrega, nunca da tela. Nasce recebido: a loja aceita no quadro. O pagamento informado vale o total, pago na
-     * entrega ou na retirada. Devolve o pedido com o código que o cliente usa para acompanhar.
+     * Pedido de um canal próprio: o cliente no cardápio digital, ou um sistema de terceiros pela API de pedidos. O preço vem do cardápio e a taxa de entrega vem da área de
+     * entrega, nunca da tela. Nasce recebido para a loja aceitar no quadro, ou já confirmado com {@code autoConfirm}.
+     * O pagamento informado vale o total, pago na entrega ou na retirada. Devolve o pedido com o código que o cliente
+     * usa para acompanhar.
      */
     @Transactional
-    public OrderResponse placeFromMenu(UUID storeId, CreateOrderRequest request, UUID paymentMethodId,
-                                       Long changeForCents) {
+    public OrderResponse placeFromChannel(UUID storeId, OrderSource source, String externalId,
+                                          CreateOrderRequest request, UUID paymentMethodId, Long changeForCents,
+                                          boolean autoConfirm) {
+        if (externalId != null) {
+            // O sistema de origem reenviou o mesmo pedido (timeout, nova tentativa): devolve o que já existe.
+            var existing = orderRepository.findByStoreIdAndSourceAndExternalId(storeId, source, externalId);
+            if (existing.isPresent()) {
+                return OrderResponse.from(existing.get());
+            }
+        }
         validateShape(request);
         List<OrderItem> items = priceItems(storeId, request.items());
         OrderCustomer customer = recordCustomer(storeId, request);
@@ -152,15 +161,28 @@ public class OrderService {
         Order order = Order.placeOwn(storeId, businessDate, number, request.type(), customer,
                 toDeliveryAddress(request.deliveryAddress()), Texts.trimToNull(request.notes()), items, 0,
                 request.deliveryFeeCents(), null, now);
-        order.fromDigitalMenu(TrackingCodes.next());
-        orderRepository.save(order);
-        historyRepository.save(new OrderStatusHistory(order, null, OrderStatus.RECEIVED,
+        order.fromOwnChannel(source, externalId, TrackingCodes.next());
+        List<OrderStatusHistory> timeline = new ArrayList<>();
+        timeline.add(new OrderStatusHistory(order, null, OrderStatus.RECEIVED,
                 Actor.customer(customer == null ? null : customer.name()), null, now));
+        if (autoConfirm) {
+            // Aceite automático do cardápio: já vai para a cozinha e para a impressora, como o pedido do balcão.
+            order.advanceTo(OrderStatus.CONFIRMED, now);
+            timeline.add(new OrderStatusHistory(order, OrderStatus.RECEIVED, OrderStatus.CONFIRMED, Actor.system(),
+                    null, now));
+            if (store.startPreparationOnConfirm()) {
+                order.advanceTo(OrderStatus.IN_PREPARATION, now);
+                timeline.add(new OrderStatusHistory(order, OrderStatus.CONFIRMED, OrderStatus.IN_PREPARATION,
+                        Actor.system(), null, now));
+            }
+        }
+        orderRepository.save(order);
+        historyRepository.saveAll(timeline);
         orderRepository.flush();
         List<OrderPaymentRequest> payments = List.of(new OrderPaymentRequest(paymentMethodId, order.getTotalCents(),
                 changeForCents, false));
         events.publishEvent(new OrderCreated(storeId, order.getId(), order.getNumber(), order.getStatus(),
-                order.getVersion(), order.getTotalCents(), payments, null, OrderSource.DIGITAL_MENU));
+                order.getVersion(), order.getTotalCents(), payments, null, source));
         return OrderResponse.from(order);
     }
 

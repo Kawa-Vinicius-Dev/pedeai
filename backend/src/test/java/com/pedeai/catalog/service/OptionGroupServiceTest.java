@@ -37,7 +37,8 @@ class OptionGroupServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new OptionGroupService(repository, CLOCK);
+        service = new OptionGroupService(repository,
+                org.mockito.Mockito.mock(org.springframework.context.ApplicationEventPublisher.class), CLOCK);
     }
 
     @Test

@@ -45,6 +45,9 @@ export function store(overrides: Partial<Store> = {}): Store {
     startPreparationOnConfirm: false,
     slug: 'pizzaria-bella',
     menuOpen: false,
+    menuAutoConfirm: false,
+    openingHours: [],
+    ifoodMarkupBp: 0,
     ...overrides,
   };
 }
@@ -126,6 +129,9 @@ export function product(overrides: Partial<Product> = {}): Product {
     optionGroupIds: [MENU_IDS.flavors],
     available: true,
     active: true,
+    sellOnIfood: true,
+    ifoodPriceCents: null,
+    imageUrl: null,
     ...overrides,
   };
 }

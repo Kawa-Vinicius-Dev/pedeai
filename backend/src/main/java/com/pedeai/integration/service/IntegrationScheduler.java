@@ -1,9 +1,12 @@
 package com.pedeai.integration.service;
 
 import com.pedeai.integration.config.IfoodProperties;
+import com.pedeai.integration.config.OpenDeliveryProperties;
 import com.pedeai.integration.domain.InboundEvent;
 import com.pedeai.integration.domain.MarketplaceConnection;
 import com.pedeai.integration.ifood.IfoodClient;
+import com.pedeai.integration.opendelivery.OpenDeliveryClient;
+import com.pedeai.integration.opendelivery.OpenDeliveryEvents;
 import com.pedeai.integration.repository.InboundEventRepository;
 import com.pedeai.integration.repository.MarketplaceConnectionRepository;
 import com.pedeai.order.domain.OrderSource;
@@ -13,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -37,12 +41,17 @@ public class IntegrationScheduler {
     private final InboundService inbound;
     private final InboundEventHandler handler;
     private final OutboxService outbox;
+    private final OpenDeliveryProperties openDeliveryProperties;
+    private final OpenDeliveryClient openDelivery;
+    private final ObjectMapper json;
+    private final MarketplaceSyncService sync;
     private final Clock clock;
 
     public IntegrationScheduler(IfoodProperties properties, IfoodClient ifood,
                                 MarketplaceConnectionRepository connections, InboundEventRepository events,
                                 InboundService inbound, InboundEventHandler handler, OutboxService outbox,
-                                Clock clock) {
+                                OpenDeliveryProperties openDeliveryProperties, OpenDeliveryClient openDelivery,
+                                ObjectMapper json, MarketplaceSyncService sync, Clock clock) {
         this.properties = properties;
         this.ifood = ifood;
         this.connections = connections;
@@ -50,6 +59,10 @@ public class IntegrationScheduler {
         this.inbound = inbound;
         this.handler = handler;
         this.outbox = outbox;
+        this.openDeliveryProperties = openDeliveryProperties;
+        this.openDelivery = openDelivery;
+        this.json = json;
+        this.sync = sync;
         this.clock = clock;
     }
 
@@ -79,6 +92,31 @@ public class IntegrationScheduler {
         }
     }
 
+    /**
+     * Polling Open Delivery: um merchant por chamada, porque o evento da especificação não diz de qual merchant ele é.
+     * ponytail: com muitas lojas no mesmo app, juntar os merchants no header e achar o merchant pelo pedido.
+     */
+    @Scheduled(fixedDelay = 30_000, initialDelay = 15_000)
+    public synchronized void pollOpenDelivery() {
+        for (OrderSource provider : List.of(OrderSource.NINETY_NINE_FOOD, OrderSource.OPEN_DELIVERY)) {
+            if (!openDeliveryProperties.configured(provider)) {
+                continue;
+            }
+            for (MarketplaceConnection connection : connections.findAllByProviderAndStatus(provider,
+                    MarketplaceConnection.Status.ACTIVE)) {
+                try {
+                    List<JsonNode> received = openDelivery.poll(provider, connection.getExternalMerchantId());
+                    received.forEach(event -> inbound.record(provider, OpenDeliveryEvents.toInbox(json, event,
+                            connection.getExternalMerchantId())));
+                    openDelivery.acknowledge(provider, received);
+                } catch (OpenDeliveryClient.OpenDeliveryApiException e) {
+                    log.warn("Polling Open Delivery ({}) falhou para o merchant {}: {}", provider,
+                            connection.getExternalMerchantId(), e.getMessage());
+                }
+            }
+        }
+    }
+
     @Scheduled(fixedDelay = 2_000)
     public synchronized void processInbox() {
         List<UUID> due = events.findAllByStatusAndNextAttemptAtLessThanEqualOrderByReceivedAtAsc(
@@ -101,6 +139,19 @@ public class IntegrationScheduler {
                 outbox.send(actionId);
             } catch (RuntimeException e) {
                 log.warn("Ação {} para o marketplace falhou: {}", actionId, e.getMessage());
+            }
+        }
+    }
+
+    /** A fila do "PedeAí manda no iFood": pausa, horário e cardápio, cada envio na sua transação. */
+    @Scheduled(fixedDelay = 5_000)
+    public synchronized void sendMarketplaceSync() {
+        for (UUID syncId : sync.due()) {
+            try {
+                sync.send(syncId);
+            } catch (RuntimeException e) {
+                log.warn("Envio {} ao iFood falhou: {}", syncId, e.getMessage());
+                sync.retryLater(syncId, e.getMessage());
             }
         }
     }

@@ -1,4 +1,4 @@
-import { ActionIcon, Alert, Button, Group, Modal, Stack, Text, TextInput } from '@mantine/core';
+import { ActionIcon, Alert, Button, Group, Image, Modal, Stack, Text, TextInput } from '@mantine/core';
 import { CircleAlert, Minus, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { ItemChoices } from '../features/catalog/ItemChoices';
@@ -78,6 +78,7 @@ function SheetBody({
 
   return (
     <Stack>
+      {product.imageUrl && <Image src={product.imageUrl} alt={product.name} h={200} radius="md" fit="cover" />}
       {product.description && (
         <Text size="sm" c="dimmed">
           {product.description}

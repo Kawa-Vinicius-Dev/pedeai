@@ -1,6 +1,7 @@
 package com.pedeai.integration.controller;
 
 import com.pedeai.integration.config.IfoodProperties;
+import com.pedeai.support.IntegrationTestProperties;
 import com.pedeai.integration.ifood.IfoodSignature;
 import com.pedeai.integration.service.InboundService;
 import com.pedeai.order.domain.OrderSource;
@@ -42,7 +43,7 @@ class IfoodWebhookControllerTest {
     static class Credentials {
         @Bean
         IfoodProperties ifoodProperties() {
-            return new IfoodProperties(true, "https://merchant-api.ifood.com.br", "client", SECRET,
+            return IntegrationTestProperties.ifood(true, "https://merchant-api.ifood.com.br", "client", SECRET,
                     "/order/v1.0/orders:polling", "/order/v1.0/orders:acknowledgment", false);
         }
     }
