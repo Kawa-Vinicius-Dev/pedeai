@@ -8,8 +8,10 @@ import com.pedeai.store.domain.Store;
 import com.pedeai.store.dto.OpeningHoursRequest;
 import com.pedeai.store.dto.StoreResponse;
 import com.pedeai.store.dto.UpdateStoreRequest;
+import com.pedeai.store.event.StoreChannelsChanged;
 import com.pedeai.store.repository.StoreRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -28,10 +30,12 @@ public class StoreService {
     static final String SLUG_TAKEN = "Este endereço de cardápio já está em uso por outra loja.";
 
     private final StoreRepository storeRepository;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
-    public StoreService(StoreRepository storeRepository, Clock clock) {
+    public StoreService(StoreRepository storeRepository, ApplicationEventPublisher events, Clock clock) {
         this.storeRepository = storeRepository;
+        this.events = events;
         this.clock = clock;
     }
 
@@ -60,6 +64,7 @@ public class StoreService {
     public StoreResponse changeMenuOpen(UUID storeId, boolean open) {
         Store store = find(storeId);
         store.changeMenuOpen(open, Instant.now(clock));
+        events.publishEvent(new StoreChannelsChanged(storeId, true, false, false));
         return StoreResponse.from(store);
     }
 
@@ -71,6 +76,15 @@ public class StoreService {
                 throw new ConflictException(SLUG_TAKEN);
             }
             store.changeSlug(request.slug(), Instant.now(clock));
+        }
+        boolean hoursChanged = request.openingHours() != null
+                && !validHours(request.openingHours()).equals(store.getOpeningHours());
+        boolean pricesChanged = request.ifoodMarkupBp() != null && request.ifoodMarkupBp() != store.getIfoodMarkupBp();
+        if (pricesChanged) {
+            store.changeIfoodMarkup(request.ifoodMarkupBp(), Instant.now(clock));
+        }
+        if (hoursChanged || pricesChanged) {
+            events.publishEvent(new StoreChannelsChanged(storeId, false, hoursChanged, pricesChanged));
         }
         if (request.menuAutoConfirm() != null || request.openingHours() != null) {
             store.changeMenuSettings(

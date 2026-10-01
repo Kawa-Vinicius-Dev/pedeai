@@ -46,9 +46,10 @@ public class IfoodOrderMapper {
     }
 
     public MarketplaceOrderRequest map(UUID storeId, JsonNode order, boolean autoConfirm) {
+        // Sem código PDV, o PedeAí manda o id do produto como externalCode (IfoodItemPayload).
         Map<String, ProductResponse> byCode = productService.list(storeId, null).stream()
-                .filter(product -> product.code() != null)
-                .collect(Collectors.toMap(ProductResponse::code, Function.identity(), (first, second) -> first));
+                .collect(Collectors.toMap(product -> product.code() == null ? product.id().toString() : product.code(),
+                        Function.identity(), (first, second) -> first));
         UUID defaultSector = sectorService.list(storeId).stream().filter(SectorResponse::defaultSector)
                 .map(SectorResponse::id).findFirst().orElse(null);
 

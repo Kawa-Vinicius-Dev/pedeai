@@ -183,14 +183,14 @@ public class CatalogImportService {
                         draft.description() == null ? current.getDescription() : draft.description(),
                         draft.priceCents(), current.getSectorId(),
                         groupIds.isEmpty() ? List.copyOf(current.getOptionGroupIds()) : groupIds,
-                        draft.available(), true);
+                        draft.available(), true, current.isSellOnIfood(), current.getIfoodPriceCents());
                 if (valid(request, draft.origin(), errors)) {
                     productService.update(storeId, current.getId(), request);
                     counts.updated++;
                 }
             } else {
                 ProductRequest request = new ProductRequest(categoryId, draft.code(), draft.name().trim(),
-                        draft.description(), draft.priceCents(), null, groupIds, draft.available(), true);
+                        draft.description(), draft.priceCents(), null, groupIds, draft.available(), true, null, null);
                 if (valid(request, draft.origin(), errors)) {
                     productService.create(storeId, request);
                     counts.created++;

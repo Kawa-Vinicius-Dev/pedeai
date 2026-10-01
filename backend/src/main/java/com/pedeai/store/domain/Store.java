@@ -30,6 +30,8 @@ public class Store {
     private String slug;
     private boolean menuOpen;
     private boolean menuAutoConfirm;
+    /** Acréscimo nos preços do iFood em pontos-base (1500 = 15%), para cobrir a comissão. */
+    private int ifoodMarkupBp;
     @ElementCollection
     @CollectionTable(name = "store_opening_hours", joinColumns = @JoinColumn(name = "store_id"))
     @OrderBy("dayOfWeek")
@@ -102,6 +104,15 @@ public class Store {
 
     public boolean isMenuOpen() {
         return menuOpen;
+    }
+
+    public int getIfoodMarkupBp() {
+        return ifoodMarkupBp;
+    }
+
+    public void changeIfoodMarkup(int markupBp, Instant now) {
+        this.ifoodMarkupBp = markupBp;
+        this.updatedAt = now;
     }
 
     public boolean isMenuAutoConfirm() {

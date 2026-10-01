@@ -38,7 +38,8 @@ public class OutboxService {
             Action.DISPATCH, "dispatch");
     private static final Map<Action, String> OPEN_DELIVERY_PATH = Map.of(
             Action.CONFIRM, "confirm", Action.START_PREPARATION, "preparing", Action.READY, "readyForPickup",
-            Action.DISPATCH, "dispatch", Action.REQUEST_CANCELLATION, "requestCancellation");
+            Action.DISPATCH, "dispatch", Action.REQUEST_CANCELLATION, "requestCancellation",
+            Action.ACCEPT_DISPUTE, "acceptCancellation", Action.REJECT_DISPUTE, "denyCancellation");
 
     private final OutboundActionRepository actions;
     private final MarketplaceConnectionRepository connections;
@@ -99,6 +100,12 @@ public class OutboxService {
         toSend.forEach(action -> enqueue(event.storeId(), order, action, null));
     }
 
+    /** Resposta da loja ao pedido de cancelamento do cliente (disputa). */
+    @Transactional
+    public OutboundAction answerDispute(UUID storeId, OrderResponse order, Action action, String payload) {
+        return enqueue(storeId, order, action, payload);
+    }
+
     /** Pedido de cancelamento: só cancela aqui quando o iFood confirmar (evento de cancelado). */
     @Transactional
     public OutboundAction requestCancellation(UUID storeId, OrderResponse order, String code, String description) {
@@ -136,6 +143,10 @@ public class OutboxService {
                 JsonNode payload = json.readTree(action.getPayload());
                 ifood.requestCancellation(action.getExternalOrderId(), payload.path("code").asString(),
                         payload.path("description").asString());
+            } else if (action.getAction() == Action.ACCEPT_DISPUTE || action.getAction() == Action.REJECT_DISPUTE) {
+                JsonNode payload = json.readTree(action.getPayload());
+                ifood.answerDispute(payload.path("disputeId").asString(), action.getAction() == Action.ACCEPT_DISPUTE,
+                        payload.path("description").asString(null));
             } else {
                 ifood.orderAction(action.getExternalOrderId(), IFOOD_PATH.get(action.getAction()));
             }
@@ -157,6 +168,11 @@ public class OutboxService {
                 JsonNode payload = json.readTree(action.getPayload());
                 yield Map.of("reason", payload.path("description").asString(), "code",
                         payload.path("code").asString(), "mode", "MANUAL");
+            }
+            case REJECT_DISPUTE -> {
+                JsonNode payload = json.readTree(action.getPayload());
+                yield Map.of("reason", payload.path("description").asString(), "code",
+                        payload.path("code").asString());
             }
             default -> null;
         };
@@ -190,18 +206,23 @@ public class OutboxService {
                 action, payload, Instant.now(clock)));
     }
 
-    /** O simulador responde como a plataforma: o pedido de cancelamento aceito volta como evento de cancelado. */
+    /**
+     * O simulador responde como a plataforma: o pedido de cancelamento (da loja, ou do cliente aceito pela loja) volta
+     * como evento de cancelado.
+     */
     private void simulate(OutboundAction action) {
-        if (action.getAction() != Action.REQUEST_CANCELLATION) {
+        if (action.getAction() != Action.REQUEST_CANCELLATION && action.getAction() != Action.ACCEPT_DISPUTE) {
             return;
         }
         String merchantId = connections.findAllByStoreIdOrderByCreatedAtAsc(action.getStoreId()).stream()
                 .filter(connection -> connection.getProvider() == action.getProvider())
                 .map(connection -> connection.getExternalMerchantId()).findFirst().orElse(null);
         JsonNode payload = json.readTree(action.getPayload());
+        String reason = action.getAction() == Action.ACCEPT_DISPUTE ? "Cancelamento pedido pelo cliente"
+                : payload.path("description").asString();
         inbound.record(action.getProvider(), json.valueToTree(Map.of(
                 "id", "sim-can-" + action.getId(), "code", "CANCELLED", "fullCode", "CANCELLED",
                 "orderId", action.getExternalOrderId(), "merchantId", merchantId == null ? "" : merchantId,
-                "metadata", Map.of("CANCEL_REASON", payload.path("description").asString()))));
+                "metadata", Map.of("CANCEL_REASON", reason))));
     }
 }

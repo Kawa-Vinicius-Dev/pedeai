@@ -1,5 +1,6 @@
 package com.pedeai.catalog.service;
 
+import com.pedeai.catalog.event.CatalogChanged;
 import com.pedeai.catalog.domain.OptionDraft;
 import com.pedeai.catalog.domain.OptionGroup;
 import com.pedeai.catalog.domain.OptionItem;
@@ -12,6 +13,7 @@ import com.pedeai.shared.exception.BusinessRuleException;
 import com.pedeai.shared.exception.ResourceNotFoundException;
 import com.pedeai.shared.text.Texts;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -31,10 +33,12 @@ public class OptionGroupService {
     static final String REPEATED_OPTION = "A mesma opção aparece duas vezes no grupo.";
 
     private final OptionGroupRepository repository;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
-    public OptionGroupService(OptionGroupRepository repository, Clock clock) {
+    public OptionGroupService(OptionGroupRepository repository, ApplicationEventPublisher events, Clock clock) {
         this.repository = repository;
+        this.events = events;
         this.clock = clock;
     }
 
@@ -62,6 +66,7 @@ public class OptionGroupService {
         List<OptionDraft> drafts = validate(request);
         group.update(request.name().trim(), request.minChoices(), request.maxChoices(), request.pricingRule(),
                 request.active(), drafts, Instant.now(clock));
+        events.publishEvent(CatalogChanged.group(storeId, id));
         return OptionGroupResponse.from(group);
     }
 
@@ -72,6 +77,7 @@ public class OptionGroupService {
         OptionItem option = group.findOption(optionId)
                 .orElseThrow(() -> new ResourceNotFoundException(OPTION_NOT_FOUND));
         option.changeAvailability(available, Instant.now(clock));
+        events.publishEvent(CatalogChanged.group(storeId, groupId));
         return OptionGroupResponse.from(group);
     }
 

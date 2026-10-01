@@ -20,7 +20,7 @@ public class OutboundAction {
     public static final int MAX_ATTEMPTS = 10;
 
     public enum Action {
-        CONFIRM, START_PREPARATION, READY, DISPATCH, REQUEST_CANCELLATION
+        CONFIRM, START_PREPARATION, READY, DISPATCH, REQUEST_CANCELLATION, ACCEPT_DISPUTE, REJECT_DISPUTE
     }
 
     public enum Status {

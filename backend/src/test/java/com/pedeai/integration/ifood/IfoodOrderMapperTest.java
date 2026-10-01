@@ -64,7 +64,7 @@ class IfoodOrderMapperTest {
         SectorService sectors = mock(SectorService.class);
         PaymentMethodService methods = mock(PaymentMethodService.class);
         when(products.list(STORE, null)).thenReturn(List.of(new ProductResponse(BURGER, UUID.randomUUID(), "10",
-                "X-Burger", null, 2990, null, BAR, List.of(), true, true)));
+                "X-Burger", null, 2990, null, BAR, List.of(), true, true, true, null, null)));
         when(sectors.list(STORE)).thenReturn(List.of(new SectorResponse(BAR, "Bar", false, true),
                 new SectorResponse(KITCHEN, "Cozinha", true, true)));
         when(methods.list(STORE)).thenReturn(List.of(

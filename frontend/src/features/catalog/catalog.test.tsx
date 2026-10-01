@@ -85,6 +85,7 @@ describe('cardápio: produtos', () => {
     await user.type(within(drawer).getByLabelText('Preço'), '32,90');
     expect(within(drawer).getByLabelText('Preço')).toHaveValue('R$ 32,90');
     await user.type(within(drawer).getByLabelText('Código PDV'), '501');
+    await user.type(within(drawer).getByLabelText('Preço fixo no iFood'), '35,90');
     await user.click(within(drawer).getByRole('button', { name: 'Salvar' }));
 
     await waitFor(() =>
@@ -96,6 +97,8 @@ describe('cardápio: produtos', () => {
         optionGroupIds: [],
         available: true,
         active: true,
+        sellOnIfood: true,
+        ifoodPriceCents: 3590,
       }),
     );
     expect(await screen.findByText('Pizza Broto')).toBeInTheDocument();

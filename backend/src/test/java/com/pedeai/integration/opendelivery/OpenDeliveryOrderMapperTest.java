@@ -59,7 +59,7 @@ class OpenDeliveryOrderMapperTest {
     void mapsItemsFeesDiscountsPaymentsAndAddress() {
         ProductService products = mock(ProductService.class);
         when(products.list(STORE_ID, null)).thenReturn(List.of(new ProductResponse(BURGER, UUID.randomUUID(), "10",
-                "X-Burger", null, 2990, null, KITCHEN, List.of(), true, true)));
+                "X-Burger", null, 2990, null, KITCHEN, List.of(), true, true, true, null, null)));
         SectorService sectors = mock(SectorService.class);
         when(sectors.list(STORE_ID)).thenReturn(List.of(new SectorResponse(KITCHEN, "Cozinha", true, true)));
         PaymentMethodService methods = mock(PaymentMethodService.class);

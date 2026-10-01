@@ -121,7 +121,7 @@ public class StorefrontService {
                         byCategory.getOrDefault(category.id(), List.of()).stream()
                                 .map(product -> new MenuProductResponse(product.id(), product.name(),
                                         product.description(), product.priceCents(), product.optionGroupIds(),
-                                        product.available()))
+                                        product.available(), product.imageUrl()))
                                 .toList()))
                 .filter(category -> !category.products().isEmpty())
                 .toList();

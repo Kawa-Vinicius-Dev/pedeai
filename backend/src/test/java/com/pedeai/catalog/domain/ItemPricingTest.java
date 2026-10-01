@@ -194,7 +194,7 @@ class ItemPricingTest {
     }
 
     private static ProductDraft draft(long priceCents, List<UUID> groupIds, boolean available, boolean active) {
-        return new ProductDraft(UUID.randomUUID(), null, "Produto", null, priceCents, null, groupIds, available, active);
+        return new ProductDraft(UUID.randomUUID(), null, "Produto", null, priceCents, null, groupIds, available, active, null, null);
     }
 
     private static OptionChoice choose(OptionGroup group, String name) {

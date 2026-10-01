@@ -1,8 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
-import type { CatalogImport, MarketplaceConnection, Platform } from '../../shared/api/types';
-import { order, orderSummary } from '../../test/fixtures';
+import type { CatalogImport, Dispute, MarketplaceConnection, Platform } from '../../shared/api/types';
+import { order, orderSummary, store } from '../../test/fixtures';
 import { loggedInAs, renderApp } from '../../test/render';
 import { server } from '../../test/server';
 
@@ -16,6 +16,9 @@ const CONNECTION: MarketplaceConnection = {
   lastEventAt: null,
   lastError: null,
   failedActions: 0,
+  catalogSync: false,
+  syncPending: 0,
+  syncFailed: 0,
 };
 
 /** iFood só no simulador; 99Food e Open Delivery desligados, a menos que o teste diga outra coisa. */
@@ -79,6 +82,87 @@ describe('integração com o iFood', () => {
     expect(within(within(modal).getByLabelText('Produtos novos')).getByText('3')).toBeInTheDocument();
     await user.click(within(modal).getByRole('button', { name: 'Importar' }));
     expect(await within(modal).findByText('Cardápio importado.')).toBeInTheDocument();
+  });
+
+  it('o PedeAí manda no cardápio do iFood: liga a sincronização, salva o acréscimo e envia tudo', async () => {
+    loggedInAs('OWNER');
+    let connection: MarketplaceConnection = { ...CONNECTION, lastError: 'Pizza: produto com grupo cobrado pelo maior valor' };
+    const received: { patch?: unknown; store?: unknown; synced?: string } = {};
+    server.use(
+      http.get('/api/integrations/platforms', () => HttpResponse.json(platforms())),
+      http.get('/api/integrations', () => HttpResponse.json([connection])),
+      http.patch('/api/integrations/:id', async ({ request }) => {
+        received.patch = await request.json();
+        connection = { ...connection, catalogSync: true, syncPending: 12 };
+        return HttpResponse.json(connection);
+      }),
+      http.patch('/api/store', async ({ request }) => {
+        received.store = await request.json();
+        return HttpResponse.json(store({ ifoodMarkupBp: 1500 }));
+      }),
+      http.post('/api/integrations/:id/catalog-sync', ({ params }) => {
+        received.synced = params.id as string;
+        connection = { ...connection, syncFailed: 1 };
+        return HttpResponse.json(connection);
+      }),
+    );
+    const { user } = renderApp('/configuracoes/integracoes');
+
+    const card = await screen.findByLabelText('Integração Loja simulada');
+    await user.click(within(card).getByRole('switch', { name: /O PedeAí manda no cardápio do iFood/ }));
+    await waitFor(() => expect(received.patch).toEqual({ status: 'ACTIVE', autoConfirm: false, catalogSync: true }));
+    expect(await within(card).findByText('12 envios na fila')).toBeInTheDocument();
+
+    await user.type(await within(card).findByLabelText('Acréscimo nos preços do iFood'), '15');
+    await user.click(within(card).getByRole('button', { name: 'Salvar acréscimo' }));
+    await waitFor(() => expect(received.store).toEqual({ ifoodMarkupBp: 1500 }));
+
+    await user.click(within(card).getByRole('button', { name: 'Enviar cardápio e horário agora' }));
+    await waitFor(() => expect(received.synced).toBe(CONNECTION.id));
+    expect(await within(card).findByText(/1 envio não chegou ao iFood/)).toBeInTheDocument();
+    expect(within(card).getByText(/Pizza: produto com grupo/)).toBeInTheDocument();
+  });
+
+  it('o cliente pede no app para cancelar: o caixa vê o prazo e recusa com um motivo', async () => {
+    loggedInAs('CASHIER');
+    let answer: unknown;
+    const dispute: Dispute = {
+      id: 'd-1',
+      orderId: '01a0d567-0000-7000-8000-000000000101',
+      orderNumber: 12,
+      provider: 'IFOOD',
+      kind: 'CANCELLATION',
+      message: 'Demorou demais',
+      expiresAt: '2026-09-27T15:05:00Z',
+      status: 'OPEN',
+      rejectReasons: [
+        { code: 'DISH_ALREADY_DONE', description: 'O pedido já está pronto' },
+        { code: 'OUT_FOR_DELIVERY', description: 'O pedido já saiu para entrega' },
+      ],
+    };
+    let disputes = [dispute];
+    server.use(
+      http.get('/api/orders/active', () => HttpResponse.json([])),
+      http.get('/api/marketplace/disputes', () => HttpResponse.json(disputes)),
+      http.post('/api/marketplace/disputes/:id/answer', async ({ request }) => {
+        answer = await request.json();
+        disputes = [];
+        return HttpResponse.json({ ...dispute, status: 'REJECTED' });
+      }),
+    );
+    const { user } = renderApp('/pedidos');
+
+    const alert = await screen.findByRole('alert', { name: 'O cliente pediu para cancelar o pedido #12 (iFood)' });
+    expect(within(alert).getByText('“Demorou demais”')).toBeInTheDocument();
+    expect(within(alert).getByText(/Depois disso, quem decide é o app/)).toBeInTheDocument();
+    await user.click(within(alert).getByRole('button', { name: 'Recusar' }));
+    await user.click(within(alert).getByRole('combobox', { name: 'Motivo da recusa' }));
+    await user.click(await screen.findByRole('option', { name: 'O pedido já está pronto' }));
+    await user.click(within(alert).getByRole('button', { name: 'Recusar cancelamento' }));
+    await waitFor(() => expect(answer).toEqual({ accept: false, rejectCode: 'DISH_ALREADY_DONE' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('alert', { name: /pedido #12/ })).not.toBeInTheDocument(),
+    );
   });
 
   it('liga a 99Food pelo padrão Open Delivery quando é o que o servidor tem', async () => {

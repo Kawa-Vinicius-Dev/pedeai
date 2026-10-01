@@ -87,6 +87,12 @@ public class IntegrationController {
         return ifoodCatalogImportService.importCatalog(user.storeId(), id, request.dryRun());
     }
 
+    /** Manda ao iFood a situação da loja, o horário e (com a sincronização ligada) o cardápio inteiro. */
+    @PostMapping("/{id}/catalog-sync")
+    public ConnectionResponse syncCatalog(CurrentUser user, @PathVariable UUID id) {
+        return connectionService.syncCatalog(user.storeId(), id);
+    }
+
     /** Só com o simulador ligado: injeta um pedido de teste do "iFood" no mesmo caminho do pedido real. */
     @PostMapping("/{id}/simulated-orders")
     public ResponseEntity<Map<String, String>> simulate(CurrentUser user, @PathVariable UUID id) {

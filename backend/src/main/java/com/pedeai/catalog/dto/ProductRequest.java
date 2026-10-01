@@ -39,6 +39,13 @@ public record ProductRequest(
         Boolean available,
 
         @NotNull(message = "Informe se o produto está ativo.")
-        Boolean active
+        Boolean active,
+
+        /** Nulo: vende no iFood (padrão) ou mantém o que estava. */
+        Boolean sellOnIfood,
+
+        @Min(value = 0, message = "O preço no iFood não pode ser negativo.")
+        @Max(value = 10_000_000, message = "Preço no iFood acima do permitido.")
+        Long ifoodPriceCents
 ) {
 }

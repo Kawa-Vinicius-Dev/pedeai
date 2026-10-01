@@ -62,6 +62,8 @@ export const server = setupServer(
   http.get('/api/stream', openStream),
   // A faixa de alertas de impressão aparece em todas as telas; sem problema, lista vazia.
   http.get('/api/print-alerts', () => HttpResponse.json([])),
+  // A faixa de pedidos de cancelamento do cliente também; sem pedido, lista vazia.
+  http.get('/api/marketplace/disputes', () => HttpResponse.json([])),
   http.get('/api/orders/:orderId/print-jobs', () => HttpResponse.json([])),
   http.get('/api/printers', () => HttpResponse.json([])),
   // A chave "Cardápio aberto" do quadro lê a loja.

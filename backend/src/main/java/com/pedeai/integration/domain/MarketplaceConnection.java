@@ -30,6 +30,10 @@ public class MarketplaceConnection {
     @Enumerated(EnumType.STRING)
     private Status status;
     private boolean autoConfirm;
+    /** O cardápio do app vem do PedeAí (o PedeAí manda; edição feita no app é sobrescrita). */
+    private boolean catalogSync;
+    /** A pausa aberta no app pela chave "Cardápio aberto", para reabrir depois. */
+    private String interruptionId;
     private Instant lastEventAt;
     private String lastError;
     private Instant createdAt;
@@ -57,6 +61,24 @@ public class MarketplaceConnection {
         this.status = status;
         this.autoConfirm = autoConfirm;
         this.updatedAt = now;
+    }
+
+    public void changeCatalogSync(boolean catalogSync, Instant now) {
+        this.catalogSync = catalogSync;
+        this.updatedAt = now;
+    }
+
+    public void paused(String interruptionId, Instant now) {
+        this.interruptionId = interruptionId;
+        this.updatedAt = now;
+    }
+
+    public boolean isCatalogSync() {
+        return catalogSync;
+    }
+
+    public String getInterruptionId() {
+        return interruptionId;
     }
 
     public void eventReceived(Instant now) {

@@ -308,3 +308,24 @@ aponta para a antiga, sem apagar a antiga.
   ack, o corpo do `requestCancellation` e os códigos de evento. As credenciais
   entram só por variável de ambiente (`IFOOD_ENABLED`, `IFOOD_CLIENT_ID`,
   `IFOOD_CLIENT_SECRET`).
+
+## D27 · O PedeAí manda no iFood
+
+- **Contexto:** a loja mexe no cardápio, nos preços e no horário em dois lugares
+  (PedeAí e Portal do Parceiro), e os dois se desencontram. O iFood cobra
+  comissão, então o preço lá costuma ser maior.
+- **Decisão:** o PedeAí é a fonte. Uma fila por loja (`marketplace_sync`) manda
+  ao iFood a pausa (a mesma chave "Cardápio aberto"), o horário e, com a chave
+  ligada no vínculo, cada produto alterado, lendo o estado na hora do envio. O
+  preço no iFood é o daqui com um acréscimo da loja (produto termina em ,90;
+  adicional sobe para os 10 centavos de cima) ou um preço fixo por produto. Cada
+  produto tem "Vender no iFood". Pizza cobrada por maior valor ou média não vai
+  (o iFood soma complementos). Fotos ficam no Cloudflare R2, com assinatura S3
+  feita na API, sem o SDK da AWS.
+- **Alternativas:** iFood como fonte e o PedeAí importando (a importação existe,
+  mas só para começar); preço fixo por produto em todos (trabalho manual a cada
+  reajuste); guardar foto no banco (pesa no backup e no cardápio).
+- **Consequências:** o que for mudado direto no iFood é sobrescrito no próximo
+  envio. A pausa só vai quando a chave muda, para ligar o iFood não fechar a loja
+  de quem não usa o cardápio digital. Caminhos e formatos do catálogo v2, das
+  interrupções e do horário precisam ser conferidos na homologação.

@@ -356,6 +356,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/products/{id}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadImage"];
+        delete: operations["removeImage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/printers": {
         parameters: {
             query?: never;
@@ -500,6 +516,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/marketplace/disputes/{id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["answer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/marketplace-actions/{id}/retry": {
         parameters: {
             query?: never;
@@ -542,6 +574,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["simulate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/integrations/{id}/catalog-sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["syncCatalog"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1189,6 +1237,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/marketplace/disputes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["open_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/kitchen/orders": {
         parameters: {
             query?: never;
@@ -1365,6 +1429,8 @@ export interface components {
             menuOpen: boolean;
             menuAutoConfirm: boolean;
             openingHours: components["schemas"]["OpeningHoursResponse"][];
+            /** Format: int32 */
+            ifoodMarkupBp: number;
         };
         SectorPrinterRequest: {
             /** Format: uuid */
@@ -1411,6 +1477,9 @@ export interface components {
             optionGroupIds: string[];
             available: boolean;
             active: boolean;
+            sellOnIfood?: boolean;
+            /** Format: int64 */
+            ifoodPriceCents?: number;
         };
         ProductResponse: {
             /** Format: uuid */
@@ -1429,6 +1498,10 @@ export interface components {
             optionGroupIds: string[];
             available: boolean;
             active: boolean;
+            sellOnIfood: boolean;
+            /** Format: int64 */
+            ifoodPriceCents: number | null;
+            imageUrl: string | null;
         };
         AvailabilityRequest: {
             available: boolean;
@@ -1966,7 +2039,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            action: "CONFIRM" | "START_PREPARATION" | "READY" | "DISPATCH" | "REQUEST_CANCELLATION";
+            action: "CONFIRM" | "START_PREPARATION" | "READY" | "DISPATCH" | "REQUEST_CANCELLATION" | "ACCEPT_DISPUTE" | "REJECT_DISPUTE";
             /** @enum {string} */
             status: "PENDING" | "DONE" | "FAILED" | "SKIPPED";
             /** Format: int32 */
@@ -1974,6 +2047,31 @@ export interface components {
             lastError: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        DisputeAnswerRequest: {
+            accept: boolean;
+            rejectCode?: string;
+        };
+        CancellationReasonResponse: {
+            code: string;
+            description: string;
+        };
+        DisputeResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: int32 */
+            orderNumber: number;
+            /** @enum {string} */
+            provider: "PEDEAI" | "DIGITAL_MENU" | "API" | "IFOOD" | "NINETY_NINE_FOOD" | "OPEN_DELIVERY";
+            kind: string;
+            message: string | null;
+            /** Format: date-time */
+            expiresAt: string | null;
+            /** @enum {string} */
+            status: "OPEN" | "ACCEPTED" | "REJECTED" | "CLOSED";
+            rejectReasons: components["schemas"]["CancellationReasonResponse"][];
         };
         ConnectionRequest: {
             /** @enum {string} */
@@ -1996,6 +2094,11 @@ export interface components {
             lastError: string | null;
             /** Format: int64 */
             failedActions: number;
+            catalogSync: boolean;
+            /** Format: int64 */
+            syncPending: number;
+            /** Format: int64 */
+            syncFailed: number;
         };
         CatalogImportRequest: {
             dryRun: boolean;
@@ -2153,6 +2256,8 @@ export interface components {
             slug?: string;
             menuAutoConfirm?: boolean;
             openingHours?: components["schemas"]["OpeningHoursRequest"][];
+            /** Format: int32 */
+            ifoodMarkupBp?: number;
         };
         PaymentStatusRequest: {
             /** @enum {string} */
@@ -2169,6 +2274,7 @@ export interface components {
             /** @enum {string} */
             status: "ACTIVE" | "PAUSED" | "ERROR";
             autoConfirm: boolean;
+            catalogSync?: boolean;
         };
         CloseCashSessionRequest: {
             counts: components["schemas"]["Count"][];
@@ -2212,6 +2318,7 @@ export interface components {
             priceCents: number;
             optionGroupIds: string[];
             available: boolean;
+            imageUrl: string | null;
         };
         StorefrontResponse: {
             name: string;
@@ -2405,10 +2512,6 @@ export interface components {
             /** Format: int32 */
             columns: number;
             lines: components["schemas"]["TicketLineResponse"][];
-        };
-        CancellationReasonResponse: {
-            code: string;
-            description: string;
         };
         OrderStatusHistoryResponse: {
             /** @enum {string|null} */
@@ -3285,6 +3388,57 @@ export interface operations {
             };
         };
     };
+    uploadImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProductResponse"];
+                };
+            };
+        };
+    };
+    removeImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProductResponse"];
+                };
+            };
+        };
+    };
     list_3: {
         parameters: {
             query?: never;
@@ -3636,6 +3790,32 @@ export interface operations {
             };
         };
     };
+    answer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisputeAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DisputeResponse"];
+                };
+            };
+        };
+    };
     retry_1: {
         parameters: {
             query?: never;
@@ -3722,6 +3902,28 @@ export interface operations {
                     "*/*": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    syncCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ConnectionResponse"];
                 };
             };
         };
@@ -4827,6 +5029,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    open_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DisputeResponse"][];
                 };
             };
         };

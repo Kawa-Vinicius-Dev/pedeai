@@ -1133,6 +1133,84 @@
         }
       }
     },
+    "/api/products/{id}/image": {
+      "post": {
+        "tags": [
+          "product-controller"
+        ],
+        "operationId": "uploadImage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "product-controller"
+        ],
+        "operationId": "removeImage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/printers": {
       "get": {
         "tags": [
@@ -1661,6 +1739,47 @@
         }
       }
     },
+    "/api/marketplace/disputes/{id}/answer": {
+      "post": {
+        "tags": [
+          "dispute-controller"
+        ],
+        "operationId": "answer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisputeAnswerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/marketplace-actions/{id}/retry": {
       "post": {
         "tags": [
@@ -1770,6 +1889,37 @@
                   "additionalProperties": {
                     "type": "string"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/{id}/catalog-sync": {
+      "post": {
+        "tags": [
+          "integration-controller"
+        ],
+        "operationId": "syncCatalog",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionResponse"
                 }
               }
             }
@@ -3372,6 +3522,29 @@
         }
       }
     },
+    "/api/marketplace/disputes": {
+      "get": {
+        "tags": [
+          "dispute-controller"
+        ],
+        "operationId": "open_1",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DisputeResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/kitchen/orders": {
       "get": {
         "tags": [
@@ -3672,6 +3845,10 @@
             "items": {
               "$ref": "#/components/schemas/OpeningHoursResponse"
             }
+          },
+          "ifoodMarkupBp": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "required": [
@@ -3679,6 +3856,7 @@
           "businessDayCutoff",
           "document",
           "id",
+          "ifoodMarkupBp",
           "menuAutoConfirm",
           "menuOpen",
           "name",
@@ -3842,6 +4020,15 @@
           },
           "active": {
             "type": "boolean"
+          },
+          "sellOnIfood": {
+            "type": "boolean"
+          },
+          "ifoodPriceCents": {
+            "type": "integer",
+            "format": "int64",
+            "maximum": 10000000,
+            "minimum": 0
           }
         },
         "required": [
@@ -3909,6 +4096,22 @@
           },
           "active": {
             "type": "boolean"
+          },
+          "sellOnIfood": {
+            "type": "boolean"
+          },
+          "ifoodPriceCents": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "imageUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -3919,10 +4122,13 @@
           "description",
           "effectiveSectorId",
           "id",
+          "ifoodPriceCents",
+          "imageUrl",
           "name",
           "optionGroupIds",
           "priceCents",
-          "sectorId"
+          "sectorId",
+          "sellOnIfood"
         ]
       },
       "AvailabilityRequest": {
@@ -6037,7 +6243,9 @@
               "START_PREPARATION",
               "READY",
               "DISPATCH",
-              "REQUEST_CANCELLATION"
+              "REQUEST_CANCELLATION",
+              "ACCEPT_DISPUTE",
+              "REJECT_DISPUTE"
             ]
           },
           "status": {
@@ -6070,6 +6278,107 @@
           "createdAt",
           "id",
           "lastError",
+          "status"
+        ]
+      },
+      "DisputeAnswerRequest": {
+        "type": "object",
+        "properties": {
+          "accept": {
+            "type": "boolean"
+          },
+          "rejectCode": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "accept"
+        ]
+      },
+      "CancellationReasonResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ]
+      },
+      "DisputeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "PEDEAI",
+              "DIGITAL_MENU",
+              "API",
+              "IFOOD",
+              "NINETY_NINE_FOOD",
+              "OPEN_DELIVERY"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "ACCEPTED",
+              "REJECTED",
+              "CLOSED"
+            ]
+          },
+          "rejectReasons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CancellationReasonResponse"
+            }
+          }
+        },
+        "required": [
+          "expiresAt",
+          "id",
+          "kind",
+          "message",
+          "orderId",
+          "orderNumber",
+          "provider",
+          "rejectReasons",
           "status"
         ]
       },
@@ -6155,10 +6464,22 @@
           "failedActions": {
             "type": "integer",
             "format": "int64"
+          },
+          "catalogSync": {
+            "type": "boolean"
+          },
+          "syncPending": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "syncFailed": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "required": [
           "autoConfirm",
+          "catalogSync",
           "externalMerchantId",
           "failedActions",
           "id",
@@ -6166,7 +6487,9 @@
           "lastEventAt",
           "merchantName",
           "provider",
-          "status"
+          "status",
+          "syncFailed",
+          "syncPending"
         ]
       },
       "CatalogImportRequest": {
@@ -6750,6 +7073,12 @@
             },
             "maxItems": 7,
             "minItems": 0
+          },
+          "ifoodMarkupBp": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 10000,
+            "minimum": 0
           }
         }
       },
@@ -6810,6 +7139,9 @@
             ]
           },
           "autoConfirm": {
+            "type": "boolean"
+          },
+          "catalogSync": {
             "type": "boolean"
           }
         },
@@ -6977,12 +7309,19 @@
           },
           "available": {
             "type": "boolean"
+          },
+          "imageUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
           "available",
           "description",
           "id",
+          "imageUrl",
           "name",
           "optionGroupIds",
           "priceCents"
@@ -7695,21 +8034,6 @@
           "columns",
           "documentType",
           "lines"
-        ]
-      },
-      "CancellationReasonResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "description"
         ]
       },
       "OrderStatusHistoryResponse": {

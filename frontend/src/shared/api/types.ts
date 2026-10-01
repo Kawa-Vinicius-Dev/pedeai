@@ -58,6 +58,7 @@ export type IfoodSetup = Schemas['IfoodSetupResponse'];
 export type Merchant = Schemas['MerchantResponse'];
 export type CancellationReason = Schemas['CancellationReasonResponse'];
 export type MarketplaceAction = Schemas['OutboundActionResponse'];
+export type Dispute = Schemas['DisputeResponse'];
 
 export type CashSession = Schemas['CashSessionResponse'];
 export type CashLine = Schemas['CashLineResponse'];

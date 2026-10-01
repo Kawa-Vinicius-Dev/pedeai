@@ -42,7 +42,7 @@ public final class PrintingFixtures {
 
     public static StoreResponse store() {
         return new StoreResponse(STORE_ID, "Lanchonete", null, null, "America/Sao_Paulo", LocalTime.of(5, 0), 1000,
-                true, false, "pizzaria-bella", true, false, java.util.List.of());
+                true, false, "pizzaria-bella", true, false, java.util.List.of(), 0);
     }
 
     public static Printer printer(String name) {

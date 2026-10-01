@@ -37,7 +37,8 @@ class CategoryServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new CategoryService(repository, sectorRepository, CLOCK);
+        service = new CategoryService(repository, sectorRepository,
+                org.mockito.Mockito.mock(org.springframework.context.ApplicationEventPublisher.class), CLOCK);
     }
 
     @Test

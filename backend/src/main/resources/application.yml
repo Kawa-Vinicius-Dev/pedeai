@@ -22,6 +22,11 @@ spring:
   threads:
     virtual:
       enabled: true
+  # Fotos de produto: a tela reduz antes de mandar e a API recusa acima de 2 MB.
+  servlet:
+    multipart:
+      max-file-size: 3MB
+      max-request-size: 3MB
 
 server:
   error:
@@ -64,6 +69,13 @@ app:
     client-id: ${IFOOD_CLIENT_ID:}
     client-secret: ${IFOOD_CLIENT_SECRET:}
     simulator: ${IFOOD_SIMULATOR:false}
+  # Fotos dos produtos no Cloudflare R2 (docs/07-deploy.md). Sem estas variáveis, as fotos ficam desligadas.
+  r2:
+    account-id: ${R2_ACCOUNT_ID:}
+    access-key-id: ${R2_ACCESS_KEY_ID:}
+    secret-access-key: ${R2_SECRET_ACCESS_KEY:}
+    bucket: ${R2_BUCKET:}
+    public-url: ${R2_PUBLIC_URL:}
   # Apps no padrão Open Delivery (docs/05-integracoes.md#open-delivery). Sem URL e credenciais, o app fica desligado.
   opendelivery:
     simulator: ${OPENDELIVERY_SIMULATOR:false}

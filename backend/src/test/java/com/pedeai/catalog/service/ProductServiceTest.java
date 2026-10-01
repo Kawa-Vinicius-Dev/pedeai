@@ -63,7 +63,7 @@ class ProductServiceTest {
     @BeforeEach
     void setUp() {
         service = new ProductService(productRepository, categoryRepository, sectorRepository, optionGroupRepository,
-                CLOCK);
+                org.mockito.Mockito.mock(org.springframework.context.ApplicationEventPublisher.class), CLOCK);
         kitchen = new Sector(STORE_ID, "Cozinha", true, 0, NOW);
         bar = new Sector(STORE_ID, "Bar", false, 1, NOW);
         pizzas = new Category(STORE_ID, "Pizzas", null, 0, NOW);
@@ -191,11 +191,11 @@ class ProductServiceTest {
     }
 
     private static ProductRequest request(UUID categoryId, String code, UUID sectorId, List<UUID> groupIds) {
-        return new ProductRequest(categoryId, code, " Pizza Grande ", "  ", 0L, sectorId, groupIds, true, true);
+        return new ProductRequest(categoryId, code, " Pizza Grande ", "  ", 0L, sectorId, groupIds, true, true, null, null);
     }
 
     private static Product product(Category category, UUID sectorId, List<UUID> groupIds) {
         return new Product(STORE_ID, new ProductDraft(category.getId(), null, "Produto", null, 0, sectorId, groupIds,
-                true, true), 0, NOW);
+                true, true, null, null), 0, NOW);
     }
 }

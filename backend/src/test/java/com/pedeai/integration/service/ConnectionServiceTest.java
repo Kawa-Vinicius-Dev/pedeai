@@ -37,7 +37,9 @@ class ConnectionServiceTest {
     private ConnectionService service(IfoodProperties properties) {
         when(repository.save(any())).then(returnsFirstArg());
         return new ConnectionService(repository, mock(OutboundActionRepository.class), ifood, properties,
-                IntegrationTestProperties.platforms(properties), CLOCK);
+                IntegrationTestProperties.platforms(properties),
+                mock(com.pedeai.integration.repository.MarketplaceSyncRepository.class), mock(MarketplaceSyncService.class),
+                CLOCK);
     }
 
     @Test

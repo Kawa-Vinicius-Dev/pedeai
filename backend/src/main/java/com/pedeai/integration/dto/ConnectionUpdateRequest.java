@@ -9,6 +9,9 @@ public record ConnectionUpdateRequest(
         MarketplaceConnection.Status status,
 
         @NotNull(message = "Informe se o pedido é aceito automaticamente.")
-        Boolean autoConfirm
+        Boolean autoConfirm,
+
+        /** O cardápio do app vem do PedeAí. Nulo: não muda. */
+        Boolean catalogSync
 ) {
 }

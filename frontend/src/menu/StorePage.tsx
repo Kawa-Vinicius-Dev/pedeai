@@ -9,6 +9,7 @@ import {
   Container,
   Drawer,
   Group,
+  Image,
   Loader,
   Stack,
   Text,
@@ -214,7 +215,8 @@ function ProductCard({ product, onPick }: { product: MenuProduct; onPick: () => 
       style={{ textAlign: 'left', cursor: product.available ? 'pointer' : 'not-allowed', opacity: product.available ? 1 : 0.6 }}
     >
       <Group justify="space-between" align="flex-start" wrap="nowrap">
-        <Stack gap={2}>
+        {product.imageUrl && <Image src={product.imageUrl} alt="" w={72} h={72} radius="sm" fit="cover" />}
+        <Stack gap={2} style={{ flex: 1 }}>
           <Text fw={600}>{product.name}</Text>
           {product.description && (
             <Text size="sm" c="dimmed" lineClamp={2}>

@@ -55,6 +55,7 @@ public class InboundEventHandler {
     private final OpenDeliveryClient openDelivery;
     private final OpenDeliveryOrderMapper openDeliveryMapper;
     private final Platforms platforms;
+    private final DisputeService disputes;
     private final ObjectMapper json;
     private final Clock clock;
 
@@ -62,7 +63,7 @@ public class InboundEventHandler {
                                OutboundActionRepository actions, OrderService orderService,
                                OrderStatusService orderStatusService, IfoodClient ifood, IfoodOrderMapper mapper,
                                OpenDeliveryClient openDelivery, OpenDeliveryOrderMapper openDeliveryMapper,
-                               Platforms platforms, ObjectMapper json, Clock clock) {
+                               Platforms platforms, DisputeService disputes, ObjectMapper json, Clock clock) {
         this.events = events;
         this.connections = connections;
         this.actions = actions;
@@ -73,6 +74,7 @@ public class InboundEventHandler {
         this.openDelivery = openDelivery;
         this.openDeliveryMapper = openDeliveryMapper;
         this.platforms = platforms;
+        this.disputes = disputes;
         this.json = json;
         this.clock = clock;
     }
@@ -103,12 +105,21 @@ public class InboundEventHandler {
             orderStatusService.applyFromMarketplace(storeId, order.id(), STATUS_BY_CODE.get(code),
                     STATUS_BY_CODE.get(code) == OrderStatus.CANCELLED
                             ? cancelReason(platforms.label(event.getProvider()), payload) : null);
-        } else if ("ORDER_CANCELLATION_REQUEST".equals(code)) {
-            // Open Delivery: o cliente pediu o cancelamento pelo app. Quem aceita ou recusa é a loja, no painel do app.
-            connection.failed("O app pediu o cancelamento do pedido " + event.getExternalOrderId()
-                    + ": aceite ou recuse no painel do " + platforms.label(event.getProvider()) + ".", now);
-            event.ignored(storeId, "Pedido de cancelamento do app: decidir no painel do app.", now);
-            return;
+            if (STATUS_BY_CODE.get(code).isFinal()) {
+                disputes.orderFinished(order.id());
+            }
+        } else if ("ORDER_CANCELLATION_REQUEST".equals(code) || "HSD".equals(code)
+                || "HANDSHAKE_DISPUTE".equals(code)) {
+            // O cliente pediu o cancelamento pelo app: a loja aceita ou recusa no PedeAí, no prazo do app.
+            OrderResponse order = ensureImported(connection, event.getExternalOrderId(), payload);
+            JsonNode metadata = payload.path("metadata");
+            disputes.opened(storeId, order.id(), event.getProvider(),
+                    metadata.path("disputeId").asString(event.getExternalEventId()),
+                    metadata.path("action").asString("CANCELLATION"),
+                    firstText(metadata, "message", "reason", "CANCEL_REASON"), instant(metadata.path("expiresAt")));
+        } else if ("HSS".equals(code) || "HANDSHAKE_SETTLEMENT".equals(code)) {
+            JsonNode metadata = payload.path("metadata");
+            disputes.closed(event.getProvider(), metadata.path("disputeId").asString(event.getExternalEventId()));
         } else if ("CARF".equals(code) || "CANCELLATION_REQUEST_FAILED".equals(code)
                 || "CANCELLATION_REQUEST_DENIED".equals(code)) {
             orderService.findExternal(storeId, event.getProvider(), event.getExternalOrderId())
@@ -160,6 +171,24 @@ public class InboundEventHandler {
         JsonNode details = payload.has("order") ? payload.get("order") : openDelivery.order(provider, externalOrderId);
         return orderService.importFromMarketplace(connection.getStoreId(), openDeliveryMapper.map(
                 connection.getStoreId(), provider, platforms.label(provider), details, connection.isAutoConfirm()));
+    }
+
+    private static String firstText(JsonNode node, String... fields) {
+        for (String field : fields) {
+            String value = node.path(field).asString("");
+            if (!value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private static Instant instant(JsonNode value) {
+        try {
+            return value.isMissingNode() || value.isNull() ? null : Instant.parse(value.asString());
+        } catch (java.time.format.DateTimeParseException e) {
+            return null;
+        }
     }
 
     private static String cancelReason(String platform, JsonNode payload) {

@@ -35,6 +35,13 @@ public class Product {
     /** Pausado quando acaba algo durante o serviço. Volta sem precisar editar o produto. */
     private boolean available;
     private boolean active;
+    /** Aparece no cardápio do iFood quando a loja deixa o PedeAí mandar no cardápio de lá. */
+    private boolean sellOnIfood = true;
+    /** Preço fixo no iFood; nulo usa o preço daqui com o acréscimo da loja. */
+    private Long ifoodPriceCents;
+    private String imageUrl;
+    /** Caminho que o iFood devolveu ao receber a foto; muda de foto, envia de novo. */
+    private String ifoodImagePath;
     private int sortOrder;
     @ElementCollection
     @CollectionTable(name = "product_option_group", joinColumns = @JoinColumn(name = "product_id"))
@@ -67,9 +74,39 @@ public class Product {
         this.sectorId = draft.sectorId();
         this.available = draft.available();
         this.active = draft.active();
+        if (draft.sellOnIfood() != null) {
+            this.sellOnIfood = draft.sellOnIfood();
+        }
+        this.ifoodPriceCents = draft.ifoodPriceCents();
         this.optionGroupIds.clear();
         this.optionGroupIds.addAll(draft.optionGroupIds());
         this.updatedAt = now;
+    }
+
+    public void changeImage(String imageUrl, Instant now) {
+        this.imageUrl = imageUrl;
+        this.ifoodImagePath = null;
+        this.updatedAt = now;
+    }
+
+    public void ifoodImageUploaded(String path) {
+        this.ifoodImagePath = path;
+    }
+
+    public boolean isSellOnIfood() {
+        return sellOnIfood;
+    }
+
+    public Long getIfoodPriceCents() {
+        return ifoodPriceCents;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public String getIfoodImagePath() {
+        return ifoodImagePath;
     }
 
     public void changeAvailability(boolean available, Instant now) {

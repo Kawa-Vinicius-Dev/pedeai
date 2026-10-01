@@ -1,14 +1,39 @@
-import { Alert, Badge, Button, Card, Group, Loader, Modal, Select, Stack, Switch, Text, TextInput, Title } from '@mantine/core';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Divider,
+  Group,
+  Loader,
+  Modal,
+  NumberInput,
+  Select,
+  Stack,
+  Switch,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BookDown, CircleAlert, FlaskConical, Pause, Play, Plug } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { BookDown, CircleAlert, FlaskConical, Pause, Play, Plug, Send } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '../../shared/api/client';
 import { errorMessage, unwrap } from '../../shared/api/errors';
 import type { CatalogImport, MarketplaceConnection, Platform } from '../../shared/api/types';
+import { useSession } from '../auth/auth-context';
 import { catalogKeys } from '../catalog/api';
 import { ImportResult } from '../catalog/ImportResult';
-import { integrationKeys, useConnections, useMerchants, usePlatforms, useSimulateOrder, useUpdateConnection } from './api';
+import {
+  integrationKeys,
+  useConnections,
+  useMerchants,
+  usePlatforms,
+  useSimulateOrder,
+  useSyncCatalog,
+  useUpdateConnection,
+} from './api';
 
 const time = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
@@ -120,6 +145,7 @@ function ConnectionCard({ connection, platform }: { connection: MarketplaceConne
             {connection.lastError}
           </Text>
         )}
+        {connection.provider === 'IFOOD' && <IfoodMenuSync connection={connection} />}
         <Group>
           {connection.provider === 'IFOOD' && (
             <Button variant="default" leftSection={<BookDown size={16} />} onClick={() => setImporting(true)}>
@@ -141,6 +167,115 @@ function ConnectionCard({ connection, platform }: { connection: MarketplaceConne
       </Stack>
       <IfoodCatalogImportModal connectionId={connection.id} opened={importing} onClose={() => setImporting(false)} />
     </Card>
+  );
+}
+
+/**
+ * O PedeAí manda no iFood (docs/05-integracoes.md#sincronização-com-o-ifood): a pausa e o horário vão sempre; o
+ * cardápio, com a chave ligada. O acréscimo é da loja (só o dono muda) e vale para todos os produtos.
+ */
+function IfoodMenuSync({ connection }: { connection: MarketplaceConnection }) {
+  const update = useUpdateConnection();
+  const sync = useSyncCatalog();
+
+  return (
+    <Stack gap="sm">
+      <Divider label="Cardápio no iFood" labelPosition="left" />
+      <Text size="sm" c="dimmed">
+        A chave “Cardápio aberto” do quadro de pedidos também pausa e reabre a loja no iFood, e o horário da loja daqui
+        substitui o de lá.
+      </Text>
+      <Switch
+        label="O PedeAí manda no cardápio do iFood"
+        description="Produtos, preços, adicionais, fotos e disponibilidade vão para o iFood a cada alteração. O que for mudado direto no iFood é sobrescrito."
+        checked={connection.catalogSync}
+        disabled={update.isPending}
+        onChange={(event) =>
+          update.mutate({
+            id: connection.id,
+            status: connection.status,
+            autoConfirm: connection.autoConfirm,
+            catalogSync: event.currentTarget.checked,
+          })
+        }
+      />
+      <IfoodMarkupField />
+      <Group>
+        <Button
+          variant="default"
+          leftSection={<Send size={16} />}
+          loading={sync.isPending}
+          disabled={connection.status !== 'ACTIVE'}
+          onClick={() => sync.mutate(connection.id)}
+        >
+          {connection.catalogSync ? 'Enviar cardápio e horário agora' : 'Enviar horário agora'}
+        </Button>
+        <Text size="sm" c="dimmed">
+          {connection.syncPending > 0
+            ? `${connection.syncPending} ${connection.syncPending === 1 ? 'envio' : 'envios'} na fila`
+            : 'Nada na fila'}
+        </Text>
+      </Group>
+      {connection.syncFailed > 0 && (
+        <Alert color="red" variant="light" p="xs">
+          {connection.syncFailed === 1
+            ? '1 envio não chegou ao iFood. O último motivo aparece abaixo.'
+            : `${connection.syncFailed} envios não chegaram ao iFood. O último motivo aparece abaixo.`}
+        </Alert>
+      )}
+    </Stack>
+  );
+}
+
+function IfoodMarkupField() {
+  const queryClient = useQueryClient();
+  const { user } = useSession();
+  const owner = user.role === 'OWNER';
+  const store = useQuery({ queryKey: ['store'], queryFn: () => unwrap(api.GET('/api/store')) });
+  const [percent, setPercent] = useState<number | string | null>(null);
+  const save = useMutation({
+    mutationFn: (ifoodMarkupBp: number) => unwrap(api.PATCH('/api/store', { body: { ifoodMarkupBp } })),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(['store'], saved);
+      setPercent(null);
+      notifications.show({ color: 'green', message: 'Acréscimo salvo. Os preços do iFood são atualizados.' });
+    },
+    onError: (error) => notifications.show({ color: 'red', message: errorMessage(error) }),
+  });
+  if (!store.data) {
+    return null;
+  }
+  const value = percent ?? store.data.ifoodMarkupBp / 100;
+
+  return (
+    <Group align="flex-end">
+      <NumberInput
+        label="Acréscimo nos preços do iFood"
+        description={
+          owner
+            ? 'Para cobrir a comissão. O preço arredonda para cima até terminar em ,90; adicionais, para os 10 centavos de cima.'
+            : 'Só o dono da loja altera o acréscimo.'
+        }
+        suffix="%"
+        min={0}
+        max={100}
+        decimalScale={2}
+        value={value}
+        onChange={setPercent}
+        disabled={!owner}
+        w={360}
+      />
+      {owner && (
+        <Button
+          variant="default"
+          loading={save.isPending}
+          disabled={percent === null || percent === ''}
+          onClick={() => save.mutate(Math.round(Number(value) * 100))}
+        >
+          Salvar acréscimo
+        </Button>
+      )}
+    </Group>
   );
 }
 

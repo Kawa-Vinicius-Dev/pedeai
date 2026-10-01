@@ -20,11 +20,13 @@ import {
 } from 'lucide-react';
 import { NavLink as RouterNavLink, Outlet, useMatch } from 'react-router';
 import { useAuth, useSession } from '../features/auth/auth-context';
+import { DisputesBar } from '../features/integrations/DisputesBar';
 import { useOrderStream } from '../features/orders/realtime';
 import { PrintAlertsBar } from '../features/printing/PrintAlertsBar';
 import {
   AVAILABILITY_TOGGLERS,
   CASH_OPERATORS,
+  ORDER_TAKERS,
   ORDER_VIEWERS,
   REPORT_VIEWERS,
   ROLE_LABELS,
@@ -108,6 +110,7 @@ export function AppLayout() {
       </AppShell.Navbar>
 
       <AppShell.Main>
+        <DisputesBar enabled={ORDER_TAKERS.includes(user.role)} />
         <PrintAlertsBar enabled={seesOrders} />
         <Outlet />
       </AppShell.Main>

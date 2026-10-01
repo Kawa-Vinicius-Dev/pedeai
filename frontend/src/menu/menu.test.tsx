@@ -25,8 +25,8 @@ function storefront(overrides: Partial<Storefront> = {}): Storefront {
         id: MENU_IDS.pizzas,
         name: 'Pizzas',
         products: [
-          { id: MENU_IDS.pizza, name: 'Pizza Grande', description: '8 fatias', priceCents: 0, optionGroupIds: [MENU_IDS.flavors], available: true },
-          { id: MENU_IDS.soda, name: 'Refrigerante lata', description: null, priceCents: 700, optionGroupIds: [], available: false },
+          { id: MENU_IDS.pizza, name: 'Pizza Grande', description: '8 fatias', priceCents: 0, optionGroupIds: [MENU_IDS.flavors], available: true, imageUrl: null },
+          { id: MENU_IDS.soda, name: 'Refrigerante lata', description: null, priceCents: 700, optionGroupIds: [], available: false, imageUrl: null },
         ],
       },
     ],

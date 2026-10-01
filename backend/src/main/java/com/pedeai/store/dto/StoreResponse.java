@@ -20,13 +20,14 @@ public record StoreResponse(
         String slug,
         boolean menuOpen,
         boolean menuAutoConfirm,
-        List<OpeningHoursResponse> openingHours
+        List<OpeningHoursResponse> openingHours,
+        int ifoodMarkupBp
 ) {
     public static StoreResponse from(Store store) {
         return new StoreResponse(store.getId(), store.getName(), store.getDocument(), store.getPhone(),
                 store.getTimezone(), store.getBusinessDayCutoff(), store.getServiceFeeBp(),
                 store.isAutoConfirmOwnOrders(), store.isStartPreparationOnConfirm(), store.getSlug(),
                 store.isMenuOpen(), store.isMenuAutoConfirm(),
-                store.getOpeningHours().stream().map(OpeningHoursResponse::from).toList());
+                store.getOpeningHours().stream().map(OpeningHoursResponse::from).toList(), store.getIfoodMarkupBp());
     }
 }

@@ -44,13 +44,14 @@ public class IntegrationScheduler {
     private final OpenDeliveryProperties openDeliveryProperties;
     private final OpenDeliveryClient openDelivery;
     private final ObjectMapper json;
+    private final MarketplaceSyncService sync;
     private final Clock clock;
 
     public IntegrationScheduler(IfoodProperties properties, IfoodClient ifood,
                                 MarketplaceConnectionRepository connections, InboundEventRepository events,
                                 InboundService inbound, InboundEventHandler handler, OutboxService outbox,
                                 OpenDeliveryProperties openDeliveryProperties, OpenDeliveryClient openDelivery,
-                                ObjectMapper json, Clock clock) {
+                                ObjectMapper json, MarketplaceSyncService sync, Clock clock) {
         this.properties = properties;
         this.ifood = ifood;
         this.connections = connections;
@@ -61,6 +62,7 @@ public class IntegrationScheduler {
         this.openDeliveryProperties = openDeliveryProperties;
         this.openDelivery = openDelivery;
         this.json = json;
+        this.sync = sync;
         this.clock = clock;
     }
 
@@ -137,6 +139,19 @@ public class IntegrationScheduler {
                 outbox.send(actionId);
             } catch (RuntimeException e) {
                 log.warn("Ação {} para o marketplace falhou: {}", actionId, e.getMessage());
+            }
+        }
+    }
+
+    /** A fila do "PedeAí manda no iFood": pausa, horário e cardápio, cada envio na sua transação. */
+    @Scheduled(fixedDelay = 5_000)
+    public synchronized void sendMarketplaceSync() {
+        for (UUID syncId : sync.due()) {
+            try {
+                sync.send(syncId);
+            } catch (RuntimeException e) {
+                log.warn("Envio {} ao iFood falhou: {}", syncId, e.getMessage());
+                sync.retryLater(syncId, e.getMessage());
             }
         }
     }

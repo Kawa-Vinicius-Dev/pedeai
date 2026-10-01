@@ -58,7 +58,7 @@ class IntegrationControllersTest {
     @Test
     void managerLinksTheStoreAndGetsTheLocation() throws Exception {
         when(connectionService.connect(eq(STORE_ID), any())).thenReturn(new ConnectionResponse(CONNECTION,
-                OrderSource.IFOOD, "m-1", "Lanchonete", MarketplaceConnection.Status.ACTIVE, false, null, null, 0));
+                OrderSource.IFOOD, "m-1", "Lanchonete", MarketplaceConnection.Status.ACTIVE, false, null, null, 0, false, 0, 0));
 
         mockMvc.perform(post("/api/integrations").with(as(Role.MANAGER)).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"externalMerchantId\":\"m-1\",\"autoConfirm\":false}"))

@@ -44,6 +44,10 @@ public record UpdateStoreRequest(
 
         /** Horário do cardápio, um período por dia. Lista vazia: sem restrição de horário. Nulo: não muda. */
         @Size(max = 7, message = "Informe no máximo um horário por dia da semana.")
-        List<@Valid @NotNull OpeningHoursRequest> openingHours
+        List<@Valid @NotNull OpeningHoursRequest> openingHours,
+
+        @Min(value = 0, message = "O acréscimo no iFood não pode ser negativo.")
+        @Max(value = 10000, message = "O acréscimo no iFood pode ser no máximo 100%.")
+        Integer ifoodMarkupBp
 ) {
 }

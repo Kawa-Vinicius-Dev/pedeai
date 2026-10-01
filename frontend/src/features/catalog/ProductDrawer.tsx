@@ -21,9 +21,10 @@ import { api } from '../../shared/api/client';
 import { unwrap } from '../../shared/api/errors';
 import type { Product, ProductRequest } from '../../shared/api/types';
 import { applyApiError } from '../../shared/lib/forms';
-import { centsToReais, moneyField } from '../../shared/lib/numbers';
+import { centsToReais, moneyField, optionalMoneyField } from '../../shared/lib/numbers';
 import { MoneyInput } from '../../shared/ui/MoneyInput';
 import { type CatalogData, invalidateCatalog } from './api';
+import { ProductPhoto } from './ProductPhoto';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Informe o nome do produto.').max(120, 'Use até 120 caracteres.'),
@@ -35,6 +36,8 @@ const schema = z.object({
   optionGroupIds: z.array(z.string()).max(20, 'Use até 20 grupos de adicionais.'),
   available: z.boolean(),
   active: z.boolean(),
+  sellOnIfood: z.boolean(),
+  ifoodPrice: optionalMoneyField('Informe um preço válido ou deixe em branco.'),
 });
 
 type ProductFormInput = z.input<typeof schema>;
@@ -56,6 +59,8 @@ function toForm(target: ProductTarget): ProductFormInput {
       optionGroupIds: product.optionGroupIds,
       available: product.available,
       active: product.active,
+      sellOnIfood: product.sellOnIfood,
+      ifoodPrice: product.ifoodPriceCents == null ? '' : centsToReais(product.ifoodPriceCents),
     };
   }
   return {
@@ -68,6 +73,8 @@ function toForm(target: ProductTarget): ProductFormInput {
     optionGroupIds: [],
     available: true,
     active: true,
+    sellOnIfood: true,
+    ifoodPrice: '',
   };
 }
 
@@ -82,6 +89,9 @@ function toRequest(form: ProductForm): ProductRequest {
     optionGroupIds: form.optionGroupIds,
     available: form.available,
     active: form.active,
+    sellOnIfood: form.sellOnIfood,
+    // Vazio: sem preço fixo (a API trata ausente como "usar o acréscimo").
+    ifoodPriceCents: form.ifoodPrice ?? undefined,
   };
 }
 
@@ -141,7 +151,7 @@ function ProductFormBody({
       notifications.show({ color: 'green', message: `${saved.name} salvo no cardápio.` });
       onClose();
     },
-    onError: (error) => applyApiError(error, setError, { priceCents: 'price' }),
+    onError: (error) => applyApiError(error, setError, { priceCents: 'price', ifoodPriceCents: 'ifoodPrice' }),
   });
 
   // Inativos só aparecem se já estão escolhidos, para não sumirem da tela ao editar.
@@ -244,6 +254,35 @@ function ProductFormBody({
             />
           )}
         />
+        {product && <ProductPhoto product={product} />}
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <Controller
+            control={control}
+            name="sellOnIfood"
+            render={({ field }) => (
+              <Switch
+                label="Vender no iFood"
+                description="Desligue para o que só sai no balcão. Vale quando o PedeAí manda no cardápio do iFood."
+                checked={field.value}
+                onChange={(event) => field.onChange(event.currentTarget.checked)}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="ifoodPrice"
+            render={({ field }) => (
+              <MoneyInput
+                label="Preço fixo no iFood"
+                description="Opcional. Vazio: o preço daqui com o acréscimo da loja."
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.ifoodPrice?.message}
+              />
+            )}
+          />
+        </SimpleGrid>
         <Controller
           control={control}
           name="available"

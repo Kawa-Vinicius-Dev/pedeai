@@ -12,6 +12,7 @@ import com.pedeai.catalog.dto.PriceQuoteResponse;
 import com.pedeai.catalog.dto.PriceQuoteResponse.QuotedOptionResponse;
 import com.pedeai.catalog.dto.ProductRequest;
 import com.pedeai.catalog.dto.ProductResponse;
+import com.pedeai.catalog.event.CatalogChanged;
 import com.pedeai.catalog.repository.CategoryRepository;
 import com.pedeai.catalog.repository.OptionGroupRepository;
 import com.pedeai.catalog.repository.ProductRepository;
@@ -21,6 +22,7 @@ import com.pedeai.shared.exception.ConflictException;
 import com.pedeai.shared.exception.ResourceNotFoundException;
 import com.pedeai.shared.text.Texts;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -30,6 +32,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,15 +50,17 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final SectorRepository sectorRepository;
     private final OptionGroupRepository optionGroupRepository;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
     public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository,
                           SectorRepository sectorRepository, OptionGroupRepository optionGroupRepository,
-                          Clock clock) {
+                          ApplicationEventPublisher events, Clock clock) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.sectorRepository = sectorRepository;
         this.optionGroupRepository = optionGroupRepository;
+        this.events = events;
         this.clock = clock;
     }
 
@@ -83,6 +89,7 @@ public class ProductService {
         Product product = new Product(storeId, draft, productRepository.findMaxSortOrder(storeId) + 1,
                 Instant.now(clock));
         productRepository.save(product);
+        events.publishEvent(new CatalogChanged(storeId, Set.of(product.getId())));
         return ProductResponse.from(product, sectorResolver(storeId).resolve(product));
     }
 
@@ -90,6 +97,7 @@ public class ProductService {
     public ProductResponse update(UUID storeId, UUID id, ProductRequest request) {
         Product product = find(storeId, id);
         product.update(validate(storeId, request, id), Instant.now(clock));
+        events.publishEvent(new CatalogChanged(storeId, Set.of(id)));
         return ProductResponse.from(product, sectorResolver(storeId).resolve(product));
     }
 
@@ -98,7 +106,28 @@ public class ProductService {
     public ProductResponse changeAvailability(UUID storeId, UUID id, boolean available) {
         Product product = find(storeId, id);
         product.changeAvailability(available, Instant.now(clock));
+        events.publishEvent(new CatalogChanged(storeId, Set.of(id)));
         return ProductResponse.from(product, sectorResolver(storeId).resolve(product));
+    }
+
+    /** Foto nova (ou nenhuma, com {@code null}): o iFood recebe de novo no próximo envio. */
+    @Transactional
+    public ProductResponse changeImage(UUID storeId, UUID id, String imageUrl) {
+        Product product = find(storeId, id);
+        product.changeImage(imageUrl, Instant.now(clock));
+        events.publishEvent(new CatalogChanged(storeId, Set.of(id)));
+        return ProductResponse.from(product, sectorResolver(storeId).resolve(product));
+    }
+
+    /** O caminho da foto no iFood, se já foi enviada para a foto atual. */
+    @Transactional(readOnly = true)
+    public Optional<String> ifoodImagePath(UUID storeId, UUID id) {
+        return Optional.ofNullable(find(storeId, id).getIfoodImagePath());
+    }
+
+    @Transactional
+    public void rememberIfoodImagePath(UUID storeId, UUID id, String path) {
+        find(storeId, id).ifoodImageUploaded(path);
     }
 
     /** Preço de um item montado, com as mesmas validações que o pedido vai aplicar. */
@@ -144,7 +173,7 @@ public class ProductService {
         }
         return new ProductDraft(request.categoryId(), code, request.name().trim(),
                 Texts.trimToNull(request.description()), request.priceCents(), request.sectorId(), groupIds,
-                request.available(), request.active());
+                request.available(), request.active(), request.sellOnIfood(), request.ifoodPriceCents());
     }
 
     private List<OptionGroup> groupsInOrder(UUID storeId, List<UUID> groupIds) {
