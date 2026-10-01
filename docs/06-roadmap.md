@@ -228,6 +228,25 @@ dia, e os números do dashboard conferem com uma consulta manual.
 > Fica para depois: contagem "às cegas" (hoje quem fecha vê o esperado) e
 > gráficos além das barras por hora.
 
+## Etapa 8 · Cardápio digital PedeAí (em andamento)
+
+Decisões (out/2026): mesmo backend e mesmo projeto do frontend, com uma página
+separada (`menu.html`, rota `/loja/:slug`) para o cliente final. Pagamento na
+entrega ou na retirada por enquanto; um endereço por loja dentro do PedeAí.
+
+Plano:
+
+- Nova origem `DIGITAL_MENU`. Trocar as checagens `source != PEDEAI` por
+  `OrderSource.isMarketplace()` (status, cancelamento e pagamento), senão o
+  pedido do cardápio seria tratado como iFood.
+- Loja ganha `slug` (único) e `menu_open` (recebendo pedidos pelo cardápio),
+  com chave no quadro de pedidos para quem está no caixa.
+- Módulo `storefront`, público: cardápio da loja, pedido (preço e taxa de
+  entrega calculados no servidor, nasce **Recebido** para o aceite no quadro,
+  limite por IP) e acompanhamento por um código aleatório do pedido.
+- Depois: API de pedidos com chave por loja, Open Delivery (cardápios de
+  terceiros e 99Food) e importação de cardápio (iFood e planilha).
+
 ## Depois do escopo atual
 
 Nada disto será construído agora. Tudo tem ponto de encaixe (ver
