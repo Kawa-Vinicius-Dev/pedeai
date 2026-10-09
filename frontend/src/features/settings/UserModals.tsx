@@ -189,10 +189,12 @@ export function EditUserModal({ user, onClose }: { user: User | null; onClose: (
 }
 
 function RoleSelect({ value, onChange, error }: { value: Role; onChange: (role: Role) => void; error?: string }) {
+  // Sem salão (D25): garçom só aparece para quem já tem esse papel.
+  const options = ROLE_OPTIONS.filter((option) => option.value !== 'WAITER' || value === 'WAITER');
   return (
     <Select
       label="Papel"
-      data={ROLE_OPTIONS}
+      data={options}
       value={value ?? null}
       onChange={(selected) => selected && onChange(selected as Role)}
       error={error}

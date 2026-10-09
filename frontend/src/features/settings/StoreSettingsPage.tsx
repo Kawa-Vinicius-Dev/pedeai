@@ -8,7 +8,6 @@ import {
   CopyButton,
   Group,
   Loader,
-  NumberInput,
   Select,
   SimpleGrid,
   Stack,
@@ -27,7 +26,6 @@ import { api } from '../../shared/api/client';
 import { errorMessage, unwrap } from '../../shared/api/errors';
 import type { Store, UpdateStoreRequest } from '../../shared/api/types';
 import { applyApiError } from '../../shared/lib/forms';
-import { decimalField } from '../../shared/lib/numbers';
 import { useAuth } from '../auth/auth-context';
 
 const TIME_ZONES = [
@@ -53,9 +51,6 @@ const schema = z.object({
   phone: z.string().trim().max(20, 'Use até 20 caracteres.'),
   timezone: z.string().min(1, 'Escolha o fuso horário.'),
   businessDayCutoff: z.string().regex(/^\d{2}:\d{2}$/, 'Informe o horário.'),
-  serviceFeePercent: decimalField('Informe a taxa (use 0 se não cobra).').pipe(
-    z.number().min(0, 'A taxa não pode ser negativa.').max(30, 'A taxa pode ser no máximo 30%.'),
-  ),
   autoConfirmOwnOrders: z.boolean(),
   startPreparationOnConfirm: z.boolean(),
   slug: z
@@ -98,7 +93,6 @@ function toForm(store: Store): StoreFormInput {
     phone: store.phone ?? '',
     timezone: store.timezone,
     businessDayCutoff: store.businessDayCutoff.slice(0, 5),
-    serviceFeePercent: store.serviceFeeBp / 100,
     autoConfirmOwnOrders: store.autoConfirmOwnOrders,
     startPreparationOnConfirm: store.startPreparationOnConfirm,
     slug: store.slug,
@@ -120,7 +114,6 @@ function toRequest(form: StoreForm): UpdateStoreRequest {
     phone: form.phone,
     timezone: form.timezone,
     businessDayCutoff: form.businessDayCutoff,
-    serviceFeeBp: Math.round(form.serviceFeePercent * 100),
     autoConfirmOwnOrders: form.autoConfirmOwnOrders,
     startPreparationOnConfirm: form.startPreparationOnConfirm,
     slug: form.slug,
@@ -321,26 +314,6 @@ export function StoreSettingsPage() {
                   error={errors.businessDayCutoff?.message}
                 />
               </SimpleGrid>
-              <Controller
-                control={control}
-                name="serviceFeePercent"
-                render={({ field }) => (
-                  <NumberInput
-                    label="Taxa de serviço (mesas)"
-                    description="O cliente pode recusar. Use 0 se a loja não cobra."
-                    suffix="%"
-                    decimalScale={2}
-                    decimalSeparator=","
-                    min={0}
-                    max={30}
-                    maw={260}
-                    value={field.value ?? ''}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    error={errors.serviceFeePercent?.message}
-                  />
-                )}
-              />
               <Controller
                 control={control}
                 name="autoConfirmOwnOrders"

@@ -1,17 +1,18 @@
 # PedeAí
 
 Sistema de gestão de pedidos para restaurantes. Ele recebe pedidos de todos os
-canais (balcão, telefone, mesa, iFood, 99Food), organiza, manda para a cozinha,
+canais de retirada e delivery (balcão, telefone, cardápio digital, iFood, 99Food), organiza, manda para a cozinha,
 imprime nas impressoras térmicas certas e acompanha cada pedido até a entrega,
 com uma visão financeira básica.
 
-> **Status:** Etapas 0 (fundação), 1 (cardápio) e 2 (pedidos) prontas: cadastro
-> de loja, login, equipe, cardápio com código PDV, adicionais e pizza meio a
-> meio, PDV de retirada e delivery (cliente pelo telefone, taxa por bairro,
-> troco), quadro de pedidos em tempo real, histórico e pagamentos no pedido,
-> com backend, frontend, testes e CI. Falta o protótipo de impressão, que
-> precisa das impressoras do restaurante-piloto. Próxima: Etapa 3 (cozinha e
-> impressão). Ver o [roadmap](docs/06-roadmap.md).
+> **Status (out/2026):** só retirada e delivery, sem mesas
+> ([D25](docs/decisoes.md#d25--sem-salão-o-piloto-só-faz-delivery)). Prontos:
+> cardápio, PDV, quadro de pedidos em tempo real, tela da cozinha, impressão
+> (agente e contingência pelo navegador), iFood e 99Food (testados pelo
+> simulador), caixa, relatórios, painel do dia e cardápio digital. Falta o que
+> depende de fora: credenciais e homologação no iFood e na 99Food, as
+> impressoras do restaurante-piloto e hospedar a API e o banco. Ver o
+> [roadmap](docs/06-roadmap.md).
 
 ## Como rodar localmente
 
@@ -90,7 +91,6 @@ já deixa o ponto de encaixe desses módulos, mas nada disso é construído agor
 flowchart LR
     subgraph REST["Restaurante"]
         PDV["Caixa / PDV<br/>navegador"]
-        GAR["Garçom<br/>celular ou tablet"]
         KDS["Tela da cozinha<br/>TV ou tablet"]
         AG["Agente de impressão<br/>PC do caixa"]
         IMP1[["Impressora cozinha<br/>80mm, rede"]]
@@ -106,7 +106,6 @@ flowchart LR
     NOVE["99Food<br/>Open Delivery"]
 
     PDV -->|"REST + SSE"| API
-    GAR -->|"REST + SSE"| API
     KDS -->|"REST + SSE"| API
     AG -->|"HTTPS de saída"| API
     AG --> IMP1
@@ -121,7 +120,7 @@ flowchart LR
 A arquitetura tem quatro peças:
 
 1. **API**: um monolito modular em Spring Boot com PostgreSQL.
-2. **SPA**: uma aplicação React usada no caixa, pelo garçom, na tela da cozinha e na gestão.
+2. **SPA**: uma aplicação React usada no caixa, na tela da cozinha e na gestão.
 3. **Agente de impressão**: um programa pequeno instalado em um computador do
    restaurante. Ele busca os trabalhos de impressão no servidor e manda para as
    impressoras térmicas.
