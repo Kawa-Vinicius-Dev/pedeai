@@ -3,6 +3,8 @@
 # Uso, na pasta deploy/: cp .env.supabase.example .env && (edite) && docker compose -f compose.supabase.yaml up -d --build
 services:
   api:
+    # Imagem pronta publicada pelo CI; sem acesso a ela, o instalador compila a partir de ../backend.
+    image: ${API_IMAGE:-ghcr.io/kawa-vinicius-dev/pedeai-api:latest}
     build: ../backend
     restart: unless-stopped
     environment:

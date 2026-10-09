@@ -20,7 +20,7 @@ log() { printf '\n==> %s\n' "$*"; }
 
 log "Memória de troca (o build da API precisa de folga em VM pequena)"
 if ! swapon --show | grep -q .; then
-  fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+  fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
   grep -q '/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
 fi
 
@@ -81,8 +81,13 @@ for name in R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET R2_PUB
   fi
 done
 
-log "Subindo (o primeiro build leva alguns minutos)"
-docker compose -f compose.supabase.yaml up -d --build
+log "Subindo a API"
+if docker compose -f compose.supabase.yaml pull api; then
+  docker compose -f compose.supabase.yaml up -d
+else
+  echo "Imagem pronta indisponível: compilando aqui (precisa de mais memória e leva alguns minutos)."
+  docker compose -f compose.supabase.yaml up -d --build
+fi
 
 log "Esperando a API responder em https://$API_DOMAIN"
 for _ in $(seq 1 60); do

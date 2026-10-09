@@ -47,7 +47,9 @@ o usuário `postgres`. Na VM só rodam a API, o Caddy (HTTPS) e o backup diário
 ([`deploy/compose.supabase.yaml`](../deploy/compose.supabase.yaml)).
 
 1. Na Oracle Cloud, crie a instância: **Ubuntu 22.04 ou 24.04**, forma **VM.Standard.A1.Flex** (ARM, Always Free;
-   2 OCPU e 12 GB bastam). Guarde a chave SSH que ela oferece.
+   2 OCPU e 12 GB bastam). Guarde a chave SSH que ela oferece. Se der "Out of capacity" (comum em São Paulo),
+   a **VM.Standard.E2.1.Micro** (1 GB, também Always Free) serve: o instalador baixa a imagem pronta da API, que o
+   CI publica em `ghcr.io/kawa-vinicius-dev/pedeai-api`, em vez de compilar na VM.
 2. Na **lista de segurança da VCN** da instância, adicione regras de entrada TCP para as portas **80** e **443**
    (origem `0.0.0.0/0`).
 3. Entre na VM (pelo botão **Cloud Shell** do console ou por SSH) e rode, com a senha do papel `pedeai`:
