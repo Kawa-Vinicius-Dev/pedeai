@@ -40,6 +40,35 @@ Serviços que "dormem" sem acesso (como o plano grátis do Render) **não servem
    docker compose -f compose.prod.yaml exec -T postgres pg_restore -U pedeai -d pedeai --clean < backups/<arquivo>.dump
    ```
 
+### Oracle Cloud com o banco no Supabase (o caminho em uso)
+
+O banco fica no projeto `pedeai` do Supabase (região São Paulo), num papel e schema próprios (`pedeai`): a API não usa
+o usuário `postgres`. Na VM só rodam a API, o Caddy (HTTPS) e o backup diário
+([`deploy/compose.supabase.yaml`](../deploy/compose.supabase.yaml)).
+
+1. Na Oracle Cloud, crie a instância: **Ubuntu 22.04 ou 24.04**, forma **VM.Standard.A1.Flex** (ARM, Always Free;
+   2 OCPU e 12 GB bastam). Guarde a chave SSH que ela oferece.
+2. Na **lista de segurança da VCN** da instância, adicione regras de entrada TCP para as portas **80** e **443**
+   (origem `0.0.0.0/0`).
+3. Entre na VM (pelo botão **Cloud Shell** do console ou por SSH) e rode, com a senha do papel `pedeai`:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/Kawa-Vinicius-Dev/pedeai/main/deploy/instalar-oracle.sh \
+     | sudo DB_PASSWORD='<senha do papel pedeai>' bash
+   ```
+
+   O script instala o Docker, abre as portas no firewall da imagem Ubuntu, acha o pooler do Supabase, gera o
+   `JWT_SECRET`, sobe tudo e espera o HTTPS. No fim mostra o endereço da API, no formato
+   `https://api-<ip-com-traços>.sslip.io` (o [sslip.io](https://sslip.io) dá um nome ao IP, então não precisa de
+   domínio próprio). Rodar o script de novo atualiza o código e mantém o `.env`.
+4. Ponha esse endereço no `frontend/vercel.json` (seção abaixo).
+5. Depois de criar a sua loja, desligue o cadastro aberto: em `/opt/pedeai/deploy/.env`, `SIGNUP_ENABLED=false`, e
+   `docker compose -f compose.supabase.yaml up -d`.
+
+O Supabase grátis pausa projeto sem uso por uma semana; com a API ligada (ela consulta o banco o tempo todo) isso
+não acontece. O plano grátis também não tem backup para baixar: o serviço `backup` da VM grava o dump diário em
+`/opt/pedeai/deploy/backups/`.
+
 ### Railway
 
 1. Crie um projeto com dois serviços: **PostgreSQL** (da própria Railway) e a API, pelo repositório, com
