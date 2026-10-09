@@ -3,6 +3,7 @@
 # Na VM, como root:
 #   curl -fsSL https://raw.githubusercontent.com/Kawa-Vinicius-Dev/pedeai/main/deploy/instalar-oracle.sh \
 #     | sudo DB_PASSWORD='senha do papel pedeai no Supabase' bash
+# Fotos (opcional): acrescente R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET e R2_PUBLIC_URL depois do sudo.
 # Rodar de novo atualiza o código e reinicia a API, mantendo o .env (e o JWT_SECRET) que já existem.
 set -euo pipefail
 
@@ -70,6 +71,15 @@ SIGNUP_ENABLED=$SIGNUP_ENABLED
 ENV
 fi
 API_DOMAIN="$(grep '^API_DOMAIN=' .env | cut -d= -f2)"
+
+# Fotos no Cloudflare R2 (opcional): as variáveis R2_* passadas no comando entram no .env, também ao rodar de novo.
+for name in R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET R2_PUBLIC_URL; do
+  value="${!name:-}"
+  if [ -n "$value" ]; then
+    sed -i "/^$name=/d" .env
+    echo "$name=$value" >> .env
+  fi
+done
 
 log "Subindo (o primeiro build leva alguns minutos)"
 docker compose -f compose.supabase.yaml up -d --build
