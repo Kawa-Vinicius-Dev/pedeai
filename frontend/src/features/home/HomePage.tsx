@@ -38,7 +38,7 @@ export function HomePage() {
                   <Anchor component={Link} to="/configuracoes/loja">
                     Revise os dados da loja
                   </Anchor>{' '}
-                  (fuso, virada do dia, taxa de serviço)
+                  (fuso, virada do dia, horário de funcionamento)
                 </List.Item>
                 <List.Item icon={<ItemIcon icon={Users} color="orange" />}>
                   <Anchor component={Link} to="/configuracoes/equipe">

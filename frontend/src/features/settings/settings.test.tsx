@@ -35,7 +35,7 @@ describe('equipe', () => {
       http.get('/api/users', () => HttpResponse.json(team)),
       http.post('/api/users', async ({ request }) => {
         created = await request.json();
-        const bia = userFixture({ id: '01a0d567-0000-7000-8000-000000000004', name: 'Bia', email: 'bia@example.com', role: 'WAITER' });
+        const bia = userFixture({ id: '01a0d567-0000-7000-8000-000000000004', name: 'Bia', email: 'bia@example.com', role: 'KITCHEN' });
         team.push(bia);
         return HttpResponse.json(bia, { status: 201 });
       }),
@@ -48,11 +48,11 @@ describe('equipe', () => {
     await user.type(within(dialog).getByLabelText('E-mail'), 'bia@example.com');
     await user.type(within(dialog).getByLabelText('Senha inicial', { selector: 'input' }), 'senha-da-bia');
     await user.click(within(dialog).getByRole('combobox', { name: 'Papel' }));
-    await user.click(await screen.findByRole('option', { name: 'Garçom' }));
+    await user.click(await screen.findByRole('option', { name: 'Cozinha' }));
     await user.click(within(dialog).getByRole('button', { name: 'Adicionar' }));
 
     await waitFor(() =>
-      expect(created).toEqual({ name: 'Bia', email: 'bia@example.com', password: 'senha-da-bia', role: 'WAITER' }),
+      expect(created).toEqual({ name: 'Bia', email: 'bia@example.com', password: 'senha-da-bia', role: 'KITCHEN' }),
     );
     expect(await screen.findByText('bia@example.com')).toBeInTheDocument();
   });
@@ -78,26 +78,26 @@ describe('equipe', () => {
 describe('dados da loja', () => {
   beforeEach(() => loggedInAs('OWNER'));
 
-  it('mostra a taxa em % e salva em pontos-base', async () => {
-    let patch: unknown;
+  it('salva os dados da loja sem mexer na taxa de serviço, que não aparece mais (sem salão)', async () => {
+    let patch: Record<string, unknown> = {};
     server.use(
       http.get('/api/store', () => HttpResponse.json(store())),
       http.patch('/api/store', async ({ request }) => {
-        patch = await request.json();
-        return HttpResponse.json(store({ serviceFeeBp: 1250 }));
+        patch = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(store({ name: 'Pizzaria Bella Centro' }));
       }),
     );
     const { user } = renderApp('/configuracoes/loja');
 
-    const fee = await screen.findByLabelText('Taxa de serviço (mesas)');
-    await waitFor(() => expect(fee).toHaveValue('10%'));
-    // Digita como a pessoa faria: o texto passa por "12," antes de virar número, e não pode se perder.
-    await user.tripleClick(fee);
-    await user.keyboard('12,5');
-    await waitFor(() => expect(fee).toHaveValue('12,5%'));
+    const name = await screen.findByLabelText('Nome da loja');
+    await waitFor(() => expect(name).toHaveValue('Pizzaria Bella'));
+    expect(screen.queryByLabelText(/Taxa de serviço/)).not.toBeInTheDocument();
+    await user.clear(name);
+    await user.type(name, 'Pizzaria Bella Centro');
     await user.click(screen.getByRole('button', { name: 'Salvar' }));
 
-    await waitFor(() => expect(patch).toMatchObject({ serviceFeeBp: 1250, businessDayCutoff: '05:00' }));
+    await waitFor(() => expect(patch).toMatchObject({ name: 'Pizzaria Bella Centro', businessDayCutoff: '05:00' }));
+    expect(patch).not.toHaveProperty('serviceFeeBp');
   });
 });
 
