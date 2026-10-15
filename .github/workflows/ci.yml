@@ -89,24 +89,14 @@ jobs:
         run: docker build --tag pedeai-api:ci backend
       # Na main, publica a imagem pronta (Intel/AMD; uma VM ARM compila sozinha): o servidor baixa em vez de compilar, o que permite
       # usar até a VM grátis de 1 GB da Oracle (deploy/instalar-oracle.sh).
+      # Build e push simples, sem buildx: o buildx baixa o moby/buildkit do Docker Hub, que limita os runners.
       - if: github.event_name == 'push'
-        uses: docker/setup-buildx-action@v3
-      - if: github.event_name == 'push'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - if: github.event_name == 'push'
-        uses: docker/build-push-action@v6
-        with:
-          context: backend
-          platforms: linux/amd64
-          push: true
-          tags: ghcr.io/kawa-vinicius-dev/pedeai-api:latest
-          labels: org.opencontainers.image.source=https://github.com/Kawa-Vinicius-Dev/pedeai
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker build \
+            --label org.opencontainers.image.source=https://github.com/Kawa-Vinicius-Dev/pedeai \
+            --tag ghcr.io/kawa-vinicius-dev/pedeai-api:latest backend
+          docker push ghcr.io/kawa-vinicius-dev/pedeai-api:latest
 
   # Instalador do agente para o computador da loja. O runner Windows já tem o WiX, que o jpackage usa para o MSI.
   # O .msi fica nos artefatos da execução do CI.
