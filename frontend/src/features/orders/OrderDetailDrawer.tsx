@@ -17,7 +17,7 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CircleAlert } from 'lucide-react';
+import { CircleAlert, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '../../shared/api/client';
 import { errorMessage, unwrap } from '../../shared/api/errors';
@@ -30,7 +30,16 @@ import { MarketplaceOrderPanel } from '../integrations/MarketplaceOrderPanel';
 import { OrderPrintJobs } from '../printing/OrderPrintJobs';
 import { PrintMenu } from '../printing/PrintMenu';
 import { orderKeys, useChangeStatus, useOrder, useOrderHistory, useOrderPayments, usePaymentMethods } from './api';
-import { canCancel, formatPhone, isMarketplace, nextActions, STATUS_COLORS, STATUS_LABELS, TYPE_LABELS } from './labels';
+import {
+  canCancel,
+  formatPhone,
+  isMarketplace,
+  nextActions,
+  STATUS_COLORS,
+  STATUS_LABELS,
+  TYPE_LABELS,
+  whatsappLink,
+} from './labels';
 
 const time = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
 const dateTime = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
@@ -63,9 +72,10 @@ export function OrderDetailDrawer({ orderId, onClose }: { orderId: string | null
 }
 
 function OrderDetail({ order }: { order: Order }) {
-  const { user } = useSession();
+  const { user, store } = useSession();
   const changeStatus = useChangeStatus();
   const [cancelling, setCancelling] = useState(false);
+  const whatsapp = whatsappLink(order, store.name);
   const actions = nextActions(order, user.role);
   const takesOrders = ORDER_TAKERS.includes(user.role);
 
@@ -165,6 +175,18 @@ function OrderDetail({ order }: { order: Order }) {
             {action.label}
           </Button>
         ))}
+        {whatsapp && (
+          <Button
+            component="a"
+            href={whatsapp}
+            target="_blank"
+            rel="noreferrer"
+            variant="default"
+            leftSection={<MessageCircle size={16} />}
+          >
+            Avisar no WhatsApp
+          </Button>
+        )}
         {canCancel(order, user.role) && (
           <Button variant="subtle" color="red" onClick={() => setCancelling(true)}>
             Cancelar pedido

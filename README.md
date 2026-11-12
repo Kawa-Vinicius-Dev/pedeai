@@ -152,6 +152,7 @@ Detalhes e alternativas descartadas estão em [docs/decisoes.md](docs/decisoes.m
 | [04 · Impressão](docs/04-impressao.md) | Impressoras térmicas, agente local, setores, fila, duplicidade, impressora offline |
 | [05 · Integrações](docs/05-integracoes.md) | iFood e 99Food: autenticação, eventos, status, erros, homologação |
 | [06 · Roadmap](docs/06-roadmap.md) | Etapas de implementação e critérios de pronto |
+| [08 · PedeAí e o mercado](docs/08-mercado.md) | Comparação com Saipos, Anota AI, Goomer e Cardápio Web, e o que fazer em seguida |
 | [Decisões](docs/decisoes.md) | Registro de decisões de arquitetura |
 
 ## Estrutura do repositório
