@@ -42,6 +42,14 @@ sentry:
     minimum-event-level: error
     minimum-breadcrumb-level: info
 
+# Documentação da API (Swagger): desligada por padrão, porque em produção ela mostra o mapa da API para qualquer um.
+# Em desenvolvimento, API_DOCS_ENABLED=true no .env (o npm run api:spec do frontend precisa dela).
+springdoc:
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:false}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:false}
+
 management:
   endpoints:
     web:

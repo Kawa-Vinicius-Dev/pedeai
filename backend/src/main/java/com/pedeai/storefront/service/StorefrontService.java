@@ -72,6 +72,11 @@ public class StorefrontService {
     /** Contra pedido falso em massa. Generoso: vários clientes podem sair pelo mesmo IP da operadora. */
     static final int MAX_ORDERS_PER_ADDRESS = 15;
     static final Duration ORDER_WINDOW = Duration.ofMinutes(10);
+    /**
+     * Teto por loja, somando todos os aparelhos: o IP vem de um cabeçalho que dá para forjar, então o limite por
+     * aparelho sozinho não segura uma enxurrada de pedido falso. Uma loja real não chega perto disso em 10 minutos.
+     */
+    static final int MAX_MENU_ORDERS_PER_STORE = 150;
     /** Um sistema de terceiros manda os pedidos de muitos clientes: o limite é por loja, e maior. */
     static final int MAX_PARTNER_ORDERS = 300;
 
@@ -83,6 +88,7 @@ public class StorefrontService {
     private final PaymentMethodService paymentMethodService;
     private final OrderService orderService;
     private final AttemptLimiter orders;
+    private final AttemptLimiter storeOrders;
     private final AttemptLimiter partnerOrders;
 
     public StorefrontService(StoreService storeService, CategoryService categoryService, ProductService productService,
@@ -96,6 +102,7 @@ public class StorefrontService {
         this.paymentMethodService = paymentMethodService;
         this.orderService = orderService;
         this.orders = new AttemptLimiter(MAX_ORDERS_PER_ADDRESS, ORDER_WINDOW, clock);
+        this.storeOrders = new AttemptLimiter(MAX_MENU_ORDERS_PER_STORE, ORDER_WINDOW, clock);
         this.partnerOrders = new AttemptLimiter(MAX_PARTNER_ORDERS, ORDER_WINDOW, clock);
     }
 
@@ -157,6 +164,7 @@ public class StorefrontService {
     public MenuOrderResponse placeOrder(String slug, MenuOrderRequest request, String clientKey) {
         StoreResponse store = storeService.getBySlug(slug);
         limit(orders, store.id() + ":" + clientKey);
+        limit(storeOrders, store.id().toString());
         OrderResponse placed = place(store, request, OrderSource.DIGITAL_MENU, null);
         return new MenuOrderResponse(placed.number(), placed.trackingCode(), placed.totalCents());
     }

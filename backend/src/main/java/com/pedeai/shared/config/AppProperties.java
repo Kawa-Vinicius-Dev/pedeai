@@ -8,10 +8,15 @@ import java.util.List;
 import java.util.Objects;
 
 @ConfigurationProperties("app")
-public record AppProperties(Auth auth, boolean signupEnabled, List<String> corsAllowedOrigins) {
+public record AppProperties(Auth auth, boolean signupEnabled, Integer signupsPerAddressPerHour,
+                            List<String> corsAllowedOrigins) {
+    private static final int DEFAULT_SIGNUPS_PER_ADDRESS = 5;
+
 
     public AppProperties {
         Objects.requireNonNull(auth, "Configure app.auth.");
+        signupsPerAddressPerHour = signupsPerAddressPerHour == null ? DEFAULT_SIGNUPS_PER_ADDRESS
+                : signupsPerAddressPerHour;
         corsAllowedOrigins = corsAllowedOrigins == null ? List.of() : List.copyOf(corsAllowedOrigins);
     }
 

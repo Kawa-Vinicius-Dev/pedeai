@@ -2,6 +2,7 @@ package com.pedeai.store.service;
 
 import com.pedeai.shared.exception.ConflictException;
 import com.pedeai.shared.exception.ForbiddenOperationException;
+import com.pedeai.shared.exception.TooManyRequestsException;
 import com.pedeai.shared.security.Role;
 import com.pedeai.store.domain.AppUser;
 import com.pedeai.store.domain.Store;
@@ -50,7 +51,7 @@ class StoreRegistrationServiceTest {
         when(storeRepository.save(any(Store.class))).then(returnsFirstArg());
         when(userRepository.save(any(AppUser.class))).then(returnsFirstArg());
 
-        service(true).register(request, "Chrome");
+        service(true).register(request, "Chrome", "10.0.0.1");
 
         ArgumentCaptor<AppUser> owner = ArgumentCaptor.forClass(AppUser.class);
         ArgumentCaptor<Store> store = ArgumentCaptor.forClass(Store.class);
@@ -69,7 +70,7 @@ class StoreRegistrationServiceTest {
     void rejectsEmailAlreadyInUse() {
         when(userRepository.existsByEmail("ana@example.com")).thenReturn(true);
 
-        assertThatThrownBy(() -> service(true).register(request, null))
+        assertThatThrownBy(() -> service(true).register(request, null, "10.0.0.1"))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage(Emails.ALREADY_IN_USE);
         verify(storeRepository, never()).save(any());
@@ -77,10 +78,27 @@ class StoreRegistrationServiceTest {
 
     @Test
     void rejectsWhenSignupIsDisabled() {
-        assertThatThrownBy(() -> service(false).register(request, null))
+        assertThatThrownBy(() -> service(false).register(request, null, "10.0.0.1"))
                 .isInstanceOf(ForbiddenOperationException.class)
                 .hasMessage(StoreRegistrationService.SIGNUP_DISABLED);
         verify(storeRepository, never()).save(any());
+    }
+
+    @Test
+    void blocksMassSignupFromTheSameAddressButNotFromAnother() {
+        when(userRepository.existsByEmail("ana@example.com")).thenReturn(true);
+        StoreRegistrationService service = service(true);
+        // Cinco tentativas (aqui recusadas pelo e-mail repetido) gastam o limite daquele endereço.
+        for (int attempt = 0; attempt < 5; attempt++) {
+            assertThatThrownBy(() -> service.register(request, null, "10.0.0.1"))
+                    .isInstanceOf(ConflictException.class);
+        }
+
+        assertThatThrownBy(() -> service.register(request, null, "10.0.0.1"))
+                .isInstanceOf(TooManyRequestsException.class)
+                .hasMessage(StoreRegistrationService.TOO_MANY_SIGNUPS);
+        assertThatThrownBy(() -> service.register(request, null, "10.0.0.2"))
+                .isInstanceOf(ConflictException.class);
     }
 
     private StoreRegistrationService service(boolean signupEnabled) {
