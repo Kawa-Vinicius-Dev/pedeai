@@ -12,6 +12,8 @@ import {
   LogOut,
   Plug,
   Printer,
+  TicketPercent,
+  Truck,
   type LucideIcon,
   Store,
   TrendingUp,
@@ -102,6 +104,8 @@ export function AppLayout() {
             )}
             <NavItem to="/configuracoes/pagamentos" label="Pagamentos" icon={CreditCard} onNavigate={close} />
             <NavItem to="/configuracoes/taxas" label="Taxas de entrega" icon={Bike} onNavigate={close} />
+            <NavItem to="/configuracoes/entregadores" label="Entregadores" icon={Truck} onNavigate={close} />
+            <NavItem to="/configuracoes/cupons" label="Cupons" icon={TicketPercent} onNavigate={close} />
             <NavItem to="/configuracoes/impressao" label="Impressão" icon={Printer} onNavigate={close} />
             <NavItem to="/configuracoes/integracoes" label="Integrações" icon={Plug} onNavigate={close} />
             <NavItem to="/configuracoes/api-de-pedidos" label="API de pedidos" icon={KeyRound} onNavigate={close} />

@@ -60,6 +60,8 @@ export const server = setupServer(
     HttpResponse.json(apiError(401, 'Sua sessão expirou. Faça login novamente.'), { status: 401 }),
   ),
   http.get('/api/stream', openStream),
+  // Loja sem entregadores cadastrados: o detalhe do pedido de delivery não mostra a escolha.
+  http.get('/api/couriers', () => HttpResponse.json([])),
   // A faixa de alertas de impressão aparece em todas as telas; sem problema, lista vazia.
   http.get('/api/print-alerts', () => HttpResponse.json([])),
   // A faixa de pedidos de cancelamento do cliente também; sem pedido, lista vazia.

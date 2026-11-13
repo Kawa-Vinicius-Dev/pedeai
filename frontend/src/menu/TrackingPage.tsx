@@ -94,6 +94,12 @@ function OrderView({ order }: { order: OrderTracking }) {
             </Stack>
           ))}
           <Divider />
+          {order.discountCents > 0 && (
+            <Group justify="space-between">
+              <Text size="sm">Desconto</Text>
+              <Text size="sm">- {formatCents(order.discountCents)}</Text>
+            </Group>
+          )}
           {order.deliveryFeeCents > 0 && (
             <Group justify="space-between">
               <Text size="sm">Entrega</Text>

@@ -26,6 +26,8 @@ export const orderKeys = {
 export const settingsKeys = {
   paymentMethods: ['settings', 'payment-methods'] as const,
   deliveryZones: ['settings', 'delivery-zones'] as const,
+  coupons: ['settings', 'coupons'] as const,
+  couriers: ['settings', 'couriers'] as const,
 };
 
 /** O quadro. O tempo real atualiza na hora; o intervalo é só a rede de segurança se o aviso se perder. */
@@ -85,6 +87,21 @@ export function useOrdersPage(filters: OrderFilters) {
 
 export function usePaymentMethods() {
   return useQuery({ queryKey: settingsKeys.paymentMethods, queryFn: () => unwrap(api.GET('/api/payment-methods')) });
+}
+
+export function useCouriers(enabled = true) {
+  return useQuery({ queryKey: settingsKeys.couriers, queryFn: () => unwrap(api.GET('/api/couriers')), enabled });
+}
+
+/** Define (ou tira, com nulo) quem leva o pedido. */
+export function useAssignCourier() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, courierId }: { id: string; courierId: string | null }) =>
+      unwrap(api.PATCH('/api/orders/{id}/courier', { params: { path: { id } }, body: { courierId } })),
+    onSuccess: (order) => queryClient.setQueryData(orderKeys.detail(order.id), order),
+    onError: (error) => notifications.show({ color: 'red', message: errorMessage(error) }),
+  });
 }
 
 export function useDeliveryZones() {

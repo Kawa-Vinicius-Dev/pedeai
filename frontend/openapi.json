@@ -662,6 +662,88 @@
         }
       }
     },
+    "/api/couriers/{id}": {
+      "put": {
+        "tags": [
+          "courier-controller"
+        ],
+        "operationId": "update_7",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourierRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourierResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/coupons/{id}": {
+      "put": {
+        "tags": [
+          "coupon-controller"
+        ],
+        "operationId": "update_8",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/categories/{id}": {
       "get": {
         "tags": [
@@ -696,7 +778,7 @@
         "tags": [
           "category-controller"
         ],
-        "operationId": "update_7",
+        "operationId": "update_9",
         "parameters": [
           {
             "name": "id",
@@ -2149,12 +2231,114 @@
         }
       }
     },
+    "/api/couriers": {
+      "get": {
+        "tags": [
+          "courier-controller"
+        ],
+        "operationId": "list_9",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourierResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "courier-controller"
+        ],
+        "operationId": "create_9",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourierRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourierResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/coupons": {
+      "get": {
+        "tags": [
+          "coupon-controller"
+        ],
+        "operationId": "list_10",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CouponResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "coupon-controller"
+        ],
+        "operationId": "create_10",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/categories": {
       "get": {
         "tags": [
           "category-controller"
         ],
-        "operationId": "list_9",
+        "operationId": "list_11",
         "responses": {
           "200": {
             "description": "OK",
@@ -2175,7 +2359,7 @@
         "tags": [
           "category-controller"
         ],
-        "operationId": "create_9",
+        "operationId": "create_11",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2235,7 +2419,7 @@
         "tags": [
           "cash-session-controller"
         ],
-        "operationId": "list_10",
+        "operationId": "list_12",
         "parameters": [
           {
             "name": "page",
@@ -2481,7 +2665,7 @@
         "tags": [
           "api-key-controller"
         ],
-        "operationId": "list_11",
+        "operationId": "list_13",
         "responses": {
           "200": {
             "description": "OK",
@@ -2502,7 +2686,7 @@
         "tags": [
           "api-key-controller"
         ],
-        "operationId": "create_10",
+        "operationId": "create_12",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2591,7 +2775,7 @@
         "tags": [
           "user-controller"
         ],
-        "operationId": "update_8",
+        "operationId": "update_10",
         "parameters": [
           {
             "name": "id",
@@ -2650,7 +2834,7 @@
         "tags": [
           "store-controller"
         ],
-        "operationId": "update_9",
+        "operationId": "update_11",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2766,12 +2950,53 @@
         }
       }
     },
+    "/api/orders/{id}/courier": {
+      "patch": {
+        "tags": [
+          "courier-controller"
+        ],
+        "operationId": "assign_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignCourierRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/integrations/{id}": {
       "patch": {
         "tags": [
           "integration-controller"
         ],
-        "operationId": "update_10",
+        "operationId": "update_12",
         "parameters": [
           {
             "name": "id",
@@ -3127,6 +3352,59 @@
         }
       }
     },
+    "/api/public/stores/{slug}/coupons/{code}": {
+      "get": {
+        "tags": [
+          "storefront-controller"
+        ],
+        "operationId": "coupon",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 60,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 30,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "subtotalCents",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "maximum": 100000000,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouponQuoteResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/public/orders/{trackingCode}": {
       "get": {
         "tags": [
@@ -3262,7 +3540,7 @@
         "tags": [
           "print-agent-controller"
         ],
-        "operationId": "list_12",
+        "operationId": "list_14",
         "responses": {
           "200": {
             "description": "OK",
@@ -3637,6 +3915,40 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/MerchantResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/couriers/settlement": {
+      "get": {
+        "tags": [
+          "courier-controller"
+        ],
+        "operationId": "settlement",
+        "parameters": [
+          {
+            "name": "businessDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourierSettlementResponse"
                   }
                 }
               }
@@ -4804,6 +5116,171 @@
           "street"
         ]
       },
+      "CourierRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 0
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 30,
+            "minLength": 0
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "name"
+        ]
+      },
+      "CourierResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "id",
+          "name",
+          "phone"
+        ]
+      },
+      "CouponRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "[A-Za-z0-9 ]{3,30}"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PERCENT",
+              "FIXED"
+            ]
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int64",
+            "maximum": 10000000,
+            "minimum": 1
+          },
+          "minOrderCents": {
+            "type": "integer",
+            "format": "int64",
+            "maximum": 10000000,
+            "minimum": 0
+          },
+          "maxUses": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 1
+          },
+          "validUntil": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "amount",
+          "code",
+          "minOrderCents",
+          "type"
+        ]
+      },
+      "CouponResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PERCENT",
+              "FIXED"
+            ]
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "minOrderCents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "maxUses": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "usedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "validUntil": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "amount",
+          "code",
+          "id",
+          "maxUses",
+          "minOrderCents",
+          "type",
+          "usedCount",
+          "validUntil"
+        ]
+      },
       "CategoryRequest": {
         "type": "object",
         "properties": {
@@ -5421,6 +5898,11 @@
             "format": "int64",
             "maximum": 100000000,
             "minimum": 1
+          },
+          "couponCode": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 0
           }
         },
         "required": [
@@ -6036,6 +6518,19 @@
               "string",
               "null"
             ]
+          },
+          "courierId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "courierName": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -6045,6 +6540,8 @@
           "cancelledAt",
           "completedAt",
           "confirmedAt",
+          "courierId",
+          "courierName",
           "createdAt",
           "customerId",
           "customerName",
@@ -7127,6 +7624,18 @@
           "status"
         ]
       },
+      "AssignCourierRequest": {
+        "type": "object",
+        "properties": {
+          "courierId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "ConnectionUpdateRequest": {
         "type": "object",
         "properties": {
@@ -7617,6 +8126,22 @@
           "totalCents"
         ]
       },
+      "CouponQuoteResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "discountCents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "code",
+          "discountCents"
+        ]
+      },
       "OrderTrackingResponse": {
         "type": "object",
         "properties": {
@@ -7666,6 +8191,10 @@
             "type": "integer",
             "format": "int64"
           },
+          "discountCents": {
+            "type": "integer",
+            "format": "int64"
+          },
           "deliveryFeeCents": {
             "type": "integer",
             "format": "int64"
@@ -7689,6 +8218,7 @@
           "cancelReason",
           "createdAt",
           "deliveryFeeCents",
+          "discountCents",
           "items",
           "number",
           "status",
@@ -8209,6 +8739,38 @@
           "size",
           "totalElements",
           "totalPages"
+        ]
+      },
+      "CourierSettlementResponse": {
+        "type": "object",
+        "properties": {
+          "courierId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "courierName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deliveries": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "deliveryFeeCents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "courierId",
+          "courierName",
+          "deliveries",
+          "deliveryFeeCents"
         ]
       },
       "CashSessionSummaryResponse": {

@@ -34,6 +34,18 @@ export function usePublicQuote(
   });
 }
 
+/** Confere o cupom e diz quanto ele tira deste valor de itens, sem gastar um uso. */
+export function useCouponQuote(slug: string) {
+  return useMutation({
+    mutationFn: ({ code, subtotalCents }: { code: string; subtotalCents: number }) =>
+      unwrap(
+        api.GET('/api/public/stores/{slug}/coupons/{code}', {
+          params: { path: { slug, code }, query: { subtotalCents } },
+        }),
+      ),
+  });
+}
+
 export function usePlaceOrder(slug: string) {
   return useMutation({
     mutationFn: (body: MenuOrderRequest) =>

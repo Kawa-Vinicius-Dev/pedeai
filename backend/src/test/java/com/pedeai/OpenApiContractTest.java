@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class OpenApiContractTest {
     private static final Path FRONTEND_SPEC = Path.of("..", "frontend", "openapi.json");
+    private static final Path LIVE_SPEC = Path.of("target", "openapi-live.json");
 
     @Autowired
     private MockMvc mockMvc;
@@ -35,6 +36,10 @@ class OpenApiContractTest {
         String live = mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
+
+        // Fica em target/ para atualizar o frontend sem subir a API: npm run api:spec:test (no frontend).
+        Files.createDirectories(LIVE_SPEC.getParent());
+        Files.writeString(LIVE_SPEC, live);
 
         JsonNode expected = objectMapper.readTree(Files.readString(FRONTEND_SPEC));
         JsonNode actual = objectMapper.readTree(live);

@@ -45,6 +45,9 @@ public record MenuOrderRequest(
 
         @Min(value = 1, message = "O troco deve ser para um valor maior que zero.")
         @Max(value = 100_000_000, message = "Troco alto demais.")
-        Long changeForCents
+        Long changeForCents,
+
+        @Size(max = 30, message = "Cupom inválido.")
+        String couponCode
 ) {
 }

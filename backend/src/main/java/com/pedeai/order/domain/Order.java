@@ -34,6 +34,7 @@ public class Order {
     static final String COMPLETED_IS_FINAL = "Este pedido já foi concluído.";
     static final String ONLY_FORWARD = "O status do pedido só anda para frente.";
     static final String DISPATCH_ONLY_DELIVERY = "Só pedido de delivery sai para entrega.";
+    static final String COURIER_ONLY_DELIVERY = "Só pedido de delivery tem entregador.";
     static final String DISCOUNT_TOO_HIGH = "O desconto não pode passar do valor dos itens.";
 
     @Id
@@ -61,6 +62,11 @@ public class Order {
     private long totalCents;
     private String externalId;
     private String trackingCode;
+    // Trocar o entregador não é "o pedido mudou": não mexe na versão que as telas usam para avançar o status.
+    @OptimisticLock(excluded = true)
+    private UUID courierId;
+    @OptimisticLock(excluded = true)
+    private String courierName;
     private String externalDisplayId;
     private Instant scheduledFor;
     private Instant confirmedAt;
@@ -328,6 +334,23 @@ public class Order {
 
     public String getTrackingCode() {
         return trackingCode;
+    }
+
+    public UUID getCourierId() {
+        return courierId;
+    }
+
+    public String getCourierName() {
+        return courierName;
+    }
+
+    /** Quem leva o pedido. Só delivery tem entregador; {@code courier} nulo tira o entregador. */
+    public void assignCourier(Courier courier) {
+        if (type != OrderType.DELIVERY) {
+            throw new BusinessRuleException(COURIER_ONLY_DELIVERY);
+        }
+        this.courierId = courier == null ? null : courier.getId();
+        this.courierName = courier == null ? null : courier.getName();
     }
 
     /**

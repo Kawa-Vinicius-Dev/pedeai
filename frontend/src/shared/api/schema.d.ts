@@ -196,6 +196,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/couriers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["update_7"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coupons/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["update_8"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/categories/{id}": {
         parameters: {
             query?: never;
@@ -204,7 +236,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_4"];
-        put: operations["update_7"];
+        put: operations["update_9"];
         post?: never;
         delete?: never;
         options?: never;
@@ -660,7 +692,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/categories": {
+    "/api/couriers": {
         parameters: {
             query?: never;
             header?: never;
@@ -670,6 +702,38 @@ export interface paths {
         get: operations["list_9"];
         put?: never;
         post: operations["create_9"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_10"];
+        put?: never;
+        post: operations["create_10"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_11"];
+        put?: never;
+        post: operations["create_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -699,7 +763,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_10"];
+        get: operations["list_12"];
         put?: never;
         post: operations["open"];
         delete?: never;
@@ -795,9 +859,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_11"];
+        get: operations["list_13"];
         put?: never;
-        post: operations["create_10"];
+        post: operations["create_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -833,7 +897,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_8"];
+        patch: operations["update_10"];
         trace?: never;
     };
     "/api/store": {
@@ -849,7 +913,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_9"];
+        patch: operations["update_11"];
         trace?: never;
     };
     "/api/orders/{orderId}/payments/{paymentId}": {
@@ -884,6 +948,22 @@ export interface paths {
         patch: operations["change"];
         trace?: never;
     };
+    "/api/orders/{id}/courier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["assign_1"];
+        trace?: never;
+    };
     "/api/integrations/{id}": {
         parameters: {
             query?: never;
@@ -897,7 +977,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_10"];
+        patch: operations["update_12"];
         trace?: never;
     };
     "/api/cash-sessions/{id}": {
@@ -1045,6 +1125,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/stores/{slug}/coupons/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["coupon"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/orders/{trackingCode}": {
         parameters: {
             query?: never;
@@ -1116,7 +1212,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_12"];
+        get: operations["list_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1309,6 +1405,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["merchants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/couriers/settlement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["settlement"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1665,6 +1777,50 @@ export interface components {
             postalCode?: string;
             reference?: string;
         };
+        CourierRequest: {
+            name: string;
+            phone?: string | null;
+            active: boolean;
+        };
+        CourierResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            phone: string | null;
+            active: boolean;
+        };
+        CouponRequest: {
+            code: string;
+            /** @enum {string} */
+            type: "PERCENT" | "FIXED";
+            /** Format: int64 */
+            amount: number;
+            /** Format: int64 */
+            minOrderCents: number;
+            /** Format: int32 */
+            maxUses?: number | null;
+            /** Format: date */
+            validUntil?: string | null;
+            active: boolean;
+        };
+        CouponResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @enum {string} */
+            type: "PERCENT" | "FIXED";
+            /** Format: int64 */
+            amount: number;
+            /** Format: int64 */
+            minOrderCents: number;
+            /** Format: int32 */
+            maxUses: number | null;
+            /** Format: int32 */
+            usedCount: number;
+            /** Format: date */
+            validUntil: string | null;
+            active: boolean;
+        };
         CategoryRequest: {
             name: string;
             /** Format: uuid */
@@ -1829,6 +1985,7 @@ export interface components {
             paymentMethodId: string;
             /** Format: int64 */
             changeForCents?: number;
+            couponCode?: string;
         };
         MenuOrderResponse: {
             /** Format: int32 */
@@ -1990,6 +2147,9 @@ export interface components {
             scheduledFor: string | null;
             externalId: string | null;
             trackingCode: string | null;
+            /** Format: uuid */
+            courierId: string | null;
+            courierName: string | null;
         };
         ReprintRequest: {
             /** @enum {string} */
@@ -2270,6 +2430,10 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        AssignCourierRequest: {
+            /** Format: uuid */
+            courierId?: string | null;
+        };
         ConnectionUpdateRequest: {
             /** @enum {string} */
             status: "ACTIVE" | "PAUSED" | "ERROR";
@@ -2400,6 +2564,11 @@ export interface components {
             /** Format: int64 */
             totalCents: number;
         };
+        CouponQuoteResponse: {
+            code: string;
+            /** Format: int64 */
+            discountCents: number;
+        };
         OrderTrackingResponse: {
             /** Format: int32 */
             number: number;
@@ -2413,6 +2582,8 @@ export interface components {
             items: components["schemas"]["TrackingItemResponse"][];
             /** Format: int64 */
             subtotalCents: number;
+            /** Format: int64 */
+            discountCents: number;
             /** Format: int64 */
             deliveryFeeCents: number;
             /** Format: int64 */
@@ -2554,6 +2725,15 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+        };
+        CourierSettlementResponse: {
+            /** Format: uuid */
+            courierId: string | null;
+            courierName: string | null;
+            /** Format: int64 */
+            deliveries: number;
+            /** Format: int64 */
+            deliveryFeeCents: number;
         };
         CashSessionSummaryResponse: {
             /** Format: uuid */
@@ -3053,6 +3233,58 @@ export interface operations {
             };
         };
     };
+    update_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourierRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourierResponse"];
+                };
+            };
+        };
+    };
+    update_8: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouponRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CouponResponse"];
+                };
+            };
+        };
+    };
     get_4: {
         parameters: {
             query?: never;
@@ -3075,7 +3307,7 @@ export interface operations {
             };
         };
     };
-    update_7: {
+    update_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -4088,12 +4320,100 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["CategoryResponse"][];
+                    "*/*": components["schemas"]["CourierResponse"][];
                 };
             };
         };
     };
     create_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourierRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourierResponse"];
+                };
+            };
+        };
+    };
+    list_10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CouponResponse"][];
+                };
+            };
+        };
+    };
+    create_10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouponRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CouponResponse"];
+                };
+            };
+        };
+    };
+    list_11: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CategoryResponse"][];
+                };
+            };
+        };
+    };
+    create_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -4141,7 +4461,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_12: {
         parameters: {
             query?: {
                 page?: number;
@@ -4308,7 +4628,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -4328,7 +4648,7 @@ export interface operations {
             };
         };
     };
-    create_10: {
+    create_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -4398,7 +4718,7 @@ export interface operations {
             };
         };
     };
-    update_8: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -4444,7 +4764,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -4521,7 +4841,33 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    assign_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignCourierRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrderResponse"];
+                };
+            };
+        };
+    };
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -4772,6 +5118,31 @@ export interface operations {
             };
         };
     };
+    coupon: {
+        parameters: {
+            query: {
+                subtotalCents: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CouponQuoteResponse"];
+                };
+            };
+        };
+    };
     track: {
         parameters: {
             query?: never;
@@ -4859,7 +5230,7 @@ export interface operations {
             };
         };
     };
-    list_12: {
+    list_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -5131,6 +5502,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MerchantResponse"][];
+                };
+            };
+        };
+    };
+    settlement: {
+        parameters: {
+            query: {
+                businessDate: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CourierSettlementResponse"][];
                 };
             };
         };

@@ -291,6 +291,8 @@ export function order(overrides: Partial<Order> = {}): Order {
     scheduledFor: null,
     externalId: null,
     trackingCode: null,
+    courierId: null,
+    courierName: null,
     ...overrides,
   };
 }
