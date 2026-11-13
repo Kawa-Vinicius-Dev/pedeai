@@ -77,3 +77,9 @@ export type OpeningHours = Schemas['OpeningHoursResponse'];
 export type ApiKey = Schemas['ApiKeyResponse'];
 export type CatalogImport = Schemas['CatalogImportResponse'];
 export type Platform = Schemas['PlatformResponse'];
+
+export type Coupon = Schemas['CouponResponse'];
+export type CouponRequest = Schemas['CouponRequest'];
+export type Courier = Schemas['CourierResponse'];
+export type CourierRequest = Schemas['CourierRequest'];
+export type CourierSettlement = Schemas['CourierSettlementResponse'];

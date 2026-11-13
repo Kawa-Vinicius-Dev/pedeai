@@ -17,6 +17,7 @@ public record OrderTrackingResponse(
         @Schema(types = {"string", "null"}) String storePhone,
         List<TrackingItemResponse> items,
         long subtotalCents,
+        long discountCents,
         long deliveryFeeCents,
         long totalCents,
         Instant createdAt,

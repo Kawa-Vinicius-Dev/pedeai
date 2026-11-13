@@ -156,6 +156,37 @@ class DigitalMenuIntegrationTest {
         mockMvc.perform(get("/api/public/stores/nao-existe")).andExpect(status().isNotFound());
         mockMvc.perform(get("/api/public/orders/codigo-que-nao-existe")).andExpect(status().isNotFound());
 
+        // Cupom de 10% para pedidos a partir de R$ 50, que só pode ser usado uma vez.
+        send(owner, post("/api/coupons"), """
+                {"code":"bemvindo 10","type":"PERCENT","amount":1000,"minOrderCents":5000,"maxUses":1,
+                 "validUntil":null,"active":true}""")
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.code").value("BEMVINDO10"));
+        send(owner, post("/api/coupons"), """
+                {"code":"BEMVINDO10","type":"FIXED","amount":500,"minOrderCents":0,"maxUses":null,
+                 "validUntil":null,"active":true}""").andExpect(status().isConflict());
+        mockMvc.perform(get("/api/public/stores/" + slug + "/coupons/bemvindo10?subtotalCents=6690"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.discountCents").value(669));
+        mockMvc.perform(get("/api/public/stores/" + slug + "/coupons/bemvindo10?subtotalCents=4000"))
+                .andExpect(status().isUnprocessableContent());
+        mockMvc.perform(get("/api/public/stores/" + slug + "/coupons/NAOEXISTE?subtotalCents=6690"))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.message").value("Cupom inválido ou vencido."));
+        String withCoupon = order.replace("\"changeForCents\":10000", "\"couponCode\":\"BemVindo10\"");
+        // O desconto é só sobre os itens (66,90): a entrega (8,00) continua inteira.
+        String discounted = mockMvc.perform(post("/api/public/stores/" + slug + "/orders")
+                        .contentType(MediaType.APPLICATION_JSON).content(withCoupon))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.totalCents").value(6690 - 669 + 800))
+                .andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/public/orders/" + JsonPath.<String>read(discounted, "$.trackingCode")))
+                .andExpect(jsonPath("$.discountCents").value(669));
+        send(owner, get("/api/coupons"), "").andExpect(jsonPath("$[0].usedCount").value(1));
+        // Acabaram os usos: o pedido não entra com o preço cheio sem o cliente saber.
+        mockMvc.perform(post("/api/public/stores/" + slug + "/orders").contentType(MediaType.APPLICATION_JSON)
+                        .content(withCoupon))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.message").value("Cupom inválido ou vencido."));
+
         // O dono troca o endereço; outra loja não pode pegar o mesmo.
         send(owner, patch("/api/store"), "{\"slug\":\"bella-" + suffix + "\"}")
                 .andExpect(status().isOk()).andExpect(jsonPath("$.slug").value("bella-" + suffix));

@@ -45,6 +45,7 @@ function tracking(overrides: Partial<OrderTracking> = {}): OrderTracking {
     storePhone: '(11) 3333-4444',
     items: [{ quantity: 1, name: 'Pizza Grande', details: 'Calabresa, Quatro queijos' }],
     subtotalCents: 5290,
+    discountCents: 0,
     deliveryFeeCents: 800,
     totalCents: 6090,
     createdAt: '2026-10-01T22:00:00Z',
@@ -99,6 +100,10 @@ describe('cardápio digital', () => {
         return HttpResponse.json({ number: 7, trackingCode: CODE, totalCents: 6090 }, { status: 201 });
       }),
       http.get(`/api/public/orders/${CODE}`, () => HttpResponse.json(tracking())),
+      http.get('/api/public/stores/pizzaria-bella/coupons/:code', ({ request }) => {
+        const subtotal = Number(new URL(request.url).searchParams.get('subtotalCents'));
+        return HttpResponse.json({ code: 'BEMVINDO10', discountCents: Math.floor(subtotal / 10) });
+      }),
     );
     serveQuotes();
     const { user, router } = renderMenu('/loja/pizzaria-bella');
@@ -129,6 +134,11 @@ describe('cardápio digital', () => {
     await user.click(await screen.findByRole('option', { name: 'Dinheiro' }));
     await user.type(within(checkout).getByLabelText(/Troco para/), '100');
     expect(within(checkout).getByText('R$ 60,90')).toBeInTheDocument();
+    // Cupom de 10% sobre os itens (R$ 52,90): a entrega continua inteira.
+    await user.type(within(checkout).getByLabelText('Cupom de desconto'), 'bemvindo10');
+    await user.click(within(checkout).getByRole('button', { name: 'Aplicar' }));
+    expect(await within(checkout).findByText('Cupom BEMVINDO10')).toBeInTheDocument();
+    expect(within(checkout).getByText('R$ 55,61')).toBeInTheDocument();
     await user.click(within(checkout).getByRole('button', { name: 'Fazer pedido' }));
 
     await waitFor(() =>
@@ -149,6 +159,7 @@ describe('cardápio digital', () => {
         ],
         paymentMethodId: ORDER_IDS.cash,
         changeForCents: 10_000,
+        couponCode: 'BEMVINDO10',
       }),
     );
     await waitFor(() => expect(router.state.location.pathname).toBe(`/loja/pizzaria-bella/pedido/${CODE}`));

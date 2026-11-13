@@ -7,17 +7,18 @@ com cada empresa antes de usar isto para decidir.
 
 Cardápio com adicionais e pizza meio a meio, PDV de retirada e delivery, quadro de pedidos em tempo real, tela da
 cozinha, impressão por setor (agente e contingência pelo navegador), iFood e 99Food (prontos, testados por simulador),
-caixa, relatórios, painel do dia, cardápio digital com acompanhamento do pedido, API de pedidos, fotos e aviso ao
-cliente pelo WhatsApp (link com a mensagem pronta).
+caixa, relatórios, painel do dia, cardápio digital com acompanhamento do pedido, API de pedidos, fotos, aviso ao
+cliente pelo WhatsApp (link com a mensagem pronta), cupons de desconto no cardápio digital e entregadores (cadastro,
+quem leva cada pedido e acerto do dia).
 
 ## O que os concorrentes anunciam e o PedeAí não tem
 
 | Recurso | Quem anuncia | No PedeAí |
 | --- | --- | --- |
 | Robô de atendimento no WhatsApp | Anota AI, Saipos, Cardápio Web | Não. Só o link com a mensagem pronta. |
-| Cupons de desconto | Goomer, Cardápio Web | Não. Só o desconto manual do gerente. |
+| Cupons de desconto | Goomer, Cardápio Web | Sim (porcentagem ou valor fixo, pedido mínimo, limite de usos e validade). |
 | Programa de fidelidade | Goomer, Cardápio Web | Não. |
-| Gestão de entregadores e roteirização | Saipos | Não. |
+| Gestão de entregadores e roteirização | Saipos | Entregadores e acerto do dia, sim. Roteirização, não. |
 | Estoque e ficha técnica (CMV) | Saipos | Não. |
 | Financeiro com DRE | Saipos | Só caixa e faturamento. |
 | Emissão fiscal (NFC-e) | Sistemas de gestão completos | Não. |
@@ -31,14 +32,15 @@ Preços anunciados: Saipos a partir de cerca de R$ 220 a R$ 240 por mês; Anota 
 
 1. **Pôr no ar e rodar com um restaurante de verdade.** Nada da lista abaixo vale mais do que o primeiro mês de uso
    real: é ele que mostra o que falta.
-2. **Cupons de desconto no cardápio digital.** Pequeno de construir, e é o que o restaurante usa para trazer o
-   cliente do iFood (que cobra comissão) para o canal próprio.
-3. **Pix com confirmação automática no cardápio digital.** Tira o "pedido falso" e o trabalho de conferir
-   comprovante. Depende de conta num provedor de pagamento.
-4. **Entregadores:** cadastro, atribuição do pedido e acerto no fim do turno. Roteirização fica para depois.
-5. **Fidelidade simples:** a cada N pedidos, um desconto. O cadastro de cliente por telefone já existe.
-6. **Avisos automáticos pelo WhatsApp** (API oficial, paga por mensagem) no lugar do link manual.
-7. **NFC-e** e **estoque com ficha técnica:** grandes, e só valem quando houver cliente pedindo.
+2. ~~Cupons de desconto no cardápio digital.~~ Feito (nov/2026).
+3. ~~Entregadores: cadastro, atribuição do pedido e acerto do dia.~~ Feito (nov/2026). Roteirização fica para depois.
+4. **Fidelidade simples:** a cada N pedidos, um desconto. O cadastro de cliente por telefone já existe.
+5. **Estoque simples:** quantidade por produto, que pausa o item sozinho quando zera.
+6. **Pix com confirmação automática no cardápio digital.** Tira o "pedido falso" e o trabalho de conferir
+   comprovante. Depende de conta num provedor de pagamento, que cobra por transação.
+7. **Avisos automáticos pelo WhatsApp** (API oficial, paga por mensagem) no lugar do link manual.
+8. **NFC-e** e **ficha técnica:** grandes, dependem de certificado digital e credenciamento, e só valem quando
+   houver cliente pedindo.
 
 O robô de atendimento com IA é o diferencial mais vendido do Anota AI, mas é caro de manter e depende da API oficial
 do WhatsApp. Não vale antes dos itens acima.

@@ -29,7 +29,16 @@ import { useSession } from '../auth/auth-context';
 import { MarketplaceOrderPanel } from '../integrations/MarketplaceOrderPanel';
 import { OrderPrintJobs } from '../printing/OrderPrintJobs';
 import { PrintMenu } from '../printing/PrintMenu';
-import { orderKeys, useChangeStatus, useOrder, useOrderHistory, useOrderPayments, usePaymentMethods } from './api';
+import {
+  orderKeys,
+  useAssignCourier,
+  useChangeStatus,
+  useCouriers,
+  useOrder,
+  useOrderHistory,
+  useOrderPayments,
+  usePaymentMethods,
+} from './api';
 import {
   canCancel,
   formatPhone,
@@ -197,6 +206,7 @@ function OrderDetail({ order }: { order: Order }) {
       {isMarketplace(order.source) && <MarketplaceOrderPanel order={order} />}
       <OrderPrintJobs order={order} />
 
+      {takesOrders && order.type === 'DELIVERY' && order.status !== 'CANCELLED' && <CourierSelect order={order} />}
       {takesOrders && (
         <>
           <Divider />
@@ -221,6 +231,31 @@ function TotalLine({ label, cents, strong = false }: { label: string; cents: num
         {cents < 0 ? `- ${formatCents(-cents)}` : formatCents(cents)}
       </Text>
     </Group>
+  );
+}
+
+/** Quem leva o pedido. Só aparece se a loja cadastrou entregadores. */
+function CourierSelect({ order }: { order: Order }) {
+  const couriers = useCouriers();
+  const assign = useAssignCourier();
+  // O entregador do pedido continua na lista mesmo se foi desativado depois.
+  const options = (couriers.data ?? [])
+    .filter((courier) => courier.active || courier.id === order.courierId)
+    .map((courier) => ({ value: courier.id, label: courier.name }));
+  if (options.length === 0) {
+    return null;
+  }
+  return (
+    <Select
+      label="Entregador"
+      placeholder="Escolha quem leva"
+      data={options}
+      value={order.courierId}
+      onChange={(courierId) => assign.mutate({ id: order.id, courierId })}
+      disabled={assign.isPending}
+      clearable
+      maw={320}
+    />
   );
 }
 

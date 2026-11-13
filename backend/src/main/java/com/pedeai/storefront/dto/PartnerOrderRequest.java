@@ -57,6 +57,6 @@ public record PartnerOrderRequest(
 ) {
     public MenuOrderRequest toMenuOrder() {
         return new MenuOrderRequest(type, customerName, customerPhone, deliveryAddress, items, notes, paymentMethodId,
-                changeForCents);
+                changeForCents, null);
     }
 }

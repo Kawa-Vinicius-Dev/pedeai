@@ -32,6 +32,8 @@ import com.pedeai.store.dto.StoreResponse;
 import com.pedeai.store.service.StoreService;
 import com.pedeai.storefront.dto.MenuCategoryResponse;
 import com.pedeai.storefront.dto.MenuDeliveryZoneResponse;
+import com.pedeai.storefront.domain.Coupon;
+import com.pedeai.storefront.dto.CouponQuoteResponse;
 import com.pedeai.storefront.dto.MenuOrderRequest;
 import com.pedeai.storefront.dto.MenuOrderResponse;
 import com.pedeai.storefront.dto.MenuPaymentMethodResponse;
@@ -44,6 +46,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.ZoneId;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,13 +90,15 @@ public class StorefrontService {
     private final DeliveryZoneService deliveryZoneService;
     private final PaymentMethodService paymentMethodService;
     private final OrderService orderService;
+    private final CouponService couponService;
     private final AttemptLimiter orders;
     private final AttemptLimiter storeOrders;
     private final AttemptLimiter partnerOrders;
 
     public StorefrontService(StoreService storeService, CategoryService categoryService, ProductService productService,
                              OptionGroupService optionGroupService, DeliveryZoneService deliveryZoneService,
-                             PaymentMethodService paymentMethodService, OrderService orderService, Clock clock) {
+                             PaymentMethodService paymentMethodService, OrderService orderService,
+                             CouponService couponService, Clock clock) {
         this.storeService = storeService;
         this.categoryService = categoryService;
         this.productService = productService;
@@ -101,6 +106,7 @@ public class StorefrontService {
         this.deliveryZoneService = deliveryZoneService;
         this.paymentMethodService = paymentMethodService;
         this.orderService = orderService;
+        this.couponService = couponService;
         this.orders = new AttemptLimiter(MAX_ORDERS_PER_ADDRESS, ORDER_WINDOW, clock);
         this.storeOrders = new AttemptLimiter(MAX_MENU_ORDERS_PER_STORE, ORDER_WINDOW, clock);
         this.partnerOrders = new AttemptLimiter(MAX_PARTNER_ORDERS, ORDER_WINDOW, clock);
@@ -157,6 +163,14 @@ public class StorefrontService {
             throw new ResourceNotFoundException(PRODUCT_UNAVAILABLE);
         }
         return productService.quote(store.id(), productId, request);
+    }
+
+    /** Quanto o cupom tira de um pedido com este valor de itens, para o cliente ver antes de enviar. */
+    @Transactional(readOnly = true)
+    public CouponQuoteResponse couponQuote(String slug, String code, long subtotalCents) {
+        StoreResponse store = storeService.getBySlug(slug);
+        long discount = couponService.quote(store.id(), ZoneId.of(store.timezone()), code, subtotalCents);
+        return new CouponQuoteResponse(Coupon.normalize(code), discount);
     }
 
     /** {@code clientKey}: o IP de quem pede, para o limite contra pedido falso em massa. */
@@ -243,9 +257,21 @@ public class StorefrontService {
             throw new BusinessRuleException(ONLY_DELIVERY_OR_TAKEOUT);
         }
 
+        long discount = 0;
+        String notes = request.notes();
+        if (request.couponCode() != null && !request.couponCode().isBlank()) {
+            // O valor dos itens pela mesma conta do pedido; o cupom é conferido e gasto na mesma transação.
+            long subtotal = request.items().stream()
+                    .mapToLong(item -> productService.quote(storeId, item.productId(),
+                            new PriceQuoteRequest(item.quantity(), item.options())).totalCents())
+                    .sum();
+            discount = couponService.redeem(storeId, ZoneId.of(store.timezone()), request.couponCode(), subtotal);
+            String coupon = "Cupom " + Coupon.normalize(request.couponCode());
+            notes = notes == null || notes.isBlank() ? coupon : coupon + " · " + notes.trim();
+        }
         CreateOrderRequest order = new CreateOrderRequest(request.type(),
                 new OrderCustomerRequest(request.customerName().trim(), request.customerPhone().trim()), address,
-                request.items(), request.notes(), 0L, deliveryFee, List.of());
+                request.items(), notes, discount, deliveryFee, List.of());
         return orderService.placeFromChannel(storeId, source, externalId, order, method.id(),
                 request.changeForCents(), store.menuAutoConfirm());
     }
@@ -263,7 +289,8 @@ public class StorefrontService {
                         details(item.options(), item.notes())))
                 .toList();
         return new OrderTrackingResponse(order.number(), order.type(), order.status(), store.name(), store.slug(),
-                store.phone(), items, order.subtotalCents(), order.deliveryFeeCents(), order.totalCents(),
+                store.phone(), items, order.subtotalCents(), order.discountCents(), order.deliveryFeeCents(),
+                order.totalCents(),
                 order.createdAt(), order.cancelReason());
     }
 

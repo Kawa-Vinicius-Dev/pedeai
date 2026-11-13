@@ -159,7 +159,9 @@ public class OrderService {
         int number = numberService.next(storeId, businessDate);
 
         Order order = Order.placeOwn(storeId, businessDate, number, request.type(), customer,
-                toDeliveryAddress(request.deliveryAddress()), Texts.trimToNull(request.notes()), items, 0,
+                toDeliveryAddress(request.deliveryAddress()), Texts.trimToNull(request.notes()), items,
+                // Só o cupom do cardápio digital chega aqui com desconto, já conferido por quem chama.
+                request.discountCents() == null ? 0 : request.discountCents(),
                 request.deliveryFeeCents(), null, now);
         order.fromOwnChannel(source, externalId, TrackingCodes.next());
         List<OrderStatusHistory> timeline = new ArrayList<>();

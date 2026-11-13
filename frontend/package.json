@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "api:spec": "node scripts/fetch-openapi.mjs",
+    "api:spec:test": "node scripts/fetch-openapi.mjs --from-test",
     "api:types": "openapi-typescript ./openapi.json -o src/shared/api/schema.d.ts"
   },
   "dependencies": {

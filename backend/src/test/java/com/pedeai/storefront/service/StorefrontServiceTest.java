@@ -37,6 +37,8 @@ class StorefrontServiceTest {
     private PaymentMethodService paymentMethodService;
     @Mock
     private OrderService orderService;
+    @Mock
+    private CouponService couponService;
 
     @Test
     void theStoreCapHoldsEvenWhenEveryOrderClaimsADifferentAddress() {
@@ -44,7 +46,7 @@ class StorefrontServiceTest {
         when(store.id()).thenReturn(STORE_ID);
         when(storeService.getBySlug("bella")).thenReturn(store);
         StorefrontService service = new StorefrontService(storeService, categoryService, productService,
-                optionGroupService, deliveryZoneService, paymentMethodService, orderService, CLOCK);
+                optionGroupService, deliveryZoneService, paymentMethodService, orderService, couponService, CLOCK);
         // Cada tentativa diz vir de um IP novo (o cabeçalho dá para forjar) e para na loja fechada.
         for (int attempt = 0; attempt < StorefrontService.MAX_MENU_ORDERS_PER_STORE; attempt++) {
             String address = "10.0.0." + attempt;

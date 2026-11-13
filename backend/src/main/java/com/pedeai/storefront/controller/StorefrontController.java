@@ -3,6 +3,7 @@ package com.pedeai.storefront.controller;
 import com.pedeai.catalog.dto.PriceQuoteRequest;
 import com.pedeai.catalog.dto.PriceQuoteResponse;
 import com.pedeai.shared.web.ClientAddress;
+import com.pedeai.storefront.dto.CouponQuoteResponse;
 import com.pedeai.storefront.dto.MenuOrderRequest;
 import com.pedeai.storefront.dto.MenuOrderResponse;
 import com.pedeai.storefront.dto.OrderTrackingResponse;
@@ -11,6 +12,8 @@ import com.pedeai.storefront.service.StorefrontService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -42,6 +46,13 @@ public class StorefrontController {
     public PriceQuoteResponse quote(@PathVariable @Size(max = 60) String slug, @PathVariable UUID productId,
                                     @Valid @RequestBody PriceQuoteRequest request) {
         return storefrontService.quote(slug, productId, request);
+    }
+
+    @GetMapping("/stores/{slug}/coupons/{code}")
+    public CouponQuoteResponse coupon(@PathVariable @Size(max = 60) String slug,
+                                      @PathVariable @Size(max = 30) String code,
+                                      @RequestParam @Min(0) @Max(100_000_000) long subtotalCents) {
+        return storefrontService.couponQuote(slug, code, subtotalCents);
     }
 
     @PostMapping("/stores/{slug}/orders")

@@ -92,6 +92,13 @@ Sobre os descontos: `discount_cents` é o desconto que **a loja** paga.
 exemplo). A diferença importa para o faturamento: num cupom do iFood de R$ 10
 num pedido de R$ 50, a loja vendeu R$ 50.
 
+## Cupons e entregadores
+
+| Tabela | Colunas principais | Regras |
+| --- | --- | --- |
+| `coupon` | `store_id`, `code`, `type` (`PERCENT`, `FIXED`), `amount`, `min_order_cents`, `max_uses`, `used_count`, `valid_until`, `active` | `UNIQUE(store_id, code)`, sempre em maiúsculas. `amount` em pontos-base na porcentagem e em centavos no valor fixo. O desconto é sobre os itens, nunca sobre a entrega. O uso é contado na mesma transação do pedido. |
+| `courier` | `store_id`, `name`, `phone`, `active` | Sem login. O pedido guarda `courier_id` e uma cópia do nome (`courier_name`). Trocar o entregador não mexe na `version` do pedido. |
+
 ## Salão (`dinein`)
 
 | Tabela | Colunas principais | Regras |

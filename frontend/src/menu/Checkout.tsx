@@ -6,7 +6,7 @@ import { errorMessage } from '../shared/api/errors';
 import type { MenuOrderRequest, Storefront } from '../shared/api/types';
 import { formatCents, optionalMoneyField } from '../shared/lib/numbers';
 import { MoneyInput } from '../shared/ui/MoneyInput';
-import { usePlaceOrder } from './api';
+import { useCouponQuote, usePlaceOrder } from './api';
 import { CUSTOMER_KEY, EMPTY_CUSTOMER, type SavedCustomer, useStored } from './storage';
 
 const changeField = optionalMoneyField('Valor de troco inválido.');
@@ -28,11 +28,16 @@ export function Checkout({
   const [changeFor, setChangeFor] = useState<number | string>('');
   const [notes, setNotes] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState('');
   const place = usePlaceOrder(store.slug);
+  const coupon = useCouponQuote(store.slug);
 
   const zone = store.deliveryZones.find((candidate) => candidate.neighborhood === customer.neighborhood);
   const deliveryFee = type === 'DELIVERY' ? (zone?.feeCents ?? 0) : 0;
   const subtotal = cartSubtotal(lines);
+  // O desconto mostrado vale para o carrinho em que o cupom foi conferido; mudou o carrinho, confere de novo.
+  const applied = coupon.data && coupon.variables?.subtotalCents === subtotal ? coupon.data : null;
+  const discount = applied?.discountCents ?? 0;
   const method = store.paymentMethods.find((candidate) => candidate.id === paymentMethodId);
   const set = (field: keyof SavedCustomer) => (value: string) => setCustomer({ ...customer, [field]: value });
 
@@ -78,6 +83,7 @@ export function Checkout({
       notes: notes.trim() || undefined,
       paymentMethodId: method?.id ?? '',
       changeForCents: method?.type === 'CASH' && change.success ? (change.data ?? undefined) : undefined,
+      couponCode: applied?.code,
     };
     place.mutate(body, { onSuccess: (placed) => onPlaced(placed.trackingCode) });
   }
@@ -147,12 +153,37 @@ export function Checkout({
       {method?.type === 'CASH' && (
         <MoneyInput label="Troco para (deixe vazio se não precisar)" value={changeFor} onChange={setChangeFor} />
       )}
+      <Group align="flex-end" gap="xs" wrap="nowrap">
+        <TextInput
+          label="Cupom de desconto"
+          placeholder="Tem um cupom? Digite aqui"
+          value={couponCode}
+          onChange={(event) => setCouponCode(event.currentTarget.value)}
+          maxLength={30}
+          style={{ flex: 1 }}
+          error={coupon.isError ? errorMessage(coupon.error) : undefined}
+        />
+        <Button
+          variant="default"
+          disabled={couponCode.trim().length < 3}
+          loading={coupon.isPending}
+          onClick={() => coupon.mutate({ code: couponCode.trim(), subtotalCents: subtotal })}
+        >
+          Aplicar
+        </Button>
+      </Group>
       <Textarea label="Observação do pedido" value={notes} onChange={(event) => setNotes(event.currentTarget.value)} maxLength={500} />
       <Divider />
       <Group justify="space-between">
         <Text>Itens</Text>
         <Text>{formatCents(subtotal)}</Text>
       </Group>
+      {applied && (
+        <Group justify="space-between">
+          <Text c="green.8">Cupom {applied.code}</Text>
+          <Text c="green.8">- {formatCents(discount)}</Text>
+        </Group>
+      )}
       {type === 'DELIVERY' && (
         <Group justify="space-between">
           <Text>Entrega</Text>
@@ -161,7 +192,7 @@ export function Checkout({
       )}
       <Group justify="space-between">
         <Text fw={700}>Total</Text>
-        <Text fw={700}>{formatCents(subtotal + deliveryFee)}</Text>
+        <Text fw={700}>{formatCents(subtotal - discount + deliveryFee)}</Text>
       </Group>
       {(problem || place.isError) && (
         <Alert color="red" icon={<CircleAlert size={18} />}>
