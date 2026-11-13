@@ -21,4 +21,10 @@ app:
     refresh-cookie-name: pedeai_refresh
     refresh-cookie-secure: false
   signup-enabled: true
+  # Os testes de integração cadastram muitas lojas do mesmo endereço.
+  signups-per-address-per-hour: 1000
   cors-allowed-origins: http://localhost:5173
+
+springdoc:
+  api-docs:
+    enabled: true

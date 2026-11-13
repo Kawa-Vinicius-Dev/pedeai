@@ -1,5 +1,6 @@
 package com.pedeai.store.controller;
 
+import com.pedeai.shared.web.ClientAddress;
 import com.pedeai.shared.security.CurrentUser;
 import com.pedeai.shared.security.Permissions;
 import com.pedeai.store.dto.AuthResponse;
@@ -10,6 +11,7 @@ import com.pedeai.store.dto.UpdateStoreRequest;
 import com.pedeai.store.service.AuthResult;
 import com.pedeai.store.service.StoreRegistrationService;
 import com.pedeai.store.service.StoreService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +43,8 @@ public class StoreController {
     @PostMapping("/api/stores")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterStoreRequest request,
                                                  @RequestHeader(value = HttpHeaders.USER_AGENT, required = false)
-                                                 String userAgent) {
-        AuthResult result = registrationService.register(request, userAgent);
+                                                 String userAgent, HttpServletRequest http) {
+        AuthResult result = registrationService.register(request, userAgent, ClientAddress.of(http));
         return ResponseEntity.created(URI.create("/api/store"))
                 .header(HttpHeaders.SET_COOKIE, cookies.create(result.refreshToken()))
                 .body(result.response());

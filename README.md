@@ -41,7 +41,7 @@ Abra http://localhost:5173/cadastro e crie a sua loja. No Windows, use
 | API com o simulador do iFood (pedidos de teste sem credenciais) | `IFOOD_SIMULATOR=true ./mvnw spring-boot:run` e, na tela, Configurações › Integrações |
 | Testes do agente de impressão | `cd agent && ./mvnw verify` (ver [agent/README.md](agent/README.md)) |
 | Testes, lint e tipos do frontend | `cd frontend && npm test && npm run lint && npm run typecheck` |
-| Documentação da API | http://localhost:8080/swagger-ui.html |
+| Documentação da API (só com `API_DOCS_ENABLED=true`, como no `.env.example`) | http://localhost:8080/swagger-ui.html |
 | Atualizar os tipos da API no frontend (com a API rodando) | `cd frontend && npm run api:spec && npm run api:types` |
 
 O teste `OpenApiContractTest` do backend falha se `frontend/openapi.json` ficar
@@ -152,6 +152,7 @@ Detalhes e alternativas descartadas estão em [docs/decisoes.md](docs/decisoes.m
 | [04 · Impressão](docs/04-impressao.md) | Impressoras térmicas, agente local, setores, fila, duplicidade, impressora offline |
 | [05 · Integrações](docs/05-integracoes.md) | iFood e 99Food: autenticação, eventos, status, erros, homologação |
 | [06 · Roadmap](docs/06-roadmap.md) | Etapas de implementação e critérios de pronto |
+| [08 · PedeAí e o mercado](docs/08-mercado.md) | Comparação com Saipos, Anota AI, Goomer e Cardápio Web, e o que fazer em seguida |
 | [Decisões](docs/decisoes.md) | Registro de decisões de arquitetura |
 
 ## Estrutura do repositório

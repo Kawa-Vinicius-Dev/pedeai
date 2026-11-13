@@ -132,3 +132,36 @@ export function formatPhone(phone: string | null): string {
   const match = /^\+55(\d{2})(\d{4,5})(\d{4})$/.exec(phone);
   return match ? `(${match[1]}) ${match[2]}-${match[3]}` : phone;
 }
+
+const WHATSAPP_MESSAGES: Partial<Record<OrderStatus, string>> = {
+  RECEIVED: 'recebemos o seu pedido e já vamos confirmar.',
+  CONFIRMED: 'o seu pedido foi confirmado.',
+  IN_PREPARATION: 'o seu pedido já está sendo preparado.',
+  DISPATCHED: 'o seu pedido saiu para entrega.',
+  COMPLETED: 'obrigado pela preferência! Bom apetite.',
+  CANCELLED: 'o seu pedido foi cancelado. Qualquer dúvida, é só chamar aqui.',
+};
+
+/**
+ * Link que abre a conversa com o cliente no WhatsApp da loja, já com o aviso do status escrito (quem manda é a
+ * pessoa, pelo WhatsApp dela: sem robô e sem custo). Nulo sem telefone ou em pedido de marketplace, em que o
+ * telefone é mascarado e o aviso é do próprio app.
+ */
+export function whatsappLink(
+  order: { number: number; status: OrderStatus; type: OrderType; source: string; customerName: string | null; customerPhone: string | null },
+  storeName: string,
+): string | null {
+  const digits = (order.customerPhone ?? '').replace(/\D/g, '');
+  if (digits.length < 12 || isMarketplace(order.source)) {
+    return null;
+  }
+  const status =
+    order.status === 'READY'
+      ? order.type === 'DELIVERY'
+        ? 'o seu pedido está pronto e já vai sair para entrega.'
+        : 'o seu pedido está pronto para retirada.'
+      : WHATSAPP_MESSAGES[order.status];
+  const firstName = order.customerName?.trim().split(' ')[0];
+  const text = `Olá${firstName ? `, ${firstName}` : ''}! Aqui é da ${storeName}. Pedido ${order.number}: ${status}`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}

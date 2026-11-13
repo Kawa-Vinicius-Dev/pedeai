@@ -116,6 +116,8 @@ formato pelo conteúdo. Trocar a foto apaga a antiga.
 
 - [ ] `JWT_SECRET` e senha do banco gerados, fortes e só no `.env` / variáveis do provedor.
 - [ ] `REFRESH_COOKIE_SECURE=true` e `SIGNUP_ENABLED=false`.
+- [ ] `API_DOCS_ENABLED` fora das variáveis de produção: `/swagger-ui.html` e `/v3/api-docs` respondem 404.
+- [ ] Enquanto o cadastro estiver aberto, ele aceita 5 lojas por hora por endereço (`app.signups-per-address-per-hour`).
 - [ ] `https://.../actuator/health` responde `UP`.
 - [ ] Backup do dia gerado e copiado para fora do servidor; restauração testada uma vez.
 - [ ] Sentry recebendo eventos (`SENTRY_DSN` na API e `VITE_SENTRY_DSN` na Vercel).

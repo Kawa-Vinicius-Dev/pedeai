@@ -62,7 +62,7 @@ class StoreControllerTest {
         AuthResponse response = new AuthResponse("jwt", "Bearer", 900,
                 new UserResponse(USER_ID, "Ana", "ana@example.com", Role.OWNER, true, NOW),
                 new StoreSummaryResponse(STORE_ID, "Pizzaria Bella"));
-        when(registrationService.register(any(), any()))
+        when(registrationService.register(any(), any(), any()))
                 .thenReturn(new AuthResult(response, new IssuedRefreshToken("refresh-value", NOW)));
 
         mockMvc.perform(post("/api/stores").contentType(MediaType.APPLICATION_JSON).content(REGISTER_BODY))
@@ -80,12 +80,12 @@ class StoreControllerTest {
                         """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields.password").value("A senha deve ter entre 8 e 72 caracteres."));
-        verify(registrationService, never()).register(any(), any());
+        verify(registrationService, never()).register(any(), any(), any());
     }
 
     @Test
     void registerReturns409WhenEmailIsTaken() throws Exception {
-        when(registrationService.register(any(), any())).thenThrow(new ConflictException("Este e-mail já está em uso."));
+        when(registrationService.register(any(), any(), any())).thenThrow(new ConflictException("Este e-mail já está em uso."));
 
         mockMvc.perform(post("/api/stores").contentType(MediaType.APPLICATION_JSON).content(REGISTER_BODY))
                 .andExpect(status().isConflict())
@@ -94,7 +94,7 @@ class StoreControllerTest {
 
     @Test
     void registerReturns403WhenSignupIsDisabled() throws Exception {
-        when(registrationService.register(any(), any()))
+        when(registrationService.register(any(), any(), any()))
                 .thenThrow(new ForbiddenOperationException("O cadastro de novas lojas está desativado."));
 
         mockMvc.perform(post("/api/stores").contentType(MediaType.APPLICATION_JSON).content(REGISTER_BODY))
