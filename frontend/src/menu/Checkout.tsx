@@ -172,6 +172,12 @@ export function Checkout({
           Aplicar
         </Button>
       </Group>
+      {store.loyaltyOrders !== null && (
+        <Text size="sm" c="dimmed">
+          Programa de fidelidade: a cada {store.loyaltyOrders} pedidos, {formatCents(store.loyaltyDiscountCents)} de
+          desconto no próximo. O desconto entra sozinho pelo seu telefone (não soma com cupom).
+        </Text>
+      )}
       <Textarea label="Observação do pedido" value={notes} onChange={(event) => setNotes(event.currentTarget.value)} maxLength={500} />
       <Divider />
       <Group justify="space-between">

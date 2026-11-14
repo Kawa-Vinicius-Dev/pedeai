@@ -18,15 +18,15 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CircleAlert, Pencil, Plus } from 'lucide-react';
+import { CircleAlert, Gift, Pencil, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { api } from '../../shared/api/client';
 import { errorMessage, unwrap } from '../../shared/api/errors';
-import type { Coupon, CouponRequest } from '../../shared/api/types';
+import type { Coupon, CouponRequest, Store } from '../../shared/api/types';
 import { applyApiError } from '../../shared/lib/forms';
-import { centsToReais, decimalField, formatCents, moneyField } from '../../shared/lib/numbers';
+import { centsToReais, decimalField, formatCents, moneyField, optionalMoneyField } from '../../shared/lib/numbers';
 import { MoneyInput } from '../../shared/ui/MoneyInput';
 import { settingsKeys } from '../orders/api';
 
@@ -129,6 +129,7 @@ export function CouponsPage() {
           />
         )}
       </Modal>
+      <LoyaltyCard />
     </Stack>
   );
 }
@@ -330,6 +331,154 @@ function CouponForm({ coupon, onClose }: { coupon: Coupon | null; onClose: () =>
           </Button>
           <Button type="submit" loading={save.isPending}>
             Salvar
+          </Button>
+        </Group>
+      </Stack>
+    </form>
+  );
+}
+
+const loyaltySchema = z
+  .object({
+    enabled: z.boolean(),
+    orders: decimalField('Informe quantos pedidos.').pipe(
+      z.number().int('Use um número inteiro.').min(2, 'Use pelo menos 2 pedidos.').max(100, 'Use até 100 pedidos.'),
+    ),
+    discount: optionalMoneyField('Informe um valor válido.'),
+  })
+  .refine((value) => !value.enabled || (value.discount !== null && value.discount > 0), {
+    path: ['discount'],
+    message: 'Informe o valor do desconto.',
+  });
+type LoyaltyInput = z.input<typeof loyaltySchema>;
+type LoyaltyForm = z.output<typeof loyaltySchema>;
+
+/**
+ * Fidelidade simples: a cada N pedidos concluídos, o cliente ganha um desconto fixo no próximo. O cliente é
+ * reconhecido pelo telefone; no PDV o caixa marca "usar o prêmio", no cardápio digital o desconto entra sozinho.
+ */
+function LoyaltyCard() {
+  const store = useQuery({ queryKey: ['store'], queryFn: () => unwrap(api.GET('/api/store')) });
+  return (
+    <Card withBorder radius="lg" padding="lg">
+      <Stack>
+        <Group gap="xs">
+          <Gift size={20} />
+          <Title order={3}>Programa de fidelidade</Title>
+        </Group>
+        <Text c="dimmed" size="sm">
+          A cada tantos pedidos concluídos, o cliente ganha um desconto no próximo. Ele é reconhecido pelo telefone.
+          No PDV, o caixa vê o prêmio e marca para usar; no cardápio digital, o desconto entra sozinho. Não soma com
+          cupom.
+        </Text>
+        {store.isPending && <Loader aria-label="Carregando fidelidade" />}
+        {store.isError && (
+          <Alert color="red" icon={<CircleAlert size={18} />}>
+            {errorMessage(store.error)}
+          </Alert>
+        )}
+        {store.data && <LoyaltyFields key={store.data.id} store={store.data} />}
+      </Stack>
+    </Card>
+  );
+}
+
+function loyaltyDefaults(store: Store): LoyaltyInput {
+  return {
+    enabled: store.loyaltyOrders !== null,
+    orders: store.loyaltyOrders ?? 10,
+    discount: store.loyaltyOrders !== null ? centsToReais(store.loyaltyDiscountCents) : '',
+  };
+}
+
+function LoyaltyFields({ store }: { store: Store }) {
+  const queryClient = useQueryClient();
+  const {
+    control,
+    handleSubmit,
+    setError,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm<LoyaltyInput, unknown, LoyaltyForm>({
+    resolver: zodResolver(loyaltySchema),
+    defaultValues: loyaltyDefaults(store),
+  });
+  const enabled = useWatch({ control, name: 'enabled' });
+  const save = useMutation({
+    mutationFn: (form: LoyaltyForm) =>
+      unwrap(
+        api.PUT('/api/store/loyalty', {
+          body: form.enabled
+            ? { orders: form.orders, discountCents: form.discount ?? 0 }
+            : { orders: null, discountCents: 0 },
+        }),
+      ),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['store'], updated);
+      reset(loyaltyDefaults(updated));
+      notifications.show({
+        color: 'green',
+        message: updated.loyaltyOrders === null ? 'Programa de fidelidade desligado.' : 'Programa de fidelidade salvo.',
+      });
+    },
+    onError: (error) => applyApiError(error, setError, { orders: 'orders', discountCents: 'discount' }),
+  });
+
+  return (
+    <form onSubmit={handleSubmit((form) => save.mutate(form))}>
+      <Stack>
+        <Controller
+          control={control}
+          name="enabled"
+          render={({ field }) => (
+            <Switch
+              label="Ligar o programa de fidelidade"
+              checked={field.value}
+              onChange={(event) => field.onChange(event.currentTarget.checked)}
+            />
+          )}
+        />
+        {enabled && (
+          <Group align="flex-start" grow>
+            <Controller
+              control={control}
+              name="orders"
+              render={({ field }) => (
+                <NumberInput
+                  label="A cada quantos pedidos"
+                  min={2}
+                  max={100}
+                  allowDecimal={false}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.orders?.message}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="discount"
+              render={({ field }) => (
+                <MoneyInput
+                  label="Desconto do prêmio"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.discount?.message}
+                />
+              )}
+            />
+          </Group>
+        )}
+        {errors.root && (
+          <Alert color="red" icon={<CircleAlert size={18} />}>
+            {errors.root.message}
+          </Alert>
+        )}
+        <Group justify="flex-end">
+          <Button type="submit" loading={save.isPending} disabled={!isDirty}>
+            Salvar fidelidade
           </Button>
         </Group>
       </Stack>

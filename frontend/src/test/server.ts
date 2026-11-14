@@ -62,6 +62,10 @@ export const server = setupServer(
   http.get('/api/stream', openStream),
   // Loja sem entregadores cadastrados: o detalhe do pedido de delivery não mostra a escolha.
   http.get('/api/couriers', () => HttpResponse.json([])),
+  // Loja sem programa de fidelidade: o PDV não mostra prêmio.
+  http.get('/api/customers/:id/loyalty', () =>
+    HttpResponse.json({ enabled: false, completedOrders: 0, ordersToNext: 0, rewardAvailable: false, rewardCents: 0 }),
+  ),
   // A faixa de alertas de impressão aparece em todas as telas; sem problema, lista vazia.
   http.get('/api/print-alerts', () => HttpResponse.json([])),
   // A faixa de pedidos de cancelamento do cliente também; sem pedido, lista vazia.

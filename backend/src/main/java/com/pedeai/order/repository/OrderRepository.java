@@ -16,6 +16,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecificationExecutor<Order> {
+    /** Fidelidade: pedidos concluídos do cliente que contam para o prêmio (os que não usaram prêmio). */
+    long countByStoreIdAndCustomerIdAndStatusAndLoyaltyReward(UUID storeId, UUID customerId, OrderStatus status,
+                                                              boolean loyaltyReward);
+
+    /** Fidelidade: prêmios que o cliente já usou. Cancelar o pedido devolve o prêmio. */
+    long countByStoreIdAndCustomerIdAndStatusNotAndLoyaltyReward(UUID storeId, UUID customerId, OrderStatus status,
+                                                                 boolean loyaltyReward);
 
     Optional<Order> findByIdAndStoreId(UUID id, UUID storeId);
 

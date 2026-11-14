@@ -5,6 +5,7 @@ import com.pedeai.shared.exception.ConflictException;
 import com.pedeai.shared.exception.ResourceNotFoundException;
 import com.pedeai.store.domain.OpeningHours;
 import com.pedeai.store.domain.Store;
+import com.pedeai.store.dto.LoyaltyRequest;
 import com.pedeai.store.dto.OpeningHoursRequest;
 import com.pedeai.store.dto.StoreResponse;
 import com.pedeai.store.dto.UpdateStoreRequest;
@@ -27,6 +28,7 @@ public class StoreService {
     static final String STORE_NOT_FOUND = "Loja não encontrada.";
     static final String REPEATED_DAY = "Informe um horário só por dia da semana.";
     static final String EMPTY_PERIOD = "O horário de fechamento deve ser diferente do de abertura.";
+    static final String LOYALTY_NEEDS_DISCOUNT = "Informe o valor do desconto do prêmio.";
     static final String SLUG_TAKEN = "Este endereço de cardápio já está em uso por outra loja.";
 
     private final StoreRepository storeRepository;
@@ -65,6 +67,16 @@ public class StoreService {
         Store store = find(storeId);
         store.changeMenuOpen(open, Instant.now(clock));
         events.publishEvent(new StoreChannelsChanged(storeId, true, false, false));
+        return StoreResponse.from(store);
+    }
+
+    @Transactional
+    public StoreResponse changeLoyalty(UUID storeId, LoyaltyRequest request) {
+        if (request.orders() != null && request.discountCents() <= 0) {
+            throw new BusinessRuleException(LOYALTY_NEEDS_DISCOUNT);
+        }
+        Store store = find(storeId);
+        store.changeLoyalty(request.orders(), request.discountCents(), Instant.now(clock));
         return StoreResponse.from(store);
     }
 

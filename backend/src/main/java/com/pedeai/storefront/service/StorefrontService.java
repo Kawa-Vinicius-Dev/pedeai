@@ -152,7 +152,7 @@ public class StorefrontService {
                         .toList(),
                 methods(storeId).stream().map(method -> new MenuPaymentMethodResponse(method.id(), method.name(),
                         method.type())).toList(),
-                categories, groups);
+                categories, groups, store.loyaltyOrders(), store.loyaltyDiscountCents());
     }
 
     /** Preço do item montado, com as mesmas regras do pedido: o cliente vê o valor antes de pôr no carrinho. */
@@ -271,7 +271,9 @@ public class StorefrontService {
         }
         CreateOrderRequest order = new CreateOrderRequest(request.type(),
                 new OrderCustomerRequest(request.customerName().trim(), request.customerPhone().trim()), address,
-                request.items(), notes, discount, deliveryFee, List.of());
+                request.items(), notes, discount, deliveryFee, List.of(),
+                // Cupom e prêmio de fidelidade não somam: com cupom, o prêmio fica para o próximo pedido.
+                discount == 0);
         return orderService.placeFromChannel(storeId, source, externalId, order, method.id(),
                 request.changeForCents(), store.menuAutoConfirm());
     }

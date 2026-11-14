@@ -48,6 +48,8 @@ export function store(overrides: Partial<Store> = {}): Store {
     menuAutoConfirm: false,
     openingHours: [],
     ifoodMarkupBp: 0,
+    loyaltyOrders: null,
+    loyaltyDiscountCents: 0,
     ...overrides,
   };
 }
@@ -132,6 +134,7 @@ export function product(overrides: Partial<Product> = {}): Product {
     sellOnIfood: true,
     ifoodPriceCents: null,
     imageUrl: null,
+    stockQuantity: null,
     ...overrides,
   };
 }

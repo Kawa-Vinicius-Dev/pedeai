@@ -67,6 +67,8 @@ public class Order {
     private UUID courierId;
     @OptimisticLock(excluded = true)
     private String courierName;
+    /** Este pedido usou o prêmio de fidelidade do cliente. */
+    private boolean loyaltyReward;
     private String externalDisplayId;
     private Instant scheduledFor;
     private Instant confirmedAt;
@@ -342,6 +344,14 @@ public class Order {
 
     public String getCourierName() {
         return courierName;
+    }
+
+    public boolean isLoyaltyReward() {
+        return loyaltyReward;
+    }
+
+    public void markLoyaltyReward() {
+        this.loyaltyReward = true;
     }
 
     /** Quem leva o pedido. Só delivery tem entregador; {@code courier} nulo tira o entregador. */

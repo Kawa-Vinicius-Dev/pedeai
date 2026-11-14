@@ -8,6 +8,8 @@ import {
   Group,
   List,
   Loader,
+  Modal,
+  NumberInput,
   Stack,
   Switch,
   Table,
@@ -18,14 +20,14 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { Calculator, Check, CircleAlert, Pencil, Plus, Search } from 'lucide-react';
+import { Boxes, Calculator, Check, CircleAlert, Pencil, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { errorMessage } from '../../shared/api/errors';
 import type { Category, Product } from '../../shared/api/types';
 import { formatCents } from '../../shared/lib/numbers';
 import { normalizeSearch } from '../../shared/lib/text';
-import { type CatalogData, useCatalog, useProductAvailability } from './api';
+import { type CatalogData, useCatalog, useProductAvailability, useProductStock } from './api';
 import { PriceSimulator } from './PriceSimulator';
 import { ProductDrawer, type ProductTarget } from './ProductDrawer';
 
@@ -36,6 +38,7 @@ export function ProductsTab({ manage }: { manage: boolean }) {
   const [showInactive, setShowInactive] = useState(false);
   const [editing, setEditing] = useState<ProductTarget | null>(null);
   const [simulating, setSimulating] = useState<Product | null>(null);
+  const [counting, setCounting] = useState<Product | null>(null);
   // Tela estreita (celular, tablet com menu aberto): lista compacta, com o botão de pausa sempre à vista.
   const compact = useMediaQuery('(max-width: 61.99em)') ?? false;
 
@@ -156,6 +159,7 @@ export function ProductsTab({ manage }: { manage: boolean }) {
                         product={product}
                         manage={manage}
                         onSimulate={setSimulating}
+                        onCount={setCounting}
                         onEdit={(current) => setEditing({ product: current })}
                       />
                     </Group>
@@ -170,7 +174,7 @@ export function ProductsTab({ manage }: { manage: boolean }) {
                     <Table.Th w={130}>Preço</Table.Th>
                     <Table.Th w={170}>Setor</Table.Th>
                     <Table.Th w={90}>À venda</Table.Th>
-                    <Table.Th w={manage ? 90 : 56} />
+                    <Table.Th w={manage ? 124 : 90} />
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -198,6 +202,7 @@ export function ProductsTab({ manage }: { manage: boolean }) {
                           product={product}
                           manage={manage}
                           onSimulate={setSimulating}
+                          onCount={setCounting}
                           onEdit={(current) => setEditing({ product: current })}
                         />
                       </Table.Td>
@@ -210,6 +215,7 @@ export function ProductsTab({ manage }: { manage: boolean }) {
       ))}
 
       <ProductDrawer target={editing} catalog={catalog} onClose={() => setEditing(null)} />
+      <StockModal product={counting} onClose={() => setCounting(null)} />
       <PriceSimulator product={simulating} optionGroups={catalog.optionGroups} onClose={() => setSimulating(null)} />
     </Stack>
   );
@@ -228,6 +234,11 @@ function ProductName({ product }: { product: Product }) {
         {!product.active && (
           <Badge size="sm" color="gray" variant="light">
             Inativo
+          </Badge>
+        )}
+        {product.stockQuantity !== null && (
+          <Badge size="sm" color={product.stockQuantity === 0 ? 'red' : 'blue'} variant="light">
+            {product.stockQuantity === 0 ? 'Sem estoque' : `Estoque: ${product.stockQuantity}`}
           </Badge>
         )}
       </Group>
@@ -260,14 +271,21 @@ function ProductActions({
   manage,
   onSimulate,
   onEdit,
+  onCount,
 }: {
   product: Product;
   manage: boolean;
   onSimulate: (product: Product) => void;
   onEdit: (product: Product) => void;
+  onCount: (product: Product) => void;
 }) {
   return (
     <Group gap={4} justify="flex-end" wrap="nowrap">
+      <Tooltip label="Estoque">
+        <ActionIcon variant="subtle" color="gray" aria-label={`Estoque de ${product.name}`} onClick={() => onCount(product)}>
+          <Boxes size={18} />
+        </ActionIcon>
+      </Tooltip>
       <Tooltip label="Simular preço">
         <ActionIcon
           variant="subtle"
@@ -388,5 +406,61 @@ function SetupSteps({ catalog, onNewProduct }: { catalog: CatalogData; onNewProd
         </List>
       </Stack>
     </Card>
+  );
+}
+
+/**
+ * Estoque simples: quantos ainda dá para vender. Cada pedido desconta e, ao chegar a zero, o produto é pausado
+ * sozinho no PDV, no cardápio digital e no iFood. Vazio: o produto não controla estoque.
+ */
+function StockModal({ product, onClose }: { product: Product | null; onClose: () => void }) {
+  return (
+    <Modal opened={product !== null} onClose={onClose} title={product ? `Estoque de ${product.name}` : ''}>
+      {product && <StockForm key={product.id} product={product} onDone={onClose} />}
+    </Modal>
+  );
+}
+
+function StockForm({ product, onDone }: { product: Product; onDone: () => void }) {
+  const stock = useProductStock();
+  const [quantity, setQuantity] = useState<number | string>(product.stockQuantity ?? '');
+  const parsed = typeof quantity === 'number' ? quantity : null;
+  const save = (value: number | null) => stock.mutate({ id: product.id, quantity: value }, { onSuccess: onDone });
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (parsed !== null) save(parsed);
+      }}
+    >
+      <Stack>
+        <Text size="sm" c="dimmed">
+          Cada pedido desconta deste número. Quando chegar a zero, o produto é pausado sozinho, inclusive no cardápio
+          digital e no iFood.
+        </Text>
+        <NumberInput
+          label="Quantidade disponível"
+          min={0}
+          max={100000}
+          allowDecimal={false}
+          allowNegative={false}
+          value={quantity}
+          onChange={setQuantity}
+          data-autofocus
+        />
+        <Group justify="space-between">
+          {product.stockQuantity !== null ? (
+            <Button variant="subtle" color="gray" onClick={() => save(null)} loading={stock.isPending}>
+              Não controlar estoque
+            </Button>
+          ) : (
+            <span />
+          )}
+          <Button type="submit" disabled={parsed === null} loading={stock.isPending}>
+            Salvar
+          </Button>
+        </Group>
+      </Stack>
+    </form>
   );
 }

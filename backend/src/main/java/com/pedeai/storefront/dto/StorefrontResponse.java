@@ -19,6 +19,9 @@ public record StorefrontResponse(
         List<MenuDeliveryZoneResponse> deliveryZones,
         List<MenuPaymentMethodResponse> paymentMethods,
         List<MenuCategoryResponse> categories,
-        List<OptionGroupResponse> optionGroups
+        List<OptionGroupResponse> optionGroups,
+        /** Fidelidade: a cada quantos pedidos concluídos o cliente ganha o desconto. Nulo: a loja não tem. */
+        @Schema(types = {"integer", "null"}) Integer loyaltyOrders,
+        long loyaltyDiscountCents
 ) {
 }

@@ -5,6 +5,7 @@ import com.pedeai.catalog.dto.PriceQuoteRequest;
 import com.pedeai.catalog.dto.PriceQuoteResponse;
 import com.pedeai.catalog.dto.ProductRequest;
 import com.pedeai.catalog.dto.ProductResponse;
+import com.pedeai.catalog.dto.StockRequest;
 import com.pedeai.catalog.service.ProductImageService;
 import com.pedeai.catalog.service.ProductService;
 import com.pedeai.shared.security.CurrentUser;
@@ -68,6 +69,14 @@ public class ProductController {
     public ProductResponse changeAvailability(CurrentUser user, @PathVariable UUID id,
                                               @Valid @RequestBody AvailabilityRequest request) {
         return productService.changeAvailability(user.storeId(), id, request.available());
+    }
+
+    /** Estoque simples: quem está no caixa ou na cozinha conta o que sobrou. */
+    @PutMapping("/{id}/stock")
+    @PreAuthorize(Permissions.TOGGLE_AVAILABILITY)
+    public ProductResponse changeStock(CurrentUser user, @PathVariable UUID id,
+                                       @Valid @RequestBody StockRequest request) {
+        return productService.changeStock(user.storeId(), id, request.quantity());
     }
 
     /** Foto do produto (JPEG ou PNG, até 2 MB), no cardápio digital e no iFood. */

@@ -80,6 +80,7 @@ export type Platform = Schemas['PlatformResponse'];
 
 export type Coupon = Schemas['CouponResponse'];
 export type CouponRequest = Schemas['CouponRequest'];
+export type LoyaltyStatus = Schemas['LoyaltyStatusResponse'];
 export type Courier = Schemas['CourierResponse'];
 export type CourierRequest = Schemas['CourierRequest'];
 export type CourierSettlement = Schemas['CourierSettlementResponse'];

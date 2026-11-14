@@ -46,6 +46,36 @@
         }
       }
     },
+    "/api/store/loyalty": {
+      "put": {
+        "tags": [
+          "store-controller"
+        ],
+        "operationId": "changeLoyalty",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoyaltyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sectors/{sectorId}/printer": {
       "put": {
         "tags": [
@@ -208,6 +238,47 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ProductRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}/stock": {
+      "put": {
+        "tags": [
+          "product-controller"
+        ],
+        "operationId": "changeStock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockRequest"
               }
             }
           },
@@ -3923,6 +3994,37 @@
         }
       }
     },
+    "/api/customers/{customerId}/loyalty": {
+      "get": {
+        "tags": [
+          "loyalty-controller"
+        ],
+        "operationId": "status_1",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoyaltyStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/couriers/settlement": {
       "get": {
         "tags": [
@@ -4161,6 +4263,17 @@
           "ifoodMarkupBp": {
             "type": "integer",
             "format": "int32"
+          },
+          "loyaltyOrders": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "loyaltyDiscountCents": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "required": [
@@ -4169,6 +4282,8 @@
           "document",
           "id",
           "ifoodMarkupBp",
+          "loyaltyDiscountCents",
+          "loyaltyOrders",
           "menuAutoConfirm",
           "menuOpen",
           "name",
@@ -4178,6 +4293,29 @@
           "slug",
           "startPreparationOnConfirm",
           "timezone"
+        ]
+      },
+      "LoyaltyRequest": {
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "maximum": 100,
+            "minimum": 2
+          },
+          "discountCents": {
+            "type": "integer",
+            "format": "int64",
+            "maximum": 100000,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "discountCents"
         ]
       },
       "SectorPrinterRequest": {
@@ -4424,6 +4562,13 @@
               "string",
               "null"
             ]
+          },
+          "stockQuantity": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
           }
         },
         "required": [
@@ -4440,8 +4585,23 @@
           "optionGroupIds",
           "priceCents",
           "sectorId",
-          "sellOnIfood"
+          "sellOnIfood",
+          "stockQuantity"
         ]
+      },
+      "StockRequest": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "maximum": 100000,
+            "minimum": 0
+          }
+        }
       },
       "AvailabilityRequest": {
         "type": "object",
@@ -6097,6 +6257,12 @@
             },
             "maxItems": 5,
             "minItems": 0
+          },
+          "loyaltyReward": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         },
         "required": [
@@ -7883,11 +8049,24 @@
             "items": {
               "$ref": "#/components/schemas/OptionGroupResponse"
             }
+          },
+          "loyaltyOrders": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "loyaltyDiscountCents": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "required": [
           "categories",
           "deliveryZones",
+          "loyaltyDiscountCents",
+          "loyaltyOrders",
           "name",
           "open",
           "openingHours",
@@ -8739,6 +8918,36 @@
           "size",
           "totalElements",
           "totalPages"
+        ]
+      },
+      "LoyaltyStatusResponse": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "completedOrders": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ordersToNext": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rewardAvailable": {
+            "type": "boolean"
+          },
+          "rewardCents": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "completedOrders",
+          "enabled",
+          "ordersToNext",
+          "rewardAvailable",
+          "rewardCents"
         ]
       },
       "CourierSettlementResponse": {

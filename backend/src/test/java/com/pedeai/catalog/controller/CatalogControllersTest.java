@@ -204,6 +204,6 @@ class CatalogControllersTest {
 
     private static ProductResponse product() {
         return new ProductResponse(PRODUCT_ID, CATEGORY_ID, "500", "Pizza Grande", null, 0, null, null, List.of(),
-                true, true, true, null, null);
+                true, true, true, null, null, null);
     }
 }

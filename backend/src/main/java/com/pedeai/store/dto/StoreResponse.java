@@ -21,13 +21,16 @@ public record StoreResponse(
         boolean menuOpen,
         boolean menuAutoConfirm,
         List<OpeningHoursResponse> openingHours,
-        int ifoodMarkupBp
+        int ifoodMarkupBp,
+        @Schema(types = {"integer", "null"}) Integer loyaltyOrders,
+        long loyaltyDiscountCents
 ) {
     public static StoreResponse from(Store store) {
         return new StoreResponse(store.getId(), store.getName(), store.getDocument(), store.getPhone(),
                 store.getTimezone(), store.getBusinessDayCutoff(), store.getServiceFeeBp(),
                 store.isAutoConfirmOwnOrders(), store.isStartPreparationOnConfirm(), store.getSlug(),
                 store.isMenuOpen(), store.isMenuAutoConfirm(),
-                store.getOpeningHours().stream().map(OpeningHoursResponse::from).toList(), store.getIfoodMarkupBp());
+                store.getOpeningHours().stream().map(OpeningHoursResponse::from).toList(), store.getIfoodMarkupBp(),
+                store.getLoyaltyOrders(), store.getLoyaltyDiscountCents());
     }
 }

@@ -92,11 +92,13 @@ Sobre os descontos: `discount_cents` é o desconto que **a loja** paga.
 exemplo). A diferença importa para o faturamento: num cupom do iFood de R$ 10
 num pedido de R$ 50, a loja vendeu R$ 50.
 
-## Cupons e entregadores
+## Cupons, entregadores, estoque e fidelidade
 
 | Tabela | Colunas principais | Regras |
 | --- | --- | --- |
 | `coupon` | `store_id`, `code`, `type` (`PERCENT`, `FIXED`), `amount`, `min_order_cents`, `max_uses`, `used_count`, `valid_until`, `active` | `UNIQUE(store_id, code)`, sempre em maiúsculas. `amount` em pontos-base na porcentagem e em centavos no valor fixo. O desconto é sobre os itens, nunca sobre a entrega. O uso é contado na mesma transação do pedido. |
+| `product.stock_quantity` | inteiro, nulo = não controla | Estoque simples. Cada pedido desconta direto no banco (`UPDATE` atômico, sem passar pela `version` do produto) e nunca fica negativo. Ao zerar, o produto é pausado e o iFood fica sabendo. Cancelar não devolve. |
+| `store.loyalty_orders`, `store.loyalty_discount_cents` | nulo = sem programa | Fidelidade: a cada N pedidos concluídos do cliente, um desconto fixo no próximo. Nada fica guardado no cliente: a conta sai dos pedidos. O pedido do prêmio fica com `orders.loyalty_reward = true`, não conta para o próximo, e cancelá-lo devolve o prêmio. Não soma com cupom. |
 | `courier` | `store_id`, `name`, `phone`, `active` | Sem login. O pedido guarda `courier_id` e uma cópia do nome (`courier_name`). Trocar o entregador não mexe na `version` do pedido. |
 
 ## Salão (`dinein`)

@@ -43,6 +43,9 @@ public class Store {
     private int serviceFeeBp;
     private boolean autoConfirmOwnOrders;
     private boolean startPreparationOnConfirm;
+    /** A cada quantos pedidos concluídos o cliente ganha o desconto. Nulo: sem programa de fidelidade. */
+    private Integer loyaltyOrders;
+    private long loyaltyDiscountCents;
     private Instant createdAt;
     private Instant updatedAt;
     @Version
@@ -160,6 +163,20 @@ public class Store {
 
     public boolean isStartPreparationOnConfirm() {
         return startPreparationOnConfirm;
+    }
+
+    public Integer getLoyaltyOrders() {
+        return loyaltyOrders;
+    }
+
+    public long getLoyaltyDiscountCents() {
+        return loyaltyDiscountCents;
+    }
+
+    public void changeLoyalty(Integer orders, long discountCents, Instant now) {
+        this.loyaltyOrders = orders;
+        this.loyaltyDiscountCents = orders == null ? 0 : discountCents;
+        this.updatedAt = now;
     }
 
     public Instant getCreatedAt() {

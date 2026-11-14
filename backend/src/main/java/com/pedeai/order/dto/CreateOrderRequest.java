@@ -2,6 +2,7 @@ package com.pedeai.order.dto;
 
 import com.pedeai.customer.dto.AddressRequest;
 import com.pedeai.order.domain.OrderType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -40,6 +41,10 @@ public record CreateOrderRequest(
 
         @NotNull(message = "Informe os pagamentos (pode ser uma lista vazia).")
         @Size(max = 5, message = "Use até 5 formas de pagamento.")
-        List<@Valid @NotNull OrderPaymentRequest> payments
+        List<@Valid @NotNull OrderPaymentRequest> payments,
+
+        /** Usar o prêmio de fidelidade do cliente neste pedido (o desconto do programa entra sozinho). */
+        @Schema(types = {"boolean", "null"})
+        Boolean loyaltyReward
 ) {
 }

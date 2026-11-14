@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/loyalty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["changeLoyalty"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sectors/{sectorId}/printer": {
         parameters: {
             query?: never;
@@ -61,6 +77,22 @@ export interface paths {
         };
         get: operations["get_1"];
         put: operations["update_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/{id}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["changeStock"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1413,6 +1445,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/customers/{customerId}/loyalty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["status_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/couriers/settlement": {
         parameters: {
             query?: never;
@@ -1543,6 +1591,16 @@ export interface components {
             openingHours: components["schemas"]["OpeningHoursResponse"][];
             /** Format: int32 */
             ifoodMarkupBp: number;
+            /** Format: int32 */
+            loyaltyOrders: number | null;
+            /** Format: int64 */
+            loyaltyDiscountCents: number;
+        };
+        LoyaltyRequest: {
+            /** Format: int32 */
+            orders?: number | null;
+            /** Format: int64 */
+            discountCents: number;
         };
         SectorPrinterRequest: {
             /** Format: uuid */
@@ -1614,6 +1672,12 @@ export interface components {
             /** Format: int64 */
             ifoodPriceCents: number | null;
             imageUrl: string | null;
+            /** Format: int32 */
+            stockQuantity: number | null;
+        };
+        StockRequest: {
+            /** Format: int32 */
+            quantity?: number | null;
         };
         AvailabilityRequest: {
             available: boolean;
@@ -2036,6 +2100,7 @@ export interface components {
             /** Format: int64 */
             deliveryFeeCents: number;
             payments: components["schemas"]["OrderPaymentRequest"][];
+            loyaltyReward?: boolean | null;
         };
         OrderCustomerRequest: {
             name: string;
@@ -2494,6 +2559,10 @@ export interface components {
             paymentMethods: components["schemas"]["MenuPaymentMethodResponse"][];
             categories: components["schemas"]["MenuCategoryResponse"][];
             optionGroups: components["schemas"]["OptionGroupResponse"][];
+            /** Format: int32 */
+            loyaltyOrders: number | null;
+            /** Format: int64 */
+            loyaltyDiscountCents: number;
         };
         PaymentMethodRevenueResponse: {
             /** Format: uuid */
@@ -2726,6 +2795,16 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
         };
+        LoyaltyStatusResponse: {
+            enabled: boolean;
+            /** Format: int64 */
+            completedOrders: number;
+            /** Format: int32 */
+            ordersToNext: number;
+            rewardAvailable: boolean;
+            /** Format: int64 */
+            rewardCents: number;
+        };
         CourierSettlementResponse: {
             /** Format: uuid */
             courierId: string | null;
@@ -2822,6 +2901,30 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["MenuOpenRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StoreResponse"];
+                };
+            };
+        };
+    };
+    changeLoyalty: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoyaltyRequest"];
             };
         };
         responses: {
@@ -2944,6 +3047,32 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ProductRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProductResponse"];
+                };
+            };
+        };
+    };
+    changeStock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockRequest"];
             };
         };
         responses: {
@@ -5502,6 +5631,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MerchantResponse"][];
+                };
+            };
+        };
+    };
+    status_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoyaltyStatusResponse"];
                 };
             };
         };

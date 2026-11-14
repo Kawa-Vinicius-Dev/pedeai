@@ -4,6 +4,7 @@ import com.pedeai.shared.web.ClientAddress;
 import com.pedeai.shared.security.CurrentUser;
 import com.pedeai.shared.security.Permissions;
 import com.pedeai.store.dto.AuthResponse;
+import com.pedeai.store.dto.LoyaltyRequest;
 import com.pedeai.store.dto.MenuOpenRequest;
 import com.pedeai.store.dto.RegisterStoreRequest;
 import com.pedeai.store.dto.StoreResponse;
@@ -59,6 +60,13 @@ public class StoreController {
     @PreAuthorize(Permissions.OWNER)
     public StoreResponse update(CurrentUser user, @Valid @RequestBody UpdateStoreRequest request) {
         return storeService.update(user.storeId(), request);
+    }
+
+    /** Programa de fidelidade: a cada N pedidos concluídos, um desconto no próximo. */
+    @PutMapping("/api/store/loyalty")
+    @PreAuthorize(Permissions.MANAGE_SETTINGS)
+    public StoreResponse changeLoyalty(CurrentUser user, @Valid @RequestBody LoyaltyRequest request) {
+        return storeService.changeLoyalty(user.storeId(), request);
     }
 
     /** Abrir ou fechar o cardápio digital para pedidos: quem está no caixa também faz, durante o serviço. */

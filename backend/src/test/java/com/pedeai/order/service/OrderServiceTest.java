@@ -105,12 +105,12 @@ class OrderServiceTest {
                 .thenReturn(new PriceQuoteResponse(SODA, "Refrigerante lata", "900", null, 1, 700, 0, 700, 700, List.of()));
         store(true, false);
         return new OrderService(orderRepository, historyRepository, numberService, productService, customerService,
-                storeService, events, CLOCK);
+                new LoyaltyService(orderRepository, storeService), storeService, events, CLOCK);
     }
 
     private void store(boolean autoConfirm, boolean startPreparation) {
         when(storeService.get(STORE_ID)).thenReturn(new StoreResponse(STORE_ID, "Pizzaria Bella", null, null,
-                "America/Sao_Paulo", LocalTime.of(5, 0), 1000, autoConfirm, startPreparation, "pizzaria-bella", true, false, java.util.List.of(), 0));
+                "America/Sao_Paulo", LocalTime.of(5, 0), 1000, autoConfirm, startPreparation, "pizzaria-bella", true, false, java.util.List.of(), 0, null, 0));
     }
 
     @Test
@@ -186,7 +186,7 @@ class OrderServiceTest {
         OrderService service = service();
 
         OrderResponse order = service.create(CASHIER, new CreateOrderRequest(OrderType.TAKEOUT,
-                new OrderCustomerRequest("João", null), null, List.of(soda()), null, 0L, 0L, List.of()));
+                new OrderCustomerRequest("João", null), null, List.of(soda()), null, 0L, 0L, List.of(), null));
 
         assertThat(order.customerName()).isEqualTo("João");
         assertThat(order.customerId()).isNull();
@@ -199,11 +199,11 @@ class OrderServiceTest {
         OrderService service = service();
 
         assertThatThrownBy(() -> service.create(CASHIER, new CreateOrderRequest(OrderType.DELIVERY,
-                new OrderCustomerRequest("Maria", null), ADDRESS, List.of(soda()), null, 0L, 800L, List.of())))
+                new OrderCustomerRequest("Maria", null), ADDRESS, List.of(soda()), null, 0L, 800L, List.of(), null)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage(OrderService.DELIVERY_NEEDS_CUSTOMER);
         assertThatThrownBy(() -> service.create(CASHIER, new CreateOrderRequest(OrderType.DELIVERY,
-                new OrderCustomerRequest("Maria", "11999990000"), null, List.of(soda()), null, 0L, 800L, List.of())))
+                new OrderCustomerRequest("Maria", "11999990000"), null, List.of(soda()), null, 0L, 800L, List.of(), null)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage(OrderService.DELIVERY_NEEDS_ADDRESS);
     }
@@ -213,7 +213,7 @@ class OrderServiceTest {
         OrderService service = service();
 
         assertThatThrownBy(() -> service.create(CASHIER, new CreateOrderRequest(OrderType.TAKEOUT, null, null,
-                List.of(soda()), null, 0L, 500L, List.of())))
+                List.of(soda()), null, 0L, 500L, List.of(), null)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage(OrderService.TAKEOUT_WITHOUT_ADDRESS);
     }
@@ -238,7 +238,7 @@ class OrderServiceTest {
         when(productService.quote(eq(STORE_ID), eq(gone), any())).thenThrow(new ResourceNotFoundException("x"));
 
         assertThatThrownBy(() -> service.create(CASHIER, new CreateOrderRequest(OrderType.TAKEOUT, null, null,
-                List.of(new OrderItemRequest(gone, 1, List.of(), null)), null, 0L, 0L, List.of())))
+                List.of(new OrderItemRequest(gone, 1, List.of(), null)), null, 0L, 0L, List.of(), null)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage(OrderService.PRODUCT_NOT_FOUND);
     }
@@ -248,7 +248,7 @@ class OrderServiceTest {
         OrderService service = service();
 
         assertThatThrownBy(() -> service.create(CASHIER, new CreateOrderRequest(OrderType.DINE_IN, null, null,
-                List.of(soda()), null, 0L, 0L, List.of())))
+                List.of(soda()), null, 0L, 0L, List.of(), null)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage(OrderService.DINE_IN_BY_TAB);
     }
@@ -325,7 +325,7 @@ class OrderServiceTest {
                 new PriceQuoteRequest.OptionChoice(CALABRESA, 1), new PriceQuoteRequest.OptionChoice(FOUR_CHEESE, 1)),
                 "  sem cebola ");
         return new CreateOrderRequest(OrderType.DELIVERY, new OrderCustomerRequest(" Maria ", "(11) 99999-0000"),
-                ADDRESS, List.of(halfAndHalf, soda()), "Interfone quebrado", discount, fee, payments);
+                ADDRESS, List.of(halfAndHalf, soda()), "Interfone quebrado", discount, fee, payments, null);
     }
 
     private static OrderItemRequest soda() {
