@@ -39,7 +39,7 @@ class IfoodItemPayloadTest {
         UUID groupId = UUID.randomUUID();
         UUID baconId = UUID.randomUUID();
         ProductResponse product = new ProductResponse(productId, UUID.randomUUID(), null, "X-Burger", null, 2990, null,
-                null, List.of(groupId), true, true, false, null, null);
+                null, List.of(groupId), true, true, false, null, null, null);
         OptionGroupResponse group = new OptionGroupResponse(groupId, "Adicionais", 0, 3, PricingRule.SUM, true, List.of(
                 new OptionItemResponse(baconId, "B1", "Bacon", 400, true, true),
                 new OptionItemResponse(UUID.randomUUID(), null, "Retirado", 100, true, false)));

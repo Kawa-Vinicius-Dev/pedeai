@@ -53,6 +53,6 @@ class ProductImageServiceTest {
 
     private static ProductResponse product(String imageUrl) {
         return new ProductResponse(PRODUCT, UUID.randomUUID(), null, "X-Burger", null, 2990, null, null, List.of(),
-                true, true, true, null, imageUrl);
+                true, true, true, null, imageUrl, null);
     }
 }

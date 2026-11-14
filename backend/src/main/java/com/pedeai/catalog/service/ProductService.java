@@ -110,6 +110,33 @@ public class ProductService {
         return ProductResponse.from(product, sectorResolver(storeId).resolve(product));
     }
 
+    /** Contagem do estoque na mão. Zero pausa o produto; repor libera; nulo deixa de controlar. */
+    @Transactional
+    public ProductResponse changeStock(UUID storeId, UUID id, Integer quantity) {
+        Product product = find(storeId, id);
+        product.changeStock(quantity, Instant.now(clock));
+        events.publishEvent(new CatalogChanged(storeId, Set.of(id)));
+        return ProductResponse.from(product, sectorResolver(storeId).resolve(product));
+    }
+
+    /**
+     * Um pedido saiu com estes produtos: desconta de quem controla estoque e pausa o que zerou (o cardápio digital
+     * e o iFood ficam sabendo pelo evento). Quem não controla estoque não muda.
+     */
+    @Transactional
+    public void consumeStock(UUID storeId, Map<UUID, Integer> quantities) {
+        Set<UUID> paused = new HashSet<>();
+        quantities.forEach((productId, quantity) -> {
+            if (productRepository.consumeStock(storeId, productId, quantity) > 0
+                    && productRepository.pauseIfOutOfStock(storeId, productId) > 0) {
+                paused.add(productId);
+            }
+        });
+        if (!paused.isEmpty()) {
+            events.publishEvent(new CatalogChanged(storeId, paused));
+        }
+    }
+
     /** Foto nova (ou nenhuma, com {@code null}): o iFood recebe de novo no próximo envio. */
     @Transactional
     public ProductResponse changeImage(UUID storeId, UUID id, String imageUrl) {

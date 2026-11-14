@@ -18,6 +18,7 @@ import com.pedeai.order.domain.OrderStatus;
 import com.pedeai.order.domain.OrderStatusHistory;
 import com.pedeai.order.domain.OrderType;
 import com.pedeai.order.dto.CreateOrderRequest;
+import com.pedeai.order.dto.LoyaltyStatusResponse;
 import com.pedeai.order.dto.DeliveryAddressResponse;
 import com.pedeai.order.dto.MarketplaceOrderRequest;
 import com.pedeai.order.dto.OrderCustomerRequest;
@@ -53,6 +54,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -67,6 +70,8 @@ public class OrderService {
     static final String DELIVERY_NEEDS_ADDRESS = "Para delivery, informe o endereço de entrega.";
     static final String TAKEOUT_WITHOUT_ADDRESS = "Pedido para retirada não tem endereço nem taxa de entrega.";
     static final String DISCOUNT_NEEDS_MANAGER = "Só gerente ou dono pode dar desconto.";
+    static final String NO_LOYALTY_REWARD = "Este cliente não tem prêmio de fidelidade para usar agora.";
+    static final String LOYALTY_NOTE = "Prêmio de fidelidade";
     static final String PRODUCT_NOT_FOUND = "Um dos produtos não está mais no cardápio.";
 
     private final OrderRepository orderRepository;
@@ -74,19 +79,21 @@ public class OrderService {
     private final OrderNumberService numberService;
     private final ProductService productService;
     private final CustomerService customerService;
+    private final LoyaltyService loyaltyService;
     private final StoreService storeService;
     private final ApplicationEventPublisher events;
     private final Clock clock;
 
     public OrderService(OrderRepository orderRepository, OrderStatusHistoryRepository historyRepository,
                         OrderNumberService numberService, ProductService productService,
-                        CustomerService customerService, StoreService storeService,
-                        ApplicationEventPublisher events, Clock clock) {
+                        CustomerService customerService, LoyaltyService loyaltyService,
+                        StoreService storeService, ApplicationEventPublisher events, Clock clock) {
         this.orderRepository = orderRepository;
         this.historyRepository = historyRepository;
         this.numberService = numberService;
         this.productService = productService;
         this.customerService = customerService;
+        this.loyaltyService = loyaltyService;
         this.storeService = storeService;
         this.events = events;
         this.clock = clock;
@@ -104,13 +111,17 @@ public class OrderService {
         DeliveryAddress address = toDeliveryAddress(request.deliveryAddress());
 
         StoreResponse store = storeService.get(storeId);
+        long loyalty = loyaltyDiscount(store, request, customer, items, request.discountCents(), true);
         Instant now = Instant.now(clock);
         LocalDate businessDate = BusinessDay.of(now, ZoneId.of(store.timezone()), store.businessDayCutoff());
         int number = numberService.next(storeId, businessDate);
 
         Order order = Order.placeOwn(storeId, businessDate, number, request.type(), customer, address,
-                Texts.trimToNull(request.notes()), items, request.discountCents(), request.deliveryFeeCents(),
-                user.userId(), now);
+                notes(request.notes(), loyalty), items, request.discountCents() + loyalty,
+                request.deliveryFeeCents(), user.userId(), now);
+        if (loyalty > 0) {
+            order.markLoyaltyReward();
+        }
         // O status inicial é aplicado antes de gravar: o pedido nasce com um INSERT só, na versão 0.
         List<OrderStatusHistory> timeline = new ArrayList<>();
         Actor actor = Actor.user(user.userId(), user.name());
@@ -126,6 +137,7 @@ public class OrderService {
             timeline.add(new OrderStatusHistory(order, null, OrderStatus.RECEIVED, actor, null, now));
         }
         orderRepository.save(order);
+        consumeStock(storeId, items);
         historyRepository.saveAll(timeline);
         orderRepository.flush();
         events.publishEvent(new OrderCreated(storeId, order.getId(), order.getNumber(), order.getStatus(),
@@ -157,12 +169,17 @@ public class OrderService {
         Instant now = Instant.now(clock);
         LocalDate businessDate = BusinessDay.of(now, ZoneId.of(store.timezone()), store.businessDayCutoff());
         int number = numberService.next(storeId, businessDate);
+        // Só o cupom do cardápio digital chega aqui com desconto, já conferido por quem chama.
+        long discount = request.discountCents() == null ? 0 : request.discountCents();
+        // No cardápio o cliente não escolhe: se tem prêmio, entra; se não tem, o pedido segue sem ele.
+        long loyalty = loyaltyDiscount(store, request, customer, items, discount, false);
 
         Order order = Order.placeOwn(storeId, businessDate, number, request.type(), customer,
-                toDeliveryAddress(request.deliveryAddress()), Texts.trimToNull(request.notes()), items,
-                // Só o cupom do cardápio digital chega aqui com desconto, já conferido por quem chama.
-                request.discountCents() == null ? 0 : request.discountCents(),
-                request.deliveryFeeCents(), null, now);
+                toDeliveryAddress(request.deliveryAddress()), notes(request.notes(), loyalty), items,
+                discount + loyalty, request.deliveryFeeCents(), null, now);
+        if (loyalty > 0) {
+            order.markLoyaltyReward();
+        }
         order.fromOwnChannel(source, externalId, TrackingCodes.next());
         List<OrderStatusHistory> timeline = new ArrayList<>();
         timeline.add(new OrderStatusHistory(order, null, OrderStatus.RECEIVED,
@@ -179,10 +196,12 @@ public class OrderService {
             }
         }
         orderRepository.save(order);
+        consumeStock(storeId, items);
         historyRepository.saveAll(timeline);
         orderRepository.flush();
-        List<OrderPaymentRequest> payments = List.of(new OrderPaymentRequest(paymentMethodId, order.getTotalCents(),
-                changeForCents, false));
+        // Pedido que saiu de graça (cupom ou prêmio cobrindo tudo) não tem nada a receber.
+        List<OrderPaymentRequest> payments = order.getTotalCents() == 0 ? List.of()
+                : List.of(new OrderPaymentRequest(paymentMethodId, order.getTotalCents(), changeForCents, false));
         events.publishEvent(new OrderCreated(storeId, order.getId(), order.getNumber(), order.getStatus(),
                 order.getVersion(), order.getTotalCents(), payments, null, source));
         return OrderResponse.from(order);
@@ -237,6 +256,7 @@ public class OrderService {
                     null, now));
         }
         orderRepository.save(order);
+        consumeStock(storeId, items);
         historyRepository.saveAll(timeline);
         orderRepository.flush();
         events.publishEvent(new OrderCreated(storeId, order.getId(), order.getNumber(), order.getStatus(),
@@ -333,6 +353,46 @@ public class OrderService {
                     Texts.trimToNull(request.notes()), options, items.size()));
         }
         return items;
+    }
+
+    /**
+     * O desconto do prêmio de fidelidade, quando o pedido pede para usar. Nunca passa do que sobra dos itens depois
+     * do outro desconto. {@code strict}: sem prêmio para usar, recusa o pedido (a tela do caixa mostrou um prêmio
+     * que não existe mais); sem {@code strict}, o pedido segue sem desconto.
+     */
+    private long loyaltyDiscount(StoreResponse store, CreateOrderRequest request, OrderCustomer customer,
+                                 List<OrderItem> items, long otherDiscount, boolean strict) {
+        if (!Boolean.TRUE.equals(request.loyaltyReward())) {
+            return 0;
+        }
+        LoyaltyStatusResponse status = loyaltyService.status(store, customer == null ? null : customer.id());
+        if (!status.rewardAvailable()) {
+            if (strict) {
+                throw new BusinessRuleException(NO_LOYALTY_REWARD);
+            }
+            return 0;
+        }
+        long subtotal = items.stream().mapToLong(OrderItem::getTotalCents).sum();
+        return Math.max(0, Math.min(status.rewardCents(), subtotal - otherDiscount));
+    }
+
+    private static String notes(String notes, long loyalty) {
+        String trimmed = Texts.trimToNull(notes);
+        if (loyalty <= 0) {
+            return trimmed;
+        }
+        return trimmed == null ? LOYALTY_NOTE : LOYALTY_NOTE + " · " + trimmed;
+    }
+
+    /** Desconta do estoque os produtos do pedido (os que controlam estoque). Item sem produto do cardápio não conta. */
+    private void consumeStock(UUID storeId, List<OrderItem> items) {
+        Map<UUID, Integer> quantities = new LinkedHashMap<>();
+        for (OrderItem item : items) {
+            if (item.getProductId() != null) {
+                quantities.merge(item.getProductId(), item.getQuantity(), Integer::sum);
+            }
+        }
+        productService.consumeStock(storeId, quantities);
     }
 
     /** Com telefone, o cliente fica gravado na loja (e o endereço, na entrega). Só com nome, fica só no pedido. */

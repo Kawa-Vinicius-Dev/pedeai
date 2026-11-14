@@ -24,12 +24,14 @@ public record ProductResponse(
         boolean active,
         boolean sellOnIfood,
         @Schema(types = {"integer", "null"}) Long ifoodPriceCents,
-        @Schema(types = {"string", "null"}) String imageUrl
+        @Schema(types = {"string", "null"}) String imageUrl,
+        @Schema(types = {"integer", "null"}) Integer stockQuantity
 ) {
     public static ProductResponse from(Product product, UUID effectiveSectorId) {
         return new ProductResponse(product.getId(), product.getCategoryId(), product.getCode(), product.getName(),
                 product.getDescription(), product.getPriceCents(), product.getSectorId(), effectiveSectorId,
                 List.copyOf(product.getOptionGroupIds()), product.isAvailable(), product.isActive(),
-                product.isSellOnIfood(), product.getIfoodPriceCents(), product.getImageUrl());
+                product.isSellOnIfood(), product.getIfoodPriceCents(), product.getImageUrl(),
+                product.getStockQuantity());
     }
 }

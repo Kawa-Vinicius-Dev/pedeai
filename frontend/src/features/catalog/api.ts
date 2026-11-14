@@ -88,6 +88,26 @@ export function useProductAvailability() {
   });
 }
 
+/** Contar o estoque: zero pausa o produto, repor libera, vazio deixa de controlar. */
+export function useProductStock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, quantity }: { id: string; quantity: number | null }) =>
+      unwrap(api.PUT('/api/products/{id}/stock', { params: { path: { id } }, body: { quantity } })),
+    onSuccess: (product) => {
+      replaceById(queryClient, catalogKeys.products, product);
+      notifications.show({
+        color: 'green',
+        message:
+          product.stockQuantity === null
+            ? `${product.name} não controla mais estoque.`
+            : `Estoque de ${product.name}: ${product.stockQuantity}.`,
+      });
+    },
+    onError: (error) => notifications.show({ color: 'red', message: errorMessage(error) }),
+  });
+}
+
 /** Pausar e liberar uma opção (um sabor que acabou, por exemplo). */
 export function useOptionAvailability() {
   const queryClient = useQueryClient();

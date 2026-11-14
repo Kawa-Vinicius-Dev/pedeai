@@ -158,6 +158,6 @@ class StoreControllerTest {
 
     private static StoreResponse storeResponse() {
         return new StoreResponse(STORE_ID, "Pizzaria Bella", null, null, "America/Sao_Paulo",
-                LocalTime.of(5, 0), 1000, true, false, "pizzaria-bella", true, false, java.util.List.of(), 0);
+                LocalTime.of(5, 0), 1000, true, false, "pizzaria-bella", true, false, java.util.List.of(), 0, null, 0);
     }
 }

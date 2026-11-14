@@ -3,6 +3,7 @@ import {
   Alert,
   Button,
   Card,
+  Checkbox,
   Divider,
   Grid,
   Group,
@@ -14,13 +15,13 @@ import {
   Stack,
   Switch,
   Text,
-  Textarea,
   TextInput,
+  Textarea,
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CircleAlert, Search } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { CircleAlert, Gift, Search } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Link } from 'react-router';
@@ -137,6 +138,16 @@ export function NewOrderPage() {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [building, setBuilding] = useState<Product | null>(null);
   const [lookup, setLookup] = useState<Lookup>({ status: 'idle' });
+  const [useReward, setUseReward] = useState(false);
+  const foundCustomerId = lookup.status === 'found' ? lookup.customer.id : null;
+  // Fidelidade: o cliente achado pelo telefone pode ter um prêmio para usar neste pedido.
+  const loyalty = useQuery({
+    queryKey: ['customers', foundCustomerId, 'loyalty'],
+    queryFn: () =>
+      unwrap(api.GET('/api/customers/{customerId}/loyalty', { params: { path: { customerId: foundCustomerId! } } })),
+    enabled: foundCustomerId !== null,
+  });
+  const reward = foundCustomerId !== null && loyalty.data?.rewardAvailable ? loyalty.data : null;
 
   const {
     register,
@@ -184,7 +195,9 @@ export function NewOrderPage() {
   const subtotal = cartSubtotal(lines);
   const feeCents = type === 'DELIVERY' ? reaisToCents(deliveryFee) : 0;
   const discountCents = Math.min(reaisToCents(discount), subtotal);
-  const total = subtotal - discountCents + feeCents;
+  // O prêmio nunca passa do que sobra dos itens depois do outro desconto (a API faz a mesma conta).
+  const rewardCents = reward && useReward ? Math.min(reward.rewardCents, subtotal - discountCents) : 0;
+  const total = subtotal - discountCents - rewardCents + feeCents;
 
   const create = useMutation({
     mutationFn: (body: CreateOrderRequest) => unwrap(api.POST('/api/orders', { body })),
@@ -192,7 +205,9 @@ export function NewOrderPage() {
       notifications.show({ color: 'green', title: `Pedido ${order.number} lançado`, message: 'Já está no quadro.' });
       setLines([]);
       setLookup({ status: 'idle' });
+      setUseReward(false);
       autoFee.current = null;
+      await queryClient.invalidateQueries({ queryKey: ['customers'] });
       reset({ ...EMPTY, type: getValues('type') });
       await queryClient.invalidateQueries({ queryKey: orderKeys.all });
     },
@@ -228,6 +243,7 @@ export function NewOrderPage() {
   function phoneChanged(phone: string) {
     if (lookup.status !== 'idle' && lookup.digits !== digitsOf(phone)) {
       setLookup({ status: 'idle' });
+      setUseReward(false);
       setValue('addressId', NEW_ADDRESS);
     }
   }
@@ -297,6 +313,7 @@ export function NewOrderPage() {
       })),
       notes: form.notes || undefined,
       discountCents: form.discount,
+      loyaltyReward: rewardCents > 0 ? true : undefined,
       deliveryFeeCents: delivery ? form.deliveryFee : 0,
       payments:
         form.paymentMethodId && paymentAmount > 0
@@ -396,6 +413,20 @@ export function NewOrderPage() {
                   {lookup.status === 'found' && (
                     <Text size="xs" c="green.8">
                       Cliente cadastrado: {lookup.customer.name}, {formatPhone(lookup.customer.phone)}.
+                    </Text>
+                  )}
+                  {reward && (
+                    <Alert color="grape" icon={<Gift size={18} />} p="xs">
+                      <Checkbox
+                        label={`Usar o prêmio de fidelidade: ${formatCents(reward.rewardCents)} de desconto`}
+                        checked={useReward}
+                        onChange={(event) => setUseReward(event.currentTarget.checked)}
+                      />
+                    </Alert>
+                  )}
+                  {lookup.status === 'found' && loyalty.data?.enabled && !loyalty.data.rewardAvailable && (
+                    <Text size="xs" c="dimmed">
+                      Fidelidade: faltam {loyalty.data.ordersToNext} pedido(s) concluído(s) para o próximo prêmio.
                     </Text>
                   )}
                   {lookup.status === 'new' && (
@@ -551,6 +582,12 @@ export function NewOrderPage() {
                     <Group justify="space-between">
                       <Text size="sm">Desconto</Text>
                       <Text size="sm">- {formatCents(discountCents)}</Text>
+                    </Group>
+                  )}
+                  {rewardCents > 0 && (
+                    <Group justify="space-between">
+                      <Text size="sm">Prêmio de fidelidade</Text>
+                      <Text size="sm">- {formatCents(rewardCents)}</Text>
                     </Group>
                   )}
                   {type === 'DELIVERY' && (

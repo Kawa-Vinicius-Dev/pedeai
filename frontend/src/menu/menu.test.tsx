@@ -31,6 +31,8 @@ function storefront(overrides: Partial<Storefront> = {}): Storefront {
       },
     ],
     optionGroups: [optionGroup()],
+    loyaltyOrders: null,
+    loyaltyDiscountCents: 0,
     ...overrides,
   };
 }

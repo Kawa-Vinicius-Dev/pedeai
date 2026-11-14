@@ -40,6 +40,8 @@ public class Product {
     /** Preço fixo no iFood; nulo usa o preço daqui com o acréscimo da loja. */
     private Long ifoodPriceCents;
     private String imageUrl;
+    /** Quantos ainda dá para vender. Nulo: não controla estoque. Os pedidos descontam direto no banco. */
+    private Integer stockQuantity;
     /** Caminho que o iFood devolveu ao receber a foto; muda de foto, envia de novo. */
     private String ifoodImagePath;
     private int sortOrder;
@@ -107,6 +109,19 @@ public class Product {
 
     public String getIfoodImagePath() {
         return ifoodImagePath;
+    }
+
+    public Integer getStockQuantity() {
+        return stockQuantity;
+    }
+
+    /** Define o estoque na mão: zero pausa o produto e repor libera. Nulo deixa de controlar. */
+    public void changeStock(Integer quantity, Instant now) {
+        this.stockQuantity = quantity;
+        if (quantity != null) {
+            this.available = quantity > 0;
+        }
+        this.updatedAt = now;
     }
 
     public void changeAvailability(boolean available, Instant now) {
